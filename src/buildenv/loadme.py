@@ -5,6 +5,9 @@ import sys
 from configparser import ConfigParser
 from pathlib import Path
 
+# Build env sub-folder in project
+BUILDENV_FOLDER = ".buildenv"
+
 # Valid venv tag file
 VENV_OK = "venvOK"
 
@@ -21,12 +24,13 @@ class LoadMe:
 
     def __init__(self, project_path: Path):
         self.project_path = project_path  # Path to current project
-        self.config_file = project_path / "loadme.cfg"  # Path to config file (in project folder)
+        self.buildenv_path = project_path / BUILDENV_FOLDER  # Path to buildenv subfolder
+        self.config_file = self.buildenv_path / "loadme.cfg"  # Path to config file (in project folder)
         self.config_parser = None  # Config parser object (lazy init)
         self.is_ci = "CI" in os.environ and len(os.environ["CI"]) > 0  # Check if running in CI
         self.venv_folder = self.read_config("venv_folder", "venv")  # venv folder name
-        self.venv_path = self.project_path / self.venv_folder  # venv folder for current project
-        self.requirements_file = self.project_path / "requirements.txt"  # requirements file path
+        self.venv_path = self.project_path / self.venv_folder  # default venv path for current project
+        self.requirements_file = self.read_config("requirements", "requirements.txt")  # requirements file name
         self.is_windows = "nt" in os.name  # Check if running on Windows
         self.bin_folder = "Scripts" if self.is_windows else "bin"  # Binary folder in venv
         self.build_env_manager = self.read_config("build_env_manager", "buildenv")  # Python module for build env manager
@@ -119,7 +123,7 @@ class LoadMe:
 
             # Install requirements
             print(">> Installing requirements...")
-            requirements = ["-r", str(self.requirements_file.name)] if self.requirements_file.is_file() else ["buildenv"]
+            requirements = ["-r", self.requirements_file] if (self.project_path / self.requirements_file).is_file() else ["buildenv"]
             subprocess.run([str(venv_python), "-m", "pip", "install"] + requirements, cwd=self.project_path, check=True)
 
             # If we get here, venv is valid

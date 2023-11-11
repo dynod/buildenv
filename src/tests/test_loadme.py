@@ -4,50 +4,79 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 from nmk.utils import is_windows
 from pytest_multilog import TestHelper
 
-from buildenv.loadme import BUILDENV_OK, VENV_OK, LoadMe
+from buildenv.loadme import BUILDENV_FOLDER, BUILDENV_OK, VENV_OK, LoadMe
 
 
 class TestLoadme(TestHelper):
-    def test_loadme_class(self):
-        # Verify default loadme attributes
-        loader = LoadMe(self.test_folder)
-        assert loader.project_path == self.test_folder
-        assert loader.config_file == self.test_folder / "loadme.cfg"
-        assert loader.config_parser is None
-        assert loader.venv_folder == "venv"
-        assert loader.venv_path == self.test_folder / "venv"
-        assert loader.requirements_file == self.test_folder / "requirements.txt"
-        assert loader.bin_folder == "Scripts" if is_windows() else "bin"
-        assert loader.build_env_manager == "buildenv"
-
-    def test_loadme_local_config(self):
-        # Populate a config file with some local profile values
-        shutil.copyfile(Path(__file__).parent / "templates" / "loadme-local.cfg", self.test_folder / "loadme.cfg")
-        loader = LoadMe(self.test_folder)
-        assert loader.config_parser is not None
-        assert loader.venv_folder == "MyVenv"
-        assert loader.build_env_manager == "buildenv"
-
-    def test_loadme_ci_config(self):
+    @pytest.fixture
+    def fake_ci(self):
         # Fake CI environment
         old_ci_value = os.environ["CI"] if "CI" in os.environ else None
         os.environ["CI"] = "true"
 
-        # Populate a config file with some ci profile values
-        shutil.copyfile(Path(__file__).parent / "templates" / "loadme-ci.cfg", self.test_folder / "loadme.cfg")
-        loader = LoadMe(self.test_folder)
-        assert loader.config_parser is not None
-        assert loader.venv_folder == "MyCiVenv"
-        assert loader.build_env_manager == "buildenv-foo"
+        # yield to test
+        yield
 
-        # Restore CI state
+        # Restore previous environment
         if old_ci_value is not None:
             os.environ["CI"] = old_ci_value
         else:
             del os.environ["CI"]
+
+    @pytest.fixture
+    def fake_local(self):
+        # Fake local environment
+        old_ci_value = os.environ["CI"] if "CI" in os.environ else None
+        os.environ["CI"] = ""
+
+        # yield to test
+        yield
+
+        # Restore previous environment
+        if old_ci_value is not None:
+            os.environ["CI"] = old_ci_value
+        else:
+            del os.environ["CI"]
+
+    def prepare_config(self, name: str):
+        # Create buildenv folder, and copy template config file
+        buildenv = self.test_folder / BUILDENV_FOLDER
+        buildenv.mkdir()
+        shutil.copyfile(Path(__file__).parent / "templates" / name, buildenv / "loadme.cfg")
+
+    def test_loadme_class(self):
+        # Verify default loadme attributes
+        loader = LoadMe(self.test_folder)
+        assert loader.project_path == self.test_folder
+        assert loader.config_file == self.test_folder / BUILDENV_FOLDER / "loadme.cfg"
+        assert loader.config_parser is None
+        assert loader.venv_folder == "venv"
+        assert loader.venv_path == self.test_folder / "venv"
+        assert loader.requirements_file == "requirements.txt"
+        assert loader.bin_folder == "Scripts" if is_windows() else "bin"
+        assert loader.build_env_manager == "buildenv"
+
+    def test_loadme_local_config(self, fake_local):
+        # Populate a config file with some local profile values
+        self.prepare_config("loadme-local.cfg")
+        loader = LoadMe(self.test_folder)
+        assert loader.config_parser is not None
+        assert loader.venv_folder == "MyVenv"
+        assert loader.build_env_manager == "buildenv"
+        assert loader.requirements_file == "requirements.txt"
+
+    def test_loadme_ci_config(self, fake_ci):
+        # Populate a config file with some ci profile values
+        self.prepare_config("loadme-ci.cfg")
+        loader = LoadMe(self.test_folder)
+        assert loader.config_parser is not None
+        assert loader.venv_folder == "MyCiVenv"
+        assert loader.build_env_manager == "buildenv-foo"
+        assert loader.requirements_file == "requirements.txt"
 
     def test_loadme_find_real_venv(self):
         # Test for current project venv detection
