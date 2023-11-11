@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -13,7 +14,7 @@ from buildenv.loadme import BUILDENV_FOLDER, BUILDENV_OK, VENV_OK, LoadMe
 BIN_FOLDER = "Scripts" if is_windows() else "bin"
 
 # Python executable name
-PYTHON_EXE = "python"
+PYTHON_EXE = "python(.exe)?" if is_windows() else "python"
 
 
 class TestLoadme(TestHelper):
@@ -154,11 +155,16 @@ class TestLoadme(TestHelper):
         assert c.executable == created_exe
 
         # Check used commands
-        assert received_commands == [
-            "git rev-parse --show-toplevel",
-            f"{created_exe} -Im ensurepip --upgrade --default-pip",
-            f"{created_exe} -m pip install pip " + requirements + " --upgrade",
-        ]
+        for received, expected in zip(
+            received_commands,
+            [
+                "git rev-parse --show-toplevel",
+                f"{created_exe} -I?m ensurepip --upgrade --default-pip",
+                f"{created_exe} -m pip install pip " + requirements + " --upgrade",
+            ],
+        ):
+            p = re.compile(expected)
+            assert p.match(received) is not None
 
     def test_setup_venv_create_empty(self, monkeypatch):
         # Check with empty folder
