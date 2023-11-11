@@ -151,8 +151,8 @@ class TestLoadme(TestHelper):
         assert received_commands == [
             "git rev-parse --show-toplevel",
             f"{sys.executable} -m venv venv",
-            f"{self.test_folder}/venv/{loader.bin_folder}/python -m pip install pip wheel --upgrade",
-            f"{self.test_folder}/venv/{loader.bin_folder}/python -m pip install " + requirements,
+            f"{self.test_folder/'venv'/loader.bin_folder/'python'} -m pip install pip wheel --upgrade",
+            f"{self.test_folder/'venv'/loader.bin_folder/'python'} -m pip install " + requirements,
         ]
 
     def test_setup_venv_create_empty(self, monkeypatch):
