@@ -48,7 +48,7 @@ class EnvContext:
         """
         Path to python executable in environment
         """
-        return self.root / self.context.bin_name / "python"
+        return self.root / self.context.bin_name / self.context.python_exe
 
 
 class LoadMe:

@@ -3,6 +3,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+from typing import List
 
 import pytest
 from nmk.utils import is_windows
@@ -14,7 +15,7 @@ from buildenv.loadme import BUILDENV_FOLDER, BUILDENV_OK, VENV_OK, LoadMe
 BIN_FOLDER = "Scripts" if is_windows() else "bin"
 
 # Python executable name
-PYTHON_EXE = "python(.exe)?" if is_windows() else "python"
+PYTHON_EXE = "python(.exe)?" if is_windows() else "python[0-9.]*"
 
 
 class TestLoadme(TestHelper):
@@ -133,6 +134,21 @@ class TestLoadme(TestHelper):
         v = loader.find_venv()
         assert v == fake_venv
 
+    def check_strings(self, received_list: List[str], expected_list: List[str]):
+        # Check used commands
+        for received, expected in zip(
+            received_list if isinstance(received_list, list) else [received_list],
+            expected_list if isinstance(expected_list, list) else [expected_list],
+        ):
+            assert re.compile(expected).match(received) is not None, f"{expected!r} doesn't match {received!r}"
+
+    def wrap_exe(self, exe: str) -> str:
+        return exe.replace("/", "\\\\" if is_windows() else "/")
+
+    @property
+    def venv_exe(self) -> str:
+        return self.wrap_exe((self.test_folder / "venv" / BIN_FOLDER / PYTHON_EXE).as_posix())
+
     def check_venv_creation(self, monkeypatch, requirements: str):
         received_commands = []
 
@@ -151,20 +167,17 @@ class TestLoadme(TestHelper):
         loader = LoadMe(self.test_folder)
         c = loader.setup_venv()
         assert c.root == self.test_folder / "venv"
-        created_exe = self.test_folder / "venv" / BIN_FOLDER / PYTHON_EXE
-        assert c.executable == created_exe
+        self.check_strings(str(c.executable), self.venv_exe)
 
         # Check used commands
-        for received, expected in zip(
+        self.check_strings(
             received_commands,
             [
                 "git rev-parse --show-toplevel",
-                f"{created_exe} -I?m ensurepip --upgrade --default-pip",
-                f"{created_exe} -m pip install pip " + requirements + " --upgrade",
+                f"{self.venv_exe} -I?m ensurepip --upgrade --default-pip",
+                f"{self.venv_exe} -m pip install pip " + requirements + " --upgrade",
             ],
-        ):
-            p = re.compile(expected)
-            assert p.match(received) is not None
+        )
 
     def test_setup_venv_create_empty(self, monkeypatch):
         # Check with empty folder
@@ -184,11 +197,11 @@ class TestLoadme(TestHelper):
         # Check with existing (but corrupted) venv folder
         self.check_venv_creation(monkeypatch, "-r requirements.txt")
 
-    def test_setup_venv_projet_path(self):
+    def test_setup_venv_project_path(self):
         # Check with current project venv
         loader = LoadMe(self.test_folder)
         c = loader.setup_venv()
-        assert c.executable == Path(__file__).parent.parent.parent / "venv" / BIN_FOLDER / PYTHON_EXE
+        self.check_strings(str(c.executable), self.wrap_exe((Path(__file__).parent.parent.parent / "venv" / BIN_FOLDER / PYTHON_EXE).as_posix()))
         assert not (self.test_folder / "venv").is_dir()
 
     def test_setup_no_manager(self, monkeypatch):
@@ -234,7 +247,10 @@ class TestLoadme(TestHelper):
         loader.setup()
 
         # Check used commands
-        assert received_commands == [
-            "git rev-parse --show-toplevel",
-            f"{self.test_folder/'venv'/BIN_FOLDER/PYTHON_EXE} -m buildenv",
-        ]
+        self.check_strings(
+            received_commands,
+            [
+                "git rev-parse --show-toplevel",
+                f"{self.venv_exe} -m buildenv",
+            ],
+        )
