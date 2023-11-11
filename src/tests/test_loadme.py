@@ -1,7 +1,6 @@
 import os
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -9,6 +8,12 @@ from nmk.utils import is_windows
 from pytest_multilog import TestHelper
 
 from buildenv.loadme import BUILDENV_FOLDER, BUILDENV_OK, VENV_OK, LoadMe
+
+# Expected bin folder in venv
+BIN_FOLDER = "Scripts" if is_windows() else "bin"
+
+# Python executable name
+PYTHON_EXE = "python"
 
 
 class TestLoadme(TestHelper):
@@ -57,7 +62,6 @@ class TestLoadme(TestHelper):
         assert loader.venv_folder == "venv"
         assert loader.venv_path == self.test_folder / "venv"
         assert loader.requirements_file == "requirements.txt"
-        assert loader.bin_folder == "Scripts" if is_windows() else "bin"
         assert loader.build_env_manager == "buildenv"
 
     def test_loadme_local_config(self, fake_local):
@@ -131,7 +135,7 @@ class TestLoadme(TestHelper):
     def check_venv_creation(self, monkeypatch, requirements: str):
         received_commands = []
 
-        def fake_subprocess(args, capture_output=True, cwd=None, check=False):
+        def fake_subprocess(args, cwd=None, **kwargs):
             received_commands.append(" ".join(args))
             if args[0] == "git":
                 return subprocess.CompletedProcess(args, 1, str(cwd).encode())
@@ -144,15 +148,16 @@ class TestLoadme(TestHelper):
 
         # Create venv
         loader = LoadMe(self.test_folder)
-        v = loader.setup_venv_python()
-        assert v == self.test_folder / "venv" / loader.bin_folder / "python"
+        c = loader.setup_venv()
+        assert c.root == self.test_folder / "venv"
+        created_exe = self.test_folder / "venv" / BIN_FOLDER / PYTHON_EXE
+        assert c.executable == created_exe
 
         # Check used commands
         assert received_commands == [
             "git rev-parse --show-toplevel",
-            f"{sys.executable} -m venv venv",
-            f"{self.test_folder/'venv'/loader.bin_folder/'python'} -m pip install pip wheel --upgrade",
-            f"{self.test_folder/'venv'/loader.bin_folder/'python'} -m pip install " + requirements,
+            f"{created_exe} -Im ensurepip --upgrade --default-pip",
+            f"{created_exe} -m pip install pip " + requirements + " --upgrade",
         ]
 
     def test_setup_venv_create_empty(self, monkeypatch):
@@ -176,8 +181,9 @@ class TestLoadme(TestHelper):
     def test_setup_venv_projet_path(self):
         # Check with current project venv
         loader = LoadMe(self.test_folder)
-        v = loader.setup_venv_python()
-        assert v == Path(__file__).parent.parent.parent / "venv" / loader.bin_folder / "python"
+        c = loader.setup_venv()
+        assert c.executable == Path(__file__).parent.parent.parent / "venv" / BIN_FOLDER / PYTHON_EXE
+        assert not (self.test_folder / "venv").is_dir()
 
     def test_setup_no_manager(self, monkeypatch):
         received_commands = []
@@ -224,5 +230,5 @@ class TestLoadme(TestHelper):
         # Check used commands
         assert received_commands == [
             "git rev-parse --show-toplevel",
-            f"{self.test_folder/'venv'/loader.bin_folder/'python'} -m buildenv",
+            f"{self.test_folder/'venv'/BIN_FOLDER/PYTHON_EXE} -m buildenv",
         ]

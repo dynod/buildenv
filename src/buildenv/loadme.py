@@ -1,23 +1,62 @@
+"""
+Python module for **loadme** script.
+
+This module is standalone (i.e. it doesn't have any dependencies out of the raw python SDK)
+and is designed to be:
+
+- copied in project :data:`BUILDENV_FOLDER` sub-folder
+- kept in source control, so that the script is ready to run just after project clone
+"""
+
 import os
-import shutil
 import subprocess
 import sys
 from configparser import ConfigParser
 from pathlib import Path
+from types import SimpleNamespace
+from venv import EnvBuilder
 
-# Build env sub-folder in project
 BUILDENV_FOLDER = ".buildenv"
+"""Build env sub-folder in project"""
 
-# Valid venv tag file
 VENV_OK = "venvOK"
+"""Valid venv tag file"""
 
-# Valid buildenv tag file
 BUILDENV_OK = "buildenvOK"
+"""Valid buildenv tag file"""
+
+
+class EnvContext:
+    """
+    Simple context class for a build env, providing some utility properties
+
+    :param context: Environment context object, returned by EnvBuilder
+    """
+
+    def __init__(self, context: SimpleNamespace):
+        self.context = context
+
+    @property
+    def root(self) -> Path:
+        """
+        Path to environment root folder
+        """
+        return self.context.env_dir
+
+    @property
+    def executable(self) -> Path:
+        """
+        Path to python executable in environment
+        """
+        return self.root / self.context.bin_name / "python"
 
 
 class LoadMe:
     """
-    **loadme** wrapper to BuildEnvManager
+    Wrapper to **buildenv** manager
+
+    This wrapper mainly creates python venv (if not done yet) before delegating setup to :class:`buildenv.manager.BuildEnvManager`.
+    Also provides configuration file (**loadme.cfg**) reading facility.
 
     :param project_path: Path to project root directory
     """
@@ -31,13 +70,15 @@ class LoadMe:
         self.venv_folder = self.read_config("venv_folder", "venv")  # venv folder name
         self.venv_path = self.project_path / self.venv_folder  # default venv path for current project
         self.requirements_file = self.read_config("requirements", "requirements.txt")  # requirements file name
-        self.is_windows = "nt" in os.name  # Check if running on Windows
-        self.bin_folder = "Scripts" if self.is_windows else "bin"  # Binary folder in venv
         self.build_env_manager = self.read_config("build_env_manager", "buildenv")  # Python module for build env manager
 
     def read_config(self, name: str, default: str) -> str:
         """
-        Read configuration parameter from config file
+        Read configuration parameter from config file (**loadme.cfg**).
+
+        Value is read according to the current profile: **[local]** or **[ci]** (if **CI** env var is defined and not empty).
+        Note that if a parameter is not defined in **[ci]** profile, it will be defaulted to value in **[local]** profile,
+        if any (otherwise provided default will be used).
 
         :param name: parameter name
         :param default: default value if parameter is not set
@@ -52,18 +93,14 @@ class LoadMe:
 
         # Read config
         if self.config_parser is not None:
-            if self.is_ci:
-                # From [ci] profile, if any
-                return self.config_parser.get("ci", name, fallback=self.config_parser.get("local", name, fallback=default))
-            else:
-                # From [default] profile, is any
-                return self.config_parser.get("local", name, fallback=default)
+            local_value = self.config_parser.get("local", name, fallback=default)
+            return self.config_parser.get("ci", name, fallback=local_value) if self.is_ci else local_value
         else:
             return default
 
     def find_venv(self) -> Path:
         """
-        Find venv folder, incurrent project folder, or in parent ones
+        Find venv folder, in current project folder, or in parent ones
 
         :return: venv folder path, or None if no venv found
         """
@@ -97,57 +134,57 @@ class LoadMe:
         # Can't find any valid venv
         return None
 
-    def setup_venv_python(self) -> Path:
+    def setup_venv(self) -> EnvContext:
         """
-        Check for python executable in venv; create venv if not done yet
+        Prepare python environment builder, and create environment if it doesn't exist yet
 
-        :return: Path to python executable in venv
+        :return: Environment context object
         """
 
         # Look for venv
         venv_path = self.find_venv()
-        if venv_path is None:
-            # No venv yet: create it in current project folder
-            if self.venv_path.is_dir():
-                print(">> Cleaning existing (corrupted?) venv folder...")
-                shutil.rmtree(self.venv_path)
+        missing_venv = venv_path is None
 
+        # Create env builder and remember context
+        env_builder = EnvBuilder(clear=missing_venv and self.venv_path.is_dir(), symlinks=True, with_pip=True, prompt=self.read_config("prompt", "buildenv"))
+        context = EnvContext(env_builder.ensure_directories(self.venv_path if missing_venv else venv_path))
+
+        if missing_venv:
             # Setup venv
-            print(">> Creating venv folder...")
-            subprocess.run([sys.executable, "-m", "venv", self.venv_folder], cwd=self.project_path, check=True)
-
-            # Upgrade pip
-            print(">> Upgrading pip...")
-            venv_python = self.venv_path / self.bin_folder / "python"
-            subprocess.run([str(venv_python), "-m", "pip", "install", "pip", "wheel", "--upgrade"], cwd=self.project_path, check=True)
+            print(">> Creating venv...")
+            env_builder.clear = False
+            env_builder.create(self.venv_path)
 
             # Install requirements
             print(">> Installing requirements...")
             requirements = ["-r", self.requirements_file] if (self.project_path / self.requirements_file).is_file() else ["buildenv"]
-            subprocess.run([str(venv_python), "-m", "pip", "install"] + requirements, cwd=self.project_path, check=True)
+            subprocess.run([str(context.executable), "-m", "pip", "install", "pip"] + requirements + ["--upgrade"], cwd=self.project_path, check=True)
 
             # If we get here, venv is valid
             print(">> Python venv is ready!")
-        else:
-            venv_python = venv_path / self.bin_folder / "python"
 
-        return venv_python
+        return context
 
-    def setup(self) -> int:
+    def setup(self):
         """
         Prepare python venv if not done yet. Then invoke build env manager if not done yet.
         """
 
-        # Prepare python venv
-        venv_python = self.setup_venv_python()
+        # Prepare venv
+        context = self.setup_venv()
 
         # Needs to invoke build env manager?
-        if not (venv_python.parent.parent / BUILDENV_OK).is_file():
+        if not (context.root / BUILDENV_OK).is_file():
             # Delegate to build env manager
             print(">> Loading buildenv manager...")
-            subprocess.run([str(venv_python), "-m", self.build_env_manager], cwd=self.project_path, check=True)
+            subprocess.run([str(context.executable), "-m", self.build_env_manager], cwd=self.project_path, check=True)
 
 
-# Load me script entry point
+# loadme script entry point
 if __name__ == "__main__":  # pragma: no cover
-    sys.exit(LoadMe(Path(__file__).parent).setup())
+    try:
+        LoadMe(Path(__file__).parent.parent).setup()
+        sys.exit(0)
+    except Exception as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        sys.exit(1)

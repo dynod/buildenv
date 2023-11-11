@@ -1,5 +1,5 @@
 """
-Python module for **buildenv** tool.
+Python main module for **buildenv** tool.
 """
 
 import pkg_resources
@@ -20,6 +20,7 @@ except pkg_resources.DistributionNotFound:  # pragma: no cover
     except Exception:
         __version__ = "unknown"
 
-from buildenv.buildenv import BuildEnvManager
+from buildenv.loadme import LoadMe
+from buildenv.manager import BuildEnvManager
 
-__all__ = ("BuildEnvManager",)
+__all__ = ("BuildEnvManager", "LoadMe")
