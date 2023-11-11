@@ -224,5 +224,5 @@ class TestLoadme(TestHelper):
         # Check used commands
         assert received_commands == [
             "git rev-parse --show-toplevel",
-            f"{self.test_folder}/venv/{loader.bin_folder}/python -m buildenv",
+            f"{self.test_folder/'venv'/loader.bin_folder/'python'} -m buildenv",
         ]
