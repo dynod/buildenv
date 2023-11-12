@@ -16,6 +16,7 @@ class TestBuildEnvManager(TestHelper):
         assert m.project_path == self.test_folder
         assert m.venv_path == Path(sys.executable).parent.parent
         assert m.venv_bin_path == Path(sys.executable).parent
+        assert m.relative_venv_bin_path == Path(sys.executable).parent
         assert m.project_script_path == self.test_folder / ".loadme"
         assert m.is_windows == is_windows()
 
@@ -57,6 +58,9 @@ class TestBuildEnvManager(TestHelper):
             assert f.is_file()
         for f in missing_files:
             assert not f.is_file()
+
+        # Verify relative venv path
+        assert m.relative_venv_bin_path == Path("venv") / ("Scripts" if is_windows() else "bin")
 
     def test_generated_files_windows(self, monkeypatch):
         self.check_generated_files(True, monkeypatch)

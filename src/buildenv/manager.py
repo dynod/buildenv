@@ -41,6 +41,13 @@ class BuildEnvManager:
         self.loader = LoadMe(self.project_path)  # Loader instance
         self.is_windows = (self.venv_bin_path / "activate.bat").is_file()  # Is Windows venv?
 
+        # Relative venv bin path for local scripts
+        try:
+            self.relative_venv_bin_path = self.venv_bin_path.relative_to(self.project_path)
+        except ValueError:  # pragma: no cover
+            # Venv is not relative to project; don't care, use the full path
+            self.relative_venv_bin_path = self.venv_bin_path
+
     def setup(self):
         """
         Build environment setup.
@@ -80,7 +87,7 @@ class BuildEnvManager:
                         "comment": _COMMENT_PER_TYPE[target_type],
                         "windowsPython": self.loader.read_config("windowsPython", "python"),
                         "linuxPython": self.loader.read_config("linuxPython", "python3"),
-                        "venvBinPath": str(self.venv_bin_path),
+                        "venvBinPath": str(self.relative_venv_bin_path),
                     }
                 )
                 generated_content += "\n\n"
