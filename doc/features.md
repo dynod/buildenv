@@ -44,3 +44,12 @@ projectA/
      |--+ loadme.*
 ```
 When **loadme** scripts are used in **projectB** or **projectC**, the **venv** of **projectA** will be used.
+
+## Suggested git files
+
+When the build env manager prepares the build environment, it will verify if some recommended git files exist in current project:
+
+* **.gitignore** should be configured so that **venv** and **.loadme** folders are ignored and not pushed to source control
+* **.gitattributes** should be configured to handle platform-specific files with correct line endings:
+  * **.bat** and **.cmd** files must always use **`crlf`** line endings
+  * **.sh** files must always use **`lf`** line endings

@@ -20,7 +20,7 @@ class TestBuildEnvManager(TestHelper):
         assert m.project_script_path == self.test_folder / ".loadme"
         assert m.is_windows == is_windows()
 
-    def check_generated_files(self, with_windows: bool, monkeypatch):
+    def check_generated_files(self, with_windows: bool, with_git_files: bool, monkeypatch):
         def fake_subprocess(args, cwd=None, **kwargs):
             if args[0] == "git":
                 return subprocess.CompletedProcess(args, 1, "".encode())
@@ -30,6 +30,11 @@ class TestBuildEnvManager(TestHelper):
         # - to fake git answer --> returns rc 1
         # - to accept other commands --> returns rc 0
         monkeypatch.setattr(subprocess, "run", fake_subprocess)
+
+        # Fake git files
+        if with_git_files:
+            (self.test_folder / ".gitignore").touch()
+            (self.test_folder / ".gitattributes").touch()
 
         # Fake venv
         loader = LoadMe(self.test_folder)
@@ -63,7 +68,7 @@ class TestBuildEnvManager(TestHelper):
         assert m.relative_venv_bin_path == Path("venv") / ("Scripts" if is_windows() else "bin")
 
     def test_generated_files_windows(self, monkeypatch):
-        self.check_generated_files(True, monkeypatch)
+        self.check_generated_files(True, False, monkeypatch)
 
     def test_generated_files_linux(self, monkeypatch):
-        self.check_generated_files(False, monkeypatch)
+        self.check_generated_files(False, True, monkeypatch)

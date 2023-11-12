@@ -6,20 +6,31 @@ from jinja2 import Template
 
 from buildenv.loadme import BUILDENV_OK, LoadMe
 
+# Path to buildenv module
 _MODULE_FOLDER = Path(__file__).parent
-"""Path to buildenv module"""
 
+# Path to bundled template files
 _TEMPLATES_FOLDER = _MODULE_FOLDER / "templates"
-"""Path to bundled template files"""
 
+# Map of comment styles per file extension
 _COMMENT_PER_TYPE = {".py": "# ", ".sh": "# ", ".cmd": ":: "}
-"""Map of comment styles per file extension"""
 
+# Map of newline styles per file extension
 _NEWLINE_PER_TYPE = {".py": None, ".sh": "\n", ".cmd": "\r\n"}
-"""Map of newline styles per file extension"""
 
+# Map of file header per file extension
 _HEADERS_PER_TYPE = {".py": "", ".sh": "#!/usr/bin/bash\n", ".cmd": "@ECHO OFF\n"}
-"""Map of file header per file extension"""
+
+# Recommended git files
+_RECOMMENDED_GIT_FILES = {
+    ".gitignore": """/venv/
+/.loadme/
+""",
+    ".gitattributes": """*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+""",
+}
 
 
 class BuildEnvManager:
@@ -55,10 +66,12 @@ class BuildEnvManager:
         This will:
 
         * copy/update loadme scripts in current project
+        * verify recommended git files
         * invoke extra environment initializers defined by sub-classes
         * mark buildenv as ready
         """
         self._update_scripts()
+        self._verify_git_files()
         self._make_ready()
 
     def _render_template(self, template: List[Path], target: Path):
@@ -110,8 +123,17 @@ class BuildEnvManager:
             # Only if venv files are generated for Windows
             self._render_template(_TEMPLATES_FOLDER / "activate.cmd.jinja", self.project_script_path / "activate.cmd")
 
+    def _verify_git_files(self):
+        """
+        Check for recommended git files, and display warning if they're missing
+        """
+        for file, content in _RECOMMENDED_GIT_FILES.items():
+            if not (self.project_path / file).is_file():
+                print(f">> WARNING: missing {file} file in project", "   Recommended content is:", "", content, sep="\n", file=sys.stderr)
+
     def _make_ready(self):
         """
         Just touch "buildenv ready" file
         """
+        print(">> Build venv is ready!")
         (self.venv_path / BUILDENV_OK).touch()
