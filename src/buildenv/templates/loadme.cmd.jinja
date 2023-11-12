@@ -1,0 +1,5 @@
+:: Wrap to loadme script
+{{ windowsPython }} loadme.py
+
+:: Load venv on success
+if %ERRORLEVEL% EQU 0 .loadme\activate.cmd

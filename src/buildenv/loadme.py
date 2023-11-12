@@ -158,6 +158,7 @@ class LoadMe:
 
             # If we get here, venv is valid
             print(">> Python venv is ready!")
+            (self.venv_path / VENV_OK).touch()
 
         return context
 

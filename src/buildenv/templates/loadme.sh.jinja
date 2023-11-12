@@ -1,0 +1,5 @@
+# Wrap to loadme script
+if test -f /git-bash.exe; then {{ windowsPython }} loadme.py; else {{ linuxPython }} loadme.py; fi
+
+# Load venv on success
+if test $? -eq 0; then source .loadme/activate.sh; fi

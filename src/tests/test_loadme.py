@@ -161,6 +161,9 @@ class TestLoadme(TestHelper):
         # - to accept other commands --> returns rc 0
         monkeypatch.setattr(subprocess, "run", fake_subprocess)
 
+        # Check venv doesn't exist yet
+        assert not (self.test_folder / "venv" / "venvOK").is_file()
+
         # Create venv
         loader = LoadMe(self.test_folder)
         c = loader.setup_venv()
@@ -176,6 +179,9 @@ class TestLoadme(TestHelper):
                 f"{self.venv_exe} -m pip install pip " + requirements + " --upgrade",
             ],
         )
+
+        # Check venv is marked as created
+        assert (self.test_folder / "venv" / "venvOK").is_file()
 
     def test_setup_venv_create_empty(self, monkeypatch):
         # Check with empty folder
