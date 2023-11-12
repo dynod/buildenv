@@ -142,7 +142,9 @@ class LoadMe:
         missing_venv = venv_path is None
 
         # Create env builder and remember context
-        env_builder = EnvBuilder(clear=missing_venv and self.venv_path.is_dir(), symlinks=True, with_pip=True, prompt=self.read_config("prompt", "buildenv"))
+        env_builder = EnvBuilder(
+            clear=missing_venv and self.venv_path.is_dir(), symlinks=os.name != "nt", with_pip=True, prompt=self.read_config("prompt", "buildenv")
+        )
         context = EnvContext(env_builder.ensure_directories(self.venv_path if missing_venv else venv_path))
 
         if missing_venv:
