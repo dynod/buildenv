@@ -9,7 +9,7 @@ import pytest
 from nmk.utils import is_windows
 from pytest_multilog import TestHelper
 
-from buildenv.loadme import BUILDENV_FOLDER, BUILDENV_OK, VENV_OK, LoadMe
+from buildenv.loadme import BUILDENV_OK, VENV_OK, LoadMe
 
 # Expected bin folder in venv
 BIN_FOLDER = "Scripts" if is_windows() else "bin"
@@ -51,15 +51,13 @@ class TestLoadme(TestHelper):
 
     def prepare_config(self, name: str):
         # Create buildenv folder, and copy template config file
-        buildenv = self.test_folder / BUILDENV_FOLDER
-        buildenv.mkdir()
-        shutil.copyfile(Path(__file__).parent / "templates" / name, buildenv / "loadme.cfg")
+        shutil.copyfile(Path(__file__).parent / "templates" / name, self.test_folder / "loadme.cfg")
 
     def test_loadme_class(self):
         # Verify default loadme attributes
         loader = LoadMe(self.test_folder)
         assert loader.project_path == self.test_folder
-        assert loader.config_file == self.test_folder / BUILDENV_FOLDER / "loadme.cfg"
+        assert loader.config_file == self.test_folder / "loadme.cfg"
         assert loader.config_parser is None
         assert loader.venv_folder == "venv"
         assert loader.venv_path == self.test_folder / "venv"

@@ -4,7 +4,6 @@ from pathlib import Path
 from pytest_multilog import TestHelper
 
 from buildenv.__main__ import BuildEnvManager
-from buildenv.loadme import BUILDENV_FOLDER
 
 
 class TestBuildEnvManager(TestHelper):
@@ -12,13 +11,12 @@ class TestBuildEnvManager(TestHelper):
         # Test manager attributes
         m = BuildEnvManager(self.test_folder)
         assert m.project_path == self.test_folder
-        assert m.buildenv_path == self.test_folder / BUILDENV_FOLDER
         assert m.venv_path == Path(sys.executable).parent.parent
 
     def test_generated_files(self):
         # List generated file + verify they don't exist yet
         m = BuildEnvManager(self.test_folder)
-        generated_files = [m.buildenv_path / "loadme.py"]
+        generated_files = [self.test_folder / "loadme.py"]
         for f in generated_files:
             assert not f.is_file()
 

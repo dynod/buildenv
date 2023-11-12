@@ -4,7 +4,7 @@ Python module for **loadme** script.
 This module is standalone (i.e. it doesn't have any dependencies out of the raw python SDK)
 and is designed to be:
 
-- copied in project :data:`BUILDENV_FOLDER` sub-folder
+- copied in project root folder
 - kept in source control, so that the script is ready to run just after project clone
 """
 
@@ -15,9 +15,6 @@ from configparser import ConfigParser
 from pathlib import Path
 from types import SimpleNamespace
 from venv import EnvBuilder
-
-BUILDENV_FOLDER = ".buildenv"
-"""Build env sub-folder in project"""
 
 VENV_OK = "venvOK"
 """Valid venv tag file"""
@@ -63,13 +60,12 @@ class LoadMe:
 
     def __init__(self, project_path: Path):
         self.project_path = project_path  # Path to current project
-        self.buildenv_path = project_path / BUILDENV_FOLDER  # Path to buildenv subfolder
-        self.config_file = self.buildenv_path / "loadme.cfg"  # Path to config file (in project folder)
+        self.config_file = self.project_path / "loadme.cfg"  # Path to config file (in project folder)
         self.config_parser = None  # Config parser object (lazy init)
         self.is_ci = "CI" in os.environ and len(os.environ["CI"]) > 0  # Check if running in CI
-        self.venv_folder = self.read_config("venv_folder", "venv")  # venv folder name
-        self.venv_path = self.project_path / self.venv_folder  # default venv path for current project
-        self.requirements_file = self.read_config("requirements", "requirements.txt")  # requirements file name
+        self.venv_folder = self.read_config("venv_folder", "venv")  # Venv folder name
+        self.venv_path = self.project_path / self.venv_folder  # Venv path for current project
+        self.requirements_file = self.read_config("requirements", "requirements.txt")  # Requirements file name
         self.build_env_manager = self.read_config("build_env_manager", "buildenv")  # Python module for build env manager
 
     def read_config(self, name: str, default: str) -> str:
@@ -183,7 +179,7 @@ class LoadMe:
 # loadme script entry point
 if __name__ == "__main__":  # pragma: no cover
     try:
-        LoadMe(Path(__file__).parent.parent).setup()
+        LoadMe(Path(__file__).parent).setup()
         sys.exit(0)
     except Exception as e:
         print(f"ERROR: {e}", file=sys.stderr)

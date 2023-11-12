@@ -4,8 +4,6 @@ from typing import List
 
 from jinja2 import Template
 
-from buildenv.loadme import BUILDENV_FOLDER
-
 MODULE_FOLDER = Path(__file__).parent
 """Path to buildenv module"""
 
@@ -28,7 +26,6 @@ class BuildEnvManager:
 
     def __init__(self, project_path: Path):
         self.project_path = project_path  # Current project path
-        self.buildenv_path = project_path / BUILDENV_FOLDER  # Current project buildenv path
         self.venv_path = Path(sys.executable).parent.parent  # Current project venv path
 
     def setup(self):
@@ -72,8 +69,5 @@ class BuildEnvManager:
         Copy/update loadme scripts in project folder
         """
 
-        # Prepare buildenv path
-        self.buildenv_path.mkdir(exist_ok=True)
-
         # Generate python module
-        self._render_template(MODULE_FOLDER / "loadme.py", self.buildenv_path / "loadme.py")
+        self._render_template(MODULE_FOLDER / "loadme.py", self.project_path / "loadme.py")

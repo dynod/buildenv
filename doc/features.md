@@ -1,6 +1,15 @@
 # Features
 
-The purpose of the **`buildenv`** tool is to help projects to setup easily a build environment, just after clone, with minimal dependencies (i.e. only [**git**](https://git-scm.com/) and [**python**](https://www.python.org/)).
+The purpose of the **`buildenv`** tool is to help projects to setup easily a build environment (based on [Python virtual environment](https://docs.python.org/3/library/venv.html), or "**venv**"), just after clone, with minimal dependencies (i.e. only [**git**](https://git-scm.com/) and [**python**](https://www.python.org/)).
+
+## Simple setup
+
+Any project can be simply setup to use **`buildenv`** by using a simple standalone python script in the project root folder:
+1. download **loadme** script (python version) -- `wget https://raw.githubusercontent.com/dynod/buildenv/main/src/buildenv/loadme.py`
+1. launch it:
+    * on Linux: `python3 loadme.py`
+    * on Windows: `python loadme.py`
+1. you're done, the project now also embeds **loadme** shell scripts for a more convenient day to day use
 
 ## "loadme" scripts
 
@@ -12,3 +21,26 @@ In other words, the typical project setup scenario with **`buildenv`** is:
     * on Linux: `source loadme.sh`
     * on Windows: `loadme.cmd`
 1. build the project
+
+## Shared venv
+
+You may work on multiple projects, and want to avoid to setup multiple build environments for each project.
+
+The **loadme** script automatically looks up in parent git folders to find an existing **venv**.
+If it finds one, it loads it instead of creating a new one in the current project folder.
+
+Example layout:
+```
+projectA/
+  + .git/
+  + venv/
+  + loadme.*
+  + projectB/
+  |--+ .git/
+  |--+ loadme.*
+  + subfolder/
+  |--+ projectC/
+     |--+ .git/
+     |--+ loadme.*
+```
+When **loadme** scripts are used in **projectB** or **projectC**, the **venv** of **projectA** will be used.
