@@ -140,7 +140,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             os.environ["SHELL"] = old_shell_value
 
     def test_setup_windows(self, monkeypatch, fake_windows_shell):
-        self.check_setup(True, False, "cmd /k .buildenv/shell.cmd", monkeypatch)
+        self.check_setup(True, False, f"cmd /k {Path('.buildenv')/'shell.cmd'}", monkeypatch)
 
     def test_setup_linux(self, monkeypatch, fake_linux_shell):
         self.check_setup(False, True, "/bin/bash --rcfile .buildenv/shell.sh", monkeypatch)
