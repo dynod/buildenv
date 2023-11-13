@@ -126,8 +126,11 @@ class TestBuildEnvManager(BuildEnvTestHelper):
     @pytest.fixture
     def fake_windows_shell(self):
         # Fake SHELL environment
-        old_shell_value = os.environ["SHELL"] if "SHELL" in os.environ else None
-        del os.environ["SHELL"]
+        if "SHELL" in os.environ:
+            old_shell_value = os.environ["SHELL"]
+            del os.environ["SHELL"]
+        else:
+            old_shell_value = None
 
         # yield to test
         yield
