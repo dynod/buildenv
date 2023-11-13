@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 from typing import List
@@ -43,8 +44,9 @@ class BuildEnvManager:
 
     def __init__(self, project_path: Path, venv_bin_path: Path = None):
         # Deal with venv paths
-        self.venv_bin_path = venv_bin_path if venv_bin_path is not None else Path(sys.executable).parent
-        self.venv_path = self.venv_bin_path.parent
+        self.venv_bin_path = venv_bin_path if venv_bin_path is not None else Path(sys.executable).parent  # Bin path
+        self.venv_path = self.venv_bin_path.parent  # Venv path
+        self.venv_root_path = self.venv_path.parent  # Parent project path (may be the current one or a parent folder one)
 
         # Other initializations
         self.project_path = project_path  # Current project path
@@ -52,12 +54,15 @@ class BuildEnvManager:
         self.loader = LoadMe(self.project_path)  # Loader instance
         self.is_windows = (self.venv_bin_path / "activate.bat").is_file()  # Is Windows venv?
 
-        # Relative venv bin path for local scripts
         try:
+            # Relative venv bin path string for local scripts
             self.relative_venv_bin_path = self.venv_bin_path.relative_to(self.project_path)
-        except ValueError:  # pragma: no cover
-            # Venv is not relative to project; don't care, use the full path
-            self.relative_venv_bin_path = self.venv_bin_path
+        except ValueError:
+            # Venv is not relative to current project: reverse logic
+            upper_levels_count = len(self.project_path.relative_to(self.venv_root_path).parts)
+            self.relative_venv_bin_path = Path(os.pardir)
+            for part in [os.pardir] * (upper_levels_count - 1) + [self.venv_path.name, self.venv_bin_path.name]:
+                self.relative_venv_bin_path /= part
 
     def setup(self):
         """
@@ -100,7 +105,8 @@ class BuildEnvManager:
                         "comment": _COMMENT_PER_TYPE[target_type],
                         "windowsPython": self.loader.read_config("windowsPython", "python"),
                         "linuxPython": self.loader.read_config("linuxPython", "python3"),
-                        "venvBinPath": str(self.relative_venv_bin_path),
+                        "windowsVenvBinPath": str(self.relative_venv_bin_path).replace("/", "\\"),
+                        "linuxVenvBinPath": str(self.relative_venv_bin_path).replace("\\", "/"),
                     }
                 )
                 generated_content += "\n\n"
