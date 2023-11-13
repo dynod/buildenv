@@ -7,7 +7,7 @@ from typing import List
 import pytest
 from nmk.utils import is_windows
 
-from buildenv.loadme import BUILDENV_OK, VENV_OK, LoadMe
+from buildenv.loadme import VENV_OK, LoadMe
 from tests.commons import BuildEnvTestHelper
 
 # Expected bin folder in venv
@@ -202,29 +202,6 @@ class TestLoadme(BuildEnvTestHelper):
         c = loader.setup_venv()
         self.check_strings(str(c.executable), self.wrap_exe((Path(__file__).parent.parent.parent / "venv" / BIN_FOLDER / PYTHON_EXE).as_posix()))
         assert not (self.test_folder / "venv").is_dir()
-
-    def test_setup_no_manager(self, monkeypatch):
-        received_commands = []
-
-        def fake_subprocess(args, capture_output=True, cwd=None, check=False):
-            received_commands.append(" ".join(args))
-            return subprocess.CompletedProcess(args, 0, str(cwd).encode())
-
-        # Patch subprocess to fake all commands
-        monkeypatch.setattr(subprocess, "run", fake_subprocess)
-
-        # Fake build env OK state
-        fake_venv = self.test_folder / "venv"
-        fake_venv.mkdir()
-        (fake_venv / VENV_OK).touch()
-        (fake_venv / BUILDENV_OK).touch()
-
-        # Setup (should do nothing)
-        loader = LoadMe(self.test_folder)
-        loader.setup()
-
-        # Check used commands
-        assert received_commands == ["git rev-parse --show-toplevel"]
 
     def test_setup_with_manager(self, monkeypatch):
         received_commands = []

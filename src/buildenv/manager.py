@@ -5,7 +5,10 @@ from typing import List
 
 from jinja2 import Template
 
-from buildenv.loadme import BUILDENV_OK, LoadMe
+from buildenv.loadme import LoadMe
+
+BUILDENV_OK = "buildenvOK"
+"""Valid buildenv tag file"""
 
 # Path to buildenv module
 _MODULE_FOLDER = Path(__file__).parent
@@ -68,16 +71,19 @@ class BuildEnvManager:
         """
         Build environment setup.
 
-        This will:
+        This setup always generates loadme scripts in current project folder.
 
-        * copy/update loadme scripts in current project
+        If the buildenv is not marked as ready yet, this setup also:
+
         * verify recommended git files
         * invoke extra environment initializers defined by sub-classes
         * mark buildenv as ready
         """
         self._update_scripts()
-        self._verify_git_files()
-        self._make_ready()
+        if not ((self.venv_path / BUILDENV_OK)).is_file():
+            print(">> Customizing buildenv...")
+            self._verify_git_files()
+            self._make_ready()
 
     def _render_template(self, template: List[Path], target: Path):
         """

@@ -19,9 +19,6 @@ from venv import EnvBuilder
 VENV_OK = "venvOK"
 """Valid venv tag file"""
 
-BUILDENV_OK = "buildenvOK"
-"""Valid buildenv tag file"""
-
 
 class EnvContext:
     """
@@ -163,17 +160,14 @@ class LoadMe:
 
     def setup(self):
         """
-        Prepare python venv if not done yet. Then invoke build env manager if not done yet.
+        Prepare python venv if not done yet. Then invoke build env manager.
         """
 
         # Prepare venv
         context = self.setup_venv()
 
-        # Needs to invoke build env manager?
-        if not (context.root / BUILDENV_OK).is_file():
-            # Delegate to build env manager
-            print(">> Loading buildenv manager...")
-            subprocess.run([str(context.executable), "-m", self.build_env_manager], cwd=self.project_path, check=True)
+        # Delegate to build env manager
+        subprocess.run([str(context.executable), "-m", self.build_env_manager], cwd=self.project_path, check=True)
 
 
 # loadme script entry point

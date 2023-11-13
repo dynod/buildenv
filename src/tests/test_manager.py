@@ -6,6 +6,7 @@ from nmk.utils import is_windows
 
 from buildenv.__main__ import BuildEnvManager
 from buildenv.loadme import LoadMe
+from buildenv.manager import BUILDENV_OK
 from tests.commons import BuildEnvTestHelper
 
 # Venv bin directory
@@ -52,38 +53,48 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         m = BuildEnvManager(self.test_folder, self.test_folder / "venv" / VENV_BIN)
         m.is_windows = with_windows  # Force windows files behavior
         generated_files = [
-            self.test_folder / "venv" / "buildenvOK",
+            self.test_folder / "venv" / BUILDENV_OK,
             self.test_folder / "loadme.py",
             self.test_folder / "loadme.sh",
             self.test_folder / "loadme.cmd",
             activate_sh,
         ] + ([activate_cmd] if with_windows else [])
         missing_files = [] if with_windows else [activate_cmd]
-        for f in generated_files + missing_files:
-            assert not f.is_file()
 
-        # Call manager setup
-        m.setup()
+        # Loop to verify files are created again even with buildenvOK
+        for i in range(2):
+            # Check files are missing
+            for f in generated_files + missing_files:
+                assert not f.is_file()
 
-        # Verify generated + missing files
-        for f in generated_files:
-            assert f.is_file()
-        for f in missing_files:
-            assert not f.is_file()
+            # Call manager setup
+            m.setup()
 
-        # Verify relative venv path
-        assert m.relative_venv_bin_path == Path("venv") / VENV_BIN
+            # Verify generated + missing files
+            for f in generated_files:
+                assert f.is_file()
+            for f in missing_files:
+                assert not f.is_file()
 
-        # Verify activate.sh file content
-        with activate_sh.open() as f:
-            lines = [line.strip("\r\n") for line in f.readlines()]
-        assert f"source venv/{VENV_BIN}/activate" in lines
+            # Verify relative venv path
+            assert m.relative_venv_bin_path == Path("venv") / VENV_BIN
 
-        # Verify activate.cmd file content
-        if activate_cmd.is_file():
-            with activate_cmd.open() as f:
+            # Verify activate.sh file content
+            with activate_sh.open() as f:
                 lines = [line.strip("\r\n") for line in f.readlines()]
-            assert f"venv\\{VENV_BIN}\\activate.bat" in lines
+            assert f"source venv/{VENV_BIN}/activate" in lines
+
+            # Verify activate.cmd file content
+            if activate_cmd.is_file():
+                with activate_cmd.open() as f:
+                    lines = [line.strip("\r\n") for line in f.readlines()]
+                assert f"venv\\{VENV_BIN}\\activate.bat" in lines
+
+            # First loop: clean before loop
+            if i == 0:
+                generated_files.remove(self.test_folder / "venv" / BUILDENV_OK)
+                for f in generated_files:
+                    f.unlink()
 
     def test_generated_files_windows(self, monkeypatch):
         self.check_generated_files(True, False, monkeypatch)
