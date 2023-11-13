@@ -35,16 +35,12 @@ class EnvContext:
 
     @property
     def root(self) -> Path:
-        """
-        Path to environment root folder
-        """
+        """Path to environment root folder"""
         return self.context.env_dir
 
     @property
     def executable(self) -> Path:
-        """
-        Path to python executable in environment
-        """
+        """Path to python executable in environment"""
         return self.root / self.context.bin_name / self.context.python_exe
 
 
@@ -110,9 +106,10 @@ class LoadMe:
             if cp.returncode == 0:
                 # Git root folder found: check for venv
                 candidate_path = Path(cp.stdout.decode().splitlines()[0].strip())
-                if (candidate_path / self.venv_folder / VENV_OK).is_file():
+                candidate_loader = LoadMe(candidate_path)
+                if (candidate_loader.venv_path / VENV_OK).is_file():
                     # Venv found!
-                    return candidate_path / self.venv_folder
+                    return candidate_loader.venv_path
 
                 # Otherwise, try parent folder
                 if len(candidate_path.parts) > 1:

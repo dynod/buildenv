@@ -3,16 +3,16 @@ import sys
 from pathlib import Path
 
 from nmk.utils import is_windows
-from pytest_multilog import TestHelper
 
 from buildenv.__main__ import BuildEnvManager
 from buildenv.loadme import LoadMe
+from tests.commons import BuildEnvTestHelper
 
 # Venv bin directory
 VENV_BIN = "Scripts" if is_windows() else "bin"
 
 
-class TestBuildEnvManager(TestHelper):
+class TestBuildEnvManager(BuildEnvTestHelper):
     def test_attributes(self):
         # Test manager attributes
         m = BuildEnvManager(self.test_folder)

@@ -1,15 +1,14 @@
 import os
 import re
-import shutil
 import subprocess
 from pathlib import Path
 from typing import List
 
 import pytest
 from nmk.utils import is_windows
-from pytest_multilog import TestHelper
 
 from buildenv.loadme import BUILDENV_OK, VENV_OK, LoadMe
+from tests.commons import BuildEnvTestHelper
 
 # Expected bin folder in venv
 BIN_FOLDER = "Scripts" if is_windows() else "bin"
@@ -18,7 +17,7 @@ BIN_FOLDER = "Scripts" if is_windows() else "bin"
 PYTHON_EXE = "python(.exe)?" if is_windows() else "python[0-9.]*"
 
 
-class TestLoadme(TestHelper):
+class TestLoadme(BuildEnvTestHelper):
     @pytest.fixture
     def fake_ci(self):
         # Fake CI environment
@@ -48,10 +47,6 @@ class TestLoadme(TestHelper):
             os.environ["CI"] = old_ci_value
         else:
             del os.environ["CI"]
-
-    def prepare_config(self, name: str):
-        # Create buildenv folder, and copy template config file
-        shutil.copyfile(Path(__file__).parent / "templates" / name, self.test_folder / "loadme.cfg")
 
     def test_loadme_class(self):
         # Verify default loadme attributes
@@ -258,3 +253,21 @@ class TestLoadme(TestHelper):
                 f"{self.venv_exe} -m buildenv",
             ],
         )
+
+    def test_generated_files_parent_custom_venv(self, monkeypatch):
+        # Prepare fake parent venv
+        parent_venv = self.test_folder / "MyVenv"
+        parent_venv.mkdir()
+        (parent_venv / VENV_OK).touch()
+        self.prepare_config("loadme-local.cfg")
+
+        # Prepare child project
+        project = self.test_folder / "subproject"
+        project.mkdir()
+
+        # Patch subprocess to fake git answer --> returns current path and rc 0
+        monkeypatch.setattr(subprocess, "run", lambda args, capture_output, cwd, check: subprocess.CompletedProcess(args, 0, str(cwd).encode()))
+
+        # Launch loader script
+        loader = LoadMe(project)
+        assert loader.find_venv() == parent_venv
