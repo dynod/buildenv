@@ -5,7 +5,7 @@ from pathlib import Path
 from nmk.utils import is_windows
 
 from buildenv.__main__ import BuildEnvManager
-from buildenv.loadme import LoadMe
+from buildenv.loader import BuildEnvLoader
 from buildenv.manager import BUILDENV_OK
 from tests.commons import BuildEnvTestHelper
 
@@ -21,7 +21,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         assert m.venv_path == Path(sys.executable).parent.parent
         assert m.venv_bin_path == Path(sys.executable).parent
         assert (self.test_folder / m.relative_venv_bin_path).resolve() == Path(sys.executable).parent
-        assert m.project_script_path == self.test_folder / ".loadme"
+        assert m.project_script_path == self.test_folder / ".buildenv"
         assert m.is_windows == is_windows()
 
     def check_generated_files(self, with_windows: bool, with_git_files: bool, monkeypatch):
@@ -41,22 +41,22 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             (self.test_folder / ".gitattributes").touch()
 
         # Fake venv
-        loader = LoadMe(self.test_folder)
+        loader = BuildEnvLoader(self.test_folder)
         loader.setup()
         assert (self.test_folder / "venv" / "venvOK").is_file()
 
         # Prepare file paths
-        activate_sh = self.test_folder / ".loadme" / "activate.sh"
-        activate_cmd = self.test_folder / ".loadme" / "activate.cmd"
+        activate_sh = self.test_folder / ".buildenv" / "activate.sh"
+        activate_cmd = self.test_folder / ".buildenv" / "activate.cmd"
 
         # List generated file + verify they don't exist yet
         m = BuildEnvManager(self.test_folder, self.test_folder / "venv" / VENV_BIN)
         m.is_windows = with_windows  # Force windows files behavior
         generated_files = [
             self.test_folder / "venv" / BUILDENV_OK,
-            self.test_folder / "loadme.py",
-            self.test_folder / "loadme.sh",
-            self.test_folder / "loadme.cmd",
+            self.test_folder / "buildenv.py",
+            self.test_folder / "buildenv.sh",
+            self.test_folder / "buildenv.cmd",
             activate_sh,
         ] + ([activate_cmd] if with_windows else [])
         missing_files = [] if with_windows else [activate_cmd]

@@ -5,7 +5,7 @@ from typing import List
 
 from jinja2 import Template
 
-from buildenv.loadme import LoadMe
+from buildenv.loader import BuildEnvLoader
 
 BUILDENV_OK = "buildenvOK"
 """Valid buildenv tag file"""
@@ -28,7 +28,7 @@ _HEADERS_PER_TYPE = {".py": "", ".sh": "#!/usr/bin/bash\n", ".cmd": "@ECHO OFF\n
 # Recommended git files
 _RECOMMENDED_GIT_FILES = {
     ".gitignore": """/venv/
-/.loadme/
+/.buildenv/
 """,
     ".gitattributes": """*.sh text eol=lf
 *.bat text eol=crlf
@@ -53,8 +53,8 @@ class BuildEnvManager:
 
         # Other initializations
         self.project_path = project_path  # Current project path
-        self.project_script_path = self.project_path / ".loadme"  # Current project generated scripts path
-        self.loader = LoadMe(self.project_path)  # Loader instance
+        self.project_script_path = self.project_path / ".buildenv"  # Current project generated scripts path
+        self.loader = BuildEnvLoader(self.project_path)  # Loader instance
         self.is_windows = (self.venv_bin_path / "activate.bat").is_file()  # Is Windows venv?
 
         try:
@@ -71,7 +71,7 @@ class BuildEnvManager:
         """
         Build environment setup.
 
-        This setup always generates loadme scripts in current project folder.
+        This setup always generates loading scripts in current project folder.
 
         If the buildenv is not marked as ready yet, this setup also:
 
@@ -123,13 +123,13 @@ class BuildEnvManager:
 
     def _update_scripts(self):
         """
-        Copy/update loadme scripts in project folder
+        Copy/update loading scripts in project folder
         """
 
         # Generate all scripts
-        self._render_template(_MODULE_FOLDER / "loadme.py", self.project_path / "loadme.py")
-        self._render_template(_TEMPLATES_FOLDER / "loadme.sh.jinja", self.project_path / "loadme.sh")
-        self._render_template(_TEMPLATES_FOLDER / "loadme.cmd.jinja", self.project_path / "loadme.cmd")
+        self._render_template(_MODULE_FOLDER / "loader.py", self.project_path / "buildenv.py")
+        self._render_template(_TEMPLATES_FOLDER / "buildenv.sh.jinja", self.project_path / "buildenv.sh")
+        self._render_template(_TEMPLATES_FOLDER / "buildenv.cmd.jinja", self.project_path / "buildenv.cmd")
         self._render_template(_TEMPLATES_FOLDER / "activate.sh.jinja", self.project_script_path / "activate.sh")
         if self.is_windows:
             # Only if venv files are generated for Windows

@@ -7,7 +7,7 @@ from typing import List
 import pytest
 from nmk.utils import is_windows
 
-from buildenv.loadme import VENV_OK, LoadMe
+from buildenv.loader import VENV_OK, BuildEnvLoader
 from tests.commons import BuildEnvTestHelper
 
 # Expected bin folder in venv
@@ -17,7 +17,7 @@ BIN_FOLDER = "Scripts" if is_windows() else "bin"
 PYTHON_EXE = "python(.exe)?" if is_windows() else "python[0-9.]*"
 
 
-class TestLoadme(BuildEnvTestHelper):
+class TestBuildEnvLoader(BuildEnvTestHelper):
     @pytest.fixture
     def fake_ci(self):
         # Fake CI environment
@@ -48,43 +48,43 @@ class TestLoadme(BuildEnvTestHelper):
         else:
             del os.environ["CI"]
 
-    def test_loadme_class(self):
-        # Verify default loadme attributes
-        loader = LoadMe(self.test_folder)
+    def test_loader_class(self):
+        # Verify default attributes
+        loader = BuildEnvLoader(self.test_folder)
         assert loader.project_path == self.test_folder
-        assert loader.config_file == self.test_folder / "loadme.cfg"
+        assert loader.config_file == self.test_folder / "buildenv.cfg"
         assert loader.config_parser is None
         assert loader.venv_folder == "venv"
         assert loader.venv_path == self.test_folder / "venv"
         assert loader.requirements_file == "requirements.txt"
         assert loader.build_env_manager == "buildenv"
 
-    def test_loadme_local_config(self, fake_local):
+    def test_loader_local_config(self, fake_local):
         # Populate a config file with some local profile values
-        self.prepare_config("loadme-local.cfg")
-        loader = LoadMe(self.test_folder)
+        self.prepare_config("buildenv-local.cfg")
+        loader = BuildEnvLoader(self.test_folder)
         assert loader.config_parser is not None
         assert loader.venv_folder == "MyVenv"
         assert loader.build_env_manager == "buildenv"
         assert loader.requirements_file == "requirements.txt"
 
-    def test_loadme_ci_config(self, fake_ci):
+    def test_loader_ci_config(self, fake_ci):
         # Populate a config file with some ci profile values
-        self.prepare_config("loadme-ci.cfg")
-        loader = LoadMe(self.test_folder)
+        self.prepare_config("buildenv-ci.cfg")
+        loader = BuildEnvLoader(self.test_folder)
         assert loader.config_parser is not None
         assert loader.venv_folder == "MyCiVenv"
         assert loader.build_env_manager == "buildenv-foo"
         assert loader.requirements_file == "requirements.txt"
 
-    def test_loadme_find_real_venv(self):
+    def test_loader_find_real_venv(self):
         # Test for current project venv detection
-        loader = LoadMe(self.test_folder)
+        loader = BuildEnvLoader(self.test_folder)
         v = loader.find_venv()
         assert v == Path(__file__).parent.parent.parent / "venv"
         assert v.is_dir()
 
-    def test_loadme_find_parent_venv(self, monkeypatch):
+    def test_loader_find_parent_venv(self, monkeypatch):
         # Patch subprocess to fake git answer --> returns parent path and rc 0
         monkeypatch.setattr(subprocess, "run", lambda args, capture_output, cwd, check: subprocess.CompletedProcess(args, 0, str(cwd).encode()))
 
@@ -100,20 +100,20 @@ class TestLoadme(BuildEnvTestHelper):
         level3.mkdir()
 
         # Test for venv detection with fake parent repo path
-        loader = LoadMe(level3)
+        loader = BuildEnvLoader(level3)
         v = loader.find_venv()
         assert v == level1_venv
 
-    def test_loadme_find_parent_venv_unknown(self, monkeypatch):
+    def test_loader_find_parent_venv_unknown(self, monkeypatch):
         # Patch subprocess to fake git answer --> returns parent path and rc 0
         monkeypatch.setattr(subprocess, "run", lambda args, capture_output, cwd, check: subprocess.CompletedProcess(args, 0, str(cwd).encode()))
 
         # Can't find venv from fake path
-        loader = LoadMe(Path(("Z:" if is_windows() else "") + "/some/unknown/path"))
+        loader = BuildEnvLoader(Path(("Z:" if is_windows() else "") + "/some/unknown/path"))
         v = loader.find_venv()
         assert v is None
 
-    def test_loadme_find_venv_git_error(self, monkeypatch):
+    def test_loader_find_venv_git_error(self, monkeypatch):
         # Patch subprocess to fake git answer --> returns rc 1
         monkeypatch.setattr(subprocess, "run", lambda args, capture_output, cwd, check: subprocess.CompletedProcess(args, 1, str(cwd).encode()))
 
@@ -123,7 +123,7 @@ class TestLoadme(BuildEnvTestHelper):
         (fake_venv / VENV_OK).touch()
 
         # Find venv when project path is not a git folder
-        loader = LoadMe(self.test_folder)
+        loader = BuildEnvLoader(self.test_folder)
         v = loader.find_venv()
         assert v == fake_venv
 
@@ -160,7 +160,7 @@ class TestLoadme(BuildEnvTestHelper):
         assert not (self.test_folder / "venv" / "venvOK").is_file()
 
         # Create venv
-        loader = LoadMe(self.test_folder)
+        loader = BuildEnvLoader(self.test_folder)
         c = loader.setup_venv()
         assert c.root == self.test_folder / "venv"
         self.check_strings(str(c.executable), self.venv_exe)
@@ -198,7 +198,7 @@ class TestLoadme(BuildEnvTestHelper):
 
     def test_setup_venv_project_path(self):
         # Check with current project venv
-        loader = LoadMe(self.test_folder)
+        loader = BuildEnvLoader(self.test_folder)
         c = loader.setup_venv()
         self.check_strings(str(c.executable), self.wrap_exe((Path(__file__).parent.parent.parent / "venv" / BIN_FOLDER / PYTHON_EXE).as_posix()))
         assert not (self.test_folder / "venv").is_dir()
@@ -219,7 +219,7 @@ class TestLoadme(BuildEnvTestHelper):
         (fake_venv / VENV_OK).touch()
 
         # Setup (should do nothing)
-        loader = LoadMe(self.test_folder)
+        loader = BuildEnvLoader(self.test_folder)
         loader.setup()
 
         # Check used commands
@@ -236,7 +236,7 @@ class TestLoadme(BuildEnvTestHelper):
         parent_venv = self.test_folder / "MyVenv"
         parent_venv.mkdir()
         (parent_venv / VENV_OK).touch()
-        self.prepare_config("loadme-local.cfg")
+        self.prepare_config("buildenv-local.cfg")
 
         # Prepare child project
         project = self.test_folder / "subproject"
@@ -246,5 +246,5 @@ class TestLoadme(BuildEnvTestHelper):
         monkeypatch.setattr(subprocess, "run", lambda args, capture_output, cwd, check: subprocess.CompletedProcess(args, 0, str(cwd).encode()))
 
         # Launch loader script
-        loader = LoadMe(project)
+        loader = BuildEnvLoader(project)
         assert loader.find_venv() == parent_venv

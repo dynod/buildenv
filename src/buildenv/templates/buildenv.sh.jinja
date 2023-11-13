@@ -1,0 +1,5 @@
+# Wrap to buildenv script
+if test -f /git-bash.exe; then {{ windowsPython }} buildenv.py; else {{ linuxPython }} buildenv.py; fi
+
+# Load venv on success
+if test $? -eq 0; then source .buildenv/activate.sh; fi

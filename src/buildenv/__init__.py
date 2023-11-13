@@ -20,7 +20,7 @@ except pkg_resources.DistributionNotFound:  # pragma: no cover
     except Exception:
         __version__ = "unknown"
 
-from buildenv.loadme import LoadMe
+from buildenv.loader import BuildEnvLoader
 from buildenv.manager import BuildEnvManager
 
-__all__ = ("BuildEnvManager", "LoadMe")
+__all__ = ("BuildEnvManager", "BuildEnvLoader")

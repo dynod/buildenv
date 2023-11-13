@@ -1,5 +1,5 @@
 """
-Python module for **loadme** script.
+Python module for loading script.
 
 This module is standalone (i.e. it doesn't have any dependencies out of the raw python SDK)
 and is designed to be:
@@ -41,19 +41,19 @@ class EnvContext:
         return self.root / self.context.bin_name / self.context.python_exe
 
 
-class LoadMe:
+class BuildEnvLoader:
     """
     Wrapper to **buildenv** manager
 
     This wrapper mainly creates python venv (if not done yet) before delegating setup to :class:`buildenv.manager.BuildEnvManager`.
-    Also provides configuration file (**loadme.cfg**) reading facility.
+    Also provides configuration file (**buildenv.cfg**) reading facility.
 
     :param project_path: Path to project root directory
     """
 
     def __init__(self, project_path: Path):
         self.project_path = project_path  # Path to current project
-        self.config_file = self.project_path / "loadme.cfg"  # Path to config file (in project folder)
+        self.config_file = self.project_path / "buildenv.cfg"  # Path to config file (in project folder)
         self.config_parser = None  # Config parser object (lazy init)
         self.is_ci = "CI" in os.environ and len(os.environ["CI"]) > 0  # Check if running in CI
         self.venv_folder = self.read_config("venv_folder", "venv")  # Venv folder name
@@ -63,7 +63,7 @@ class LoadMe:
 
     def read_config(self, name: str, default: str) -> str:
         """
-        Read configuration parameter from config file (**loadme.cfg**).
+        Read configuration parameter from config file (**buildenv.cfg**).
 
         Value is read according to the current profile: **[local]** or **[ci]** (if **CI** env var is defined and not empty).
         Note that if a parameter is not defined in **[ci]** profile, it will be defaulted to value in **[local]** profile,
@@ -103,7 +103,7 @@ class LoadMe:
             if cp.returncode == 0:
                 # Git root folder found: check for venv
                 candidate_path = Path(cp.stdout.decode().splitlines()[0].strip())
-                candidate_loader = LoadMe(candidate_path)
+                candidate_loader = BuildEnvLoader(candidate_path)
                 if (candidate_loader.venv_path / VENV_OK).is_file():
                     # Venv found!
                     return candidate_loader.venv_path
@@ -170,10 +170,10 @@ class LoadMe:
         subprocess.run([str(context.executable), "-m", self.build_env_manager], cwd=self.project_path, check=True)
 
 
-# loadme script entry point
+# Loading script entry point
 if __name__ == "__main__":  # pragma: no cover
     try:
-        LoadMe(Path(__file__).parent).setup()
+        BuildEnvLoader(Path(__file__).parent).setup()
         sys.exit(0)
     except Exception as e:
         print(f"ERROR: {e}", file=sys.stderr)
