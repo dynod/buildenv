@@ -1,0 +1,10 @@
+# Load user profile (if any)
+if test -e ~/.bashrc; then
+    source ~/.bashrc
+fi
+
+# Activate venv
+source .buildenv/activate.sh
+
+# Welcome message
+echo "Welcome to buildenv shell!"

@@ -1,5 +1,2 @@
 :: Wrap to buildenv script
-{{ windowsPython }} buildenv.py
-
-:: Load venv on success
-if %ERRORLEVEL% EQU 0 .buildenv\activate.cmd
+{{ windowsPython }} buildenv-loader.py

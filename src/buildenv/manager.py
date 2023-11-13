@@ -1,4 +1,6 @@
 import os
+import stat
+import subprocess
 import sys
 from pathlib import Path
 from typing import List
@@ -71,30 +73,36 @@ class BuildEnvManager:
         """
         Build environment setup.
 
-        This setup always generates loading scripts in current project folder.
+        This setup method always generates loading scripts in current project folder.
 
-        If the buildenv is not marked as ready yet, this setup also:
+        If the buildenv is not marked as ready yet, this method also:
 
         * verify recommended git files
         * invoke extra environment initializers defined by sub-classes
         * mark buildenv as ready
+
+        Finally, this method spawns a new shell with buildenv loaded
         """
+
+        # Always update script
         self._update_scripts()
+
+        # Refresh buildenv if not done yet
         if not ((self.venv_path / BUILDENV_OK)).is_file():
             print(">> Customizing buildenv...")
             self._verify_git_files()
             self._make_ready()
 
-    def _render_template(self, template: List[Path], target: Path):
+        # Spawn to new shell process
+        self._spawn()
+
+    def _render_template(self, template: List[Path], target: Path, executable: bool = False):
         """
         Render template template to target file
 
         :param template: Path to template file
         :param target: Target file to be generated
         """
-
-        # Create target directory if needed
-        target.parent.mkdir(parents=True, exist_ok=True)
 
         # Check target file suffix
         target_type = target.suffix
@@ -117,9 +125,16 @@ class BuildEnvManager:
                 )
                 generated_content += "\n\n"
 
+        # Create target directory if needed
+        target.parent.mkdir(parents=True, exist_ok=True)
+
         # Generate target
         with target.open("w", newline=_NEWLINE_PER_TYPE[target_type]) as f:
             f.write(generated_content)
+
+        # Make script executable if required
+        if executable:
+            target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
     def _update_scripts(self):
         """
@@ -127,13 +142,15 @@ class BuildEnvManager:
         """
 
         # Generate all scripts
-        self._render_template(_MODULE_FOLDER / "loader.py", self.project_path / "buildenv.py")
-        self._render_template(_TEMPLATES_FOLDER / "buildenv.sh.jinja", self.project_path / "buildenv.sh")
+        self._render_template(_MODULE_FOLDER / "loader.py", self.project_path / "buildenv-loader.py")
+        self._render_template(_TEMPLATES_FOLDER / "buildenv.sh.jinja", self.project_path / "buildenv.sh", executable=True)
         self._render_template(_TEMPLATES_FOLDER / "buildenv.cmd.jinja", self.project_path / "buildenv.cmd")
         self._render_template(_TEMPLATES_FOLDER / "activate.sh.jinja", self.project_script_path / "activate.sh")
+        self._render_template(_TEMPLATES_FOLDER / "shell.sh.jinja", self.project_script_path / "shell.sh")
         if self.is_windows:
             # Only if venv files are generated for Windows
             self._render_template(_TEMPLATES_FOLDER / "activate.cmd.jinja", self.project_script_path / "activate.cmd")
+            self._render_template(_TEMPLATES_FOLDER / "shell.cmd.jinja", self.project_script_path / "shell.cmd")
 
     def _verify_git_files(self):
         """
@@ -149,3 +166,16 @@ class BuildEnvManager:
         """
         print(">> Build venv is ready!")
         (self.venv_path / BUILDENV_OK).touch()
+
+    def _spawn(self):
+        """
+        Spawn a new shell
+        """
+
+        # Prepare shell args
+        is_linux_shell = "SHELL" in os.environ
+        shell_script = (self.project_script_path / ("shell.sh" if is_linux_shell else "shell.cmd")).relative_to(self.project_path)
+        args = [os.environ["SHELL"], "--rcfile", shell_script.as_posix()] if is_linux_shell else ["cmd", "/k", str(shell_script)]
+
+        # Spawn shell subprocess
+        subprocess.run(args, cwd=self.project_path, check=False)

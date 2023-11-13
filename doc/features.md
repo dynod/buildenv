@@ -5,10 +5,10 @@ The purpose of the **`buildenv`** tool is to help projects to setup easily a bui
 ## Simple setup
 
 Any project can be simply setup to use **`buildenv`** by using a simple standalone python script in the project root folder:
-1. download **buildenv** script (python version) -- `wget https://raw.githubusercontent.com/dynod/buildenv/main/buildenv.py`
+1. download **buildenv** script (python version) -- `wget https://raw.githubusercontent.com/dynod/buildenv/main/buildenv-loader.py`
 1. launch it:
-    * on Linux: `python3 buildenv.py`
-    * on Windows: `python buildenv.py`
+    * on Linux: `python3 buildenv-loader.py`
+    * on Windows: `python buildenv-loader.py`
 1. you're done, the project now also embeds **buildenv** shell scripts for a more convenient day to day use
 
 ## "buildenv" loading scripts

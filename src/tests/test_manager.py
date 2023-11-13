@@ -1,7 +1,9 @@
+import os
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 from nmk.utils import is_windows
 
 from buildenv.__main__ import BuildEnvManager
@@ -24,8 +26,11 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         assert m.project_script_path == self.test_folder / ".buildenv"
         assert m.is_windows == is_windows()
 
-    def check_generated_files(self, with_windows: bool, with_git_files: bool, monkeypatch):
+    def check_setup(self, with_windows: bool, with_git_files: bool, shell_cmd: str, monkeypatch):
+        received_commands = []
+
         def fake_subprocess(args, cwd=None, **kwargs):
+            received_commands.append(" ".join(args))
             if args[0] == "git":
                 return subprocess.CompletedProcess(args, 1, "".encode())
             return subprocess.CompletedProcess(args, 0, "".encode())
@@ -54,12 +59,13 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         m.is_windows = with_windows  # Force windows files behavior
         generated_files = [
             self.test_folder / "venv" / BUILDENV_OK,
-            self.test_folder / "buildenv.py",
+            self.test_folder / "buildenv-loader.py",
             self.test_folder / "buildenv.sh",
             self.test_folder / "buildenv.cmd",
             activate_sh,
-        ] + ([activate_cmd] if with_windows else [])
-        missing_files = [] if with_windows else [activate_cmd]
+            self.test_folder / ".buildenv" / "shell.sh",
+        ] + ([activate_cmd, self.test_folder / ".buildenv" / "shell.cmd"] if with_windows else [])
+        missing_files = [] if with_windows else [activate_cmd, self.test_folder / ".buildenv" / "shell.cmd"]
 
         # Loop to verify files are created again even with buildenvOK
         for i in range(2):
@@ -67,8 +73,14 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             for f in generated_files + missing_files:
                 assert not f.is_file()
 
+            # Clear received commands
+            received_commands.clear()
+
             # Call manager setup
             m.setup()
+
+            # Check received commands
+            assert received_commands == [shell_cmd]
 
             # Verify generated + missing files
             for f in generated_files:
@@ -96,8 +108,36 @@ class TestBuildEnvManager(BuildEnvTestHelper):
                 for f in generated_files:
                     f.unlink()
 
-    def test_generated_files_windows(self, monkeypatch):
-        self.check_generated_files(True, False, monkeypatch)
+    @pytest.fixture
+    def fake_linux_shell(self):
+        # Fake SHELL environment
+        old_shell_value = os.environ["SHELL"] if "SHELL" in os.environ else None
+        os.environ["SHELL"] = "/bin/bash"
 
-    def test_generated_files_linux(self, monkeypatch):
-        self.check_generated_files(False, True, monkeypatch)
+        # yield to test
+        yield
+
+        # Restore previous environment
+        if old_shell_value is not None:
+            os.environ["SHELL"] = old_shell_value
+        else:
+            del os.environ["SHELL"]
+
+    @pytest.fixture
+    def fake_windows_shell(self):
+        # Fake SHELL environment
+        old_shell_value = os.environ["SHELL"] if "SHELL" in os.environ else None
+        del os.environ["SHELL"]
+
+        # yield to test
+        yield
+
+        # Restore previous environment
+        if old_shell_value is not None:
+            os.environ["SHELL"] = old_shell_value
+
+    def test_setup_windows(self, monkeypatch, fake_windows_shell):
+        self.check_setup(True, False, "cmd /k .buildenv/shell.cmd", monkeypatch)
+
+    def test_setup_linux(self, monkeypatch, fake_linux_shell):
+        self.check_setup(False, True, "/bin/bash --rcfile .buildenv/shell.sh", monkeypatch)
