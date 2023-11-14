@@ -2,16 +2,9 @@
 
 The purpose of the **`buildenv`** tool is to help projects to setup easily a build environment (based on [Python virtual environment](https://docs.python.org/3/library/venv.html), or "**venv**"), just after clone, with minimal dependencies (i.e. only [**git**](https://git-scm.com/) and [**python**](https://www.python.org/)).
 
-## Simple setup
+## Simple setup with "buildenv" loading scripts
 
-Any project can be simply setup to use **`buildenv`** by using a simple standalone python script in the project root folder:
-1. download **buildenv** script (python version) -- `wget https://raw.githubusercontent.com/dynod/buildenv/main/buildenv-loader.py`
-1. launch it:
-    * on Linux: `python3 buildenv-loader.py`
-    * on Windows: `python buildenv-loader.py`
-1. you're done, the project now also embeds **buildenv** shell scripts for a more convenient day to day use
-
-## "buildenv" loading scripts
+### Existing project
 
 The main feature of the **`buildenv`** tool is to generate loading scripts in the project root folder, ready to be executed just after the project is cloned, and loading everything so that the project is ready to build (whatever is the used build system).
 
@@ -21,6 +14,23 @@ In other words, the typical project setup scenario with **`buildenv`** is:
     * on Linux: `./buildenv.sh`
     * on Windows: `buildenv.cmd`
 1. build the project
+
+### New project
+
+Any project can be simply setup to use **`buildenv`** by running a simple standalone python script in the project root folder:
+1. download **buildenv** script (python version) -- `wget https://raw.githubusercontent.com/dynod/buildenv/main/buildenv-loader.py`
+1. launch it:
+    * on Linux: `python3 buildenv-loader.py`
+    * on Windows: `python buildenv-loader.py`
+1. you're done, the project now also embeds **buildenv** loading scripts for a more convenient day to day use
+
+## Launch build terminal from explorer
+
+By default, the loading scripts are spawning a new shell process. It means that when launched from the OS explorer (Windows/Linux), a build terminal will be launched, initialized with the build environment context, and stay openned to let you entering shell commands.
+
+On Windows, it works with both:
+* **buildenv.cmd**: that will open the terminal in a **cmd** window (or better, in [Windows Terminal](https://github.com/microsoft/terminal) if installed)
+* **buildenv.sh**: that will open the terminal in a **git bash** window (see [gitforwindows.org](https://gitforwindows.org/))
 
 ## Shared venv
 
