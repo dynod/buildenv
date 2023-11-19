@@ -170,7 +170,7 @@ class BuildEnvLoader:
         context = self.setup_venv()
 
         # Delegate to build env manager
-        return subprocess.run([str(context.executable), "-m", self.build_env_manager, "--from-loader"] + args, cwd=self.project_path, check=False).returncode
+        return subprocess.run([str(context.executable), "-m", self.build_env_manager] + args, cwd=self.project_path, check=False).returncode
 
 
 # Loading script entry point

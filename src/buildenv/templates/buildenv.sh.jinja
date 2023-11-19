@@ -1,10 +1,17 @@
-# Wrap to buildenv script
+# Check if python is installed
 if test -f /git-bash.exe; then
     _BUILDENV_PYTHON={{ windowsPython }}
 else
     _BUILDENV_PYTHON={{ linuxPython }}
 fi
-${_BUILDENV_PYTHON} buildenv-loader.py "$@"
+${_BUILDENV_PYTHON} --version 2>/dev/null 1>&2
+if test $? -ne 0; then
+    echo ">> ERROR: ${_BUILDENV_PYTHON} is not installed"
+    exit 1
+fi
+
+# Wrap to buildenv script
+${_BUILDENV_PYTHON} buildenv-loader.py --from-loader "$@"
 
 # Spawn shell if required
 if test $? -eq {{ rcStartShell }}; then

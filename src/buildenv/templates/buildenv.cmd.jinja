@@ -1,7 +1,16 @@
+:: Check if python is installed
+{{ windowsPython }} --version > NUL 2> NUL
+if %ERRORLEVEL% NEQ 0 (
+    echo|set /p=">> ERROR: {{ windowsPython }} is not installed" & echo.
+    goto end
+)
+
 :: Wrap to buildenv script
-{{ windowsPython }} buildenv-loader.py %*
+{{ windowsPython }} buildenv-loader.py --from-loader %*
 
 :: Spawn shell if required
 if %ERRORLEVEL% EQU {{ rcStartShell }} (
     cmd /k .buildenv\shell.cmd
 )
+
+:end

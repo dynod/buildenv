@@ -227,7 +227,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
             received_commands,
             [
                 "git rev-parse --show-toplevel",
-                f"{self.venv_exe} -m buildenv --from-loader",
+                f"{self.venv_exe} -m buildenv",
             ],
         )
 
