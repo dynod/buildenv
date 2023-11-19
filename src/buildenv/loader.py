@@ -151,7 +151,9 @@ class BuildEnvLoader:
             # Install requirements
             print(">> Installing requirements...")
             requirements = ["-r", self.requirements_file] if (self.project_path / self.requirements_file).is_file() else ["buildenv"]
-            subprocess.run([str(context.executable), "-m", "pip", "install", "pip"] + requirements + ["--upgrade"], cwd=self.project_path, check=True)
+            subprocess.run(
+                [str(context.executable), "-m", "pip", "install", "pip", "buildenv"] + requirements + ["--upgrade"], cwd=self.project_path, check=True
+            )
 
             # If we get here, venv is valid
             print(">> Python venv is ready!")

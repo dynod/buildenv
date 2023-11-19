@@ -171,7 +171,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
             [
                 "git rev-parse --show-toplevel",
                 f"{self.venv_exe} -I?m ensurepip --upgrade --default-pip",
-                f"{self.venv_exe} -m pip install pip " + requirements + " --upgrade",
+                f"{self.venv_exe} -m pip install pip buildenv " + requirements + " --upgrade",
             ],
         )
 
