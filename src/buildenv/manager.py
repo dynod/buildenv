@@ -1,12 +1,13 @@
 import os
 import stat
-import subprocess
 import sys
+from argparse import Namespace
 from pathlib import Path
 from typing import List
 
 from jinja2 import Template
 
+from buildenv._internal.parser import RCHolder
 from buildenv.loader import BuildEnvLoader
 
 BUILDENV_OK = "buildenvOK"
@@ -37,6 +38,9 @@ _RECOMMENDED_GIT_FILES = {
 *.cmd text eol=crlf
 """,
 }
+
+# Return codes
+_RC_START_SHELL = 100  # RC used to tell loading script to spawn an interactive shell
 
 
 class BuildEnvManager:
@@ -69,11 +73,11 @@ class BuildEnvManager:
             for part in [os.pardir] * (upper_levels_count - 1) + [self.venv_path.name, self.venv_bin_path.name]:
                 self.relative_venv_bin_path /= part
 
-    def setup(self):
+    def init(self, options: Namespace = None):
         """
-        Build environment setup.
+        Build environment initialization.
 
-        This setup method always generates loading scripts in current project folder.
+        This method always generates loading scripts in current project folder.
 
         If the buildenv is not marked as ready yet, this method also:
 
@@ -81,7 +85,7 @@ class BuildEnvManager:
         * invoke extra environment initializers defined by sub-classes
         * mark buildenv as ready
 
-        Finally, this method spawns a new shell with buildenv loaded
+        :param options: Input command line parsed options
         """
 
         # Always update script
@@ -92,9 +96,6 @@ class BuildEnvManager:
             print(">> Customizing buildenv...")
             self._verify_git_files()
             self._make_ready()
-
-        # Spawn to new shell process
-        self._spawn()
 
     def _render_template(self, template: List[Path], target: Path, executable: bool = False):
         """
@@ -121,6 +122,7 @@ class BuildEnvManager:
                         "linuxPython": self.loader.read_config("linuxPython", "python3"),
                         "windowsVenvBinPath": str(self.relative_venv_bin_path).replace("/", "\\"),
                         "linuxVenvBinPath": str(self.relative_venv_bin_path).replace("\\", "/"),
+                        "rcStartShell": _RC_START_SHELL,
                     }
                 )
                 generated_content += "\n\n"
@@ -164,18 +166,22 @@ class BuildEnvManager:
         """
         Just touch "buildenv ready" file
         """
-        print(">> Build venv is ready!")
+        print(">> Buildenv is ready!")
         (self.venv_path / BUILDENV_OK).touch()
 
-    def _spawn(self):
+    def shell(self, options: Namespace):
         """
-        Spawn a new shell
+        Verify that the context is OK to run a shell, then throws a specific return code
+        so that loading script is told to spawn an interactive shell.
+
+        :param options: Input command line parsed options
         """
 
-        # Prepare shell args
-        is_linux_shell = "SHELL" in os.environ
-        shell_script = (self.project_script_path / ("shell.sh" if is_linux_shell else "shell.cmd")).relative_to(self.project_path)
-        args = [os.environ["SHELL"], "--rcfile", shell_script.as_posix()] if is_linux_shell else ["cmd", "/k", str(shell_script)]
+        # Refuse to execute if not started from loading script
+        assert options.from_loader, "Can't use shell command if not invoked from loading script."
 
-        # Spawn shell subprocess
-        subprocess.run(args, cwd=self.project_path, check=False)
+        # Always implicitely init
+        self.init(options)
+
+        # Nothing more to do than telling loading script to spawn an interactive shell
+        raise RCHolder(_RC_START_SHELL)

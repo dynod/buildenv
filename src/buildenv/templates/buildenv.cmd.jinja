@@ -1,2 +1,7 @@
 :: Wrap to buildenv script
-{{ windowsPython }} buildenv-loader.py
+{{ windowsPython }} buildenv-loader.py %*
+
+:: Spawn shell if required
+if %ERRORLEVEL% EQU {{ rcStartShell }} (
+    cmd /k .buildenv\shell.cmd
+)

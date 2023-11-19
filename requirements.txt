@@ -20,6 +20,7 @@ flake8-bugbear
 setuptools
 wheel
 Jinja2
+argcomplete
 pytest-xdist
 pytest-cov
 pytest-multilog

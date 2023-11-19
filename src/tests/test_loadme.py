@@ -133,7 +133,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
             received_list if isinstance(received_list, list) else [received_list],
             expected_list if isinstance(expected_list, list) else [expected_list],
         ):
-            assert re.compile(expected).match(received) is not None, f"{expected!r} doesn't match {received!r}"
+            assert re.compile("^" + expected + "$").match(received) is not None, f"{expected!r} doesn't match {received!r}"
 
     def wrap_exe(self, exe: str) -> str:
         return exe.replace("/", "\\\\" if is_windows() else "/")
@@ -220,14 +220,14 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
 
         # Setup (should do nothing)
         loader = BuildEnvLoader(self.test_folder)
-        loader.setup()
+        loader.setup([])
 
         # Check used commands
         self.check_strings(
             received_commands,
             [
                 "git rev-parse --show-toplevel",
-                f"{self.venv_exe} -m buildenv",
+                f"{self.venv_exe} -m buildenv --from-loader",
             ],
         )
 

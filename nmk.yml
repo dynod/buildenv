@@ -14,6 +14,8 @@ config:
     pythonSetupItems:
         metadata:
             description: Build environment setup system, based on Python venv
+        options.entry_points:
+            console_scripts: "\nbuildenv = buildenv.__main__:main"
         options.package_data:
             buildenv.templates:
                 - "*.jinja"
@@ -21,6 +23,7 @@ config:
     # Dependencies
     pythonPackageRequirements:
         - Jinja2
+        - argcomplete
 
     # Extra known words for spell check
     vscodeSettingsItems:

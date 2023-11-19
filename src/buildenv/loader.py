@@ -14,6 +14,7 @@ import sys
 from configparser import ConfigParser
 from pathlib import Path
 from types import SimpleNamespace
+from typing import List, Union
 from venv import EnvBuilder
 
 VENV_OK = "venvOK"
@@ -87,7 +88,7 @@ class BuildEnvLoader:
         else:
             return default
 
-    def find_venv(self) -> Path:
+    def find_venv(self) -> Union[Path, None]:
         """
         Find venv folder, in current project folder, or in parent ones
 
@@ -158,23 +159,24 @@ class BuildEnvLoader:
 
         return context
 
-    def setup(self):
+    def setup(self, args: List[str]) -> int:
         """
         Prepare python venv if not done yet. Then invoke build env manager.
+
+        :returns: Forwarded **buildenv** command return code
         """
 
         # Prepare venv
         context = self.setup_venv()
 
         # Delegate to build env manager
-        subprocess.run([str(context.executable), "-m", self.build_env_manager], cwd=self.project_path, check=True)
+        return subprocess.run([str(context.executable), "-m", self.build_env_manager, "--from-loader"] + args, cwd=self.project_path, check=False).returncode
 
 
 # Loading script entry point
 if __name__ == "__main__":  # pragma: no cover
     try:
-        BuildEnvLoader(Path(__file__).parent).setup()
-        sys.exit(0)
+        sys.exit(BuildEnvLoader(Path(__file__).parent).setup(sys.argv[1:]))
     except Exception as e:
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)

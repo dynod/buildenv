@@ -1,18 +1,17 @@
-import os
 import subprocess
 import sys
+from argparse import Namespace
 from pathlib import Path
 
-import pytest
 from nmk.utils import is_windows
 
-from buildenv.__main__ import BuildEnvManager
+from buildenv._internal.parser import RCHolder
 from buildenv.loader import BuildEnvLoader
-from buildenv.manager import BUILDENV_OK
-from tests.commons import BuildEnvTestHelper
+from buildenv.manager import BUILDENV_OK, BuildEnvManager
+from tests.commons import VENV_BIN, BuildEnvTestHelper
 
-# Venv bin directory
-VENV_BIN = "Scripts" if is_windows() else "bin"
+# Default (empty) namespace
+DEFAULT_OPTIONS = Namespace()
 
 
 class TestBuildEnvManager(BuildEnvTestHelper):
@@ -26,7 +25,15 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         assert m.project_script_path == self.test_folder / ".buildenv"
         assert m.is_windows == is_windows()
 
-    def check_setup(self, with_windows: bool, with_git_files: bool, shell_cmd: str, monkeypatch):
+    def check_manager(
+        self,
+        monkeypatch,
+        method: str,
+        with_windows: bool = False,
+        with_git_files: bool = False,
+        expect_files: bool = True,
+        options: Namespace = DEFAULT_OPTIONS,
+    ):
         received_commands = []
 
         def fake_subprocess(args, cwd=None, **kwargs):
@@ -47,7 +54,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
 
         # Fake venv
         loader = BuildEnvLoader(self.test_folder)
-        loader.setup()
+        loader.setup([])
         assert (self.test_folder / "venv" / "venvOK").is_file()
 
         # Prepare file paths
@@ -73,74 +80,54 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             for f in generated_files + missing_files:
                 assert not f.is_file()
 
-            # Clear received commands
-            received_commands.clear()
-
-            # Call manager setup
-            m.setup()
-
-            # Check received commands
-            assert received_commands == [shell_cmd]
+            # Call manager method
+            getattr(m, method)(options)
 
             # Verify generated + missing files
             for f in generated_files:
-                assert f.is_file()
+                if expect_files:
+                    assert f.is_file()
+                else:
+                    assert not f.is_file()
             for f in missing_files:
                 assert not f.is_file()
 
-            # Verify relative venv path
-            assert m.relative_venv_bin_path == Path("venv") / VENV_BIN
+            if expect_files:
+                # Verify relative venv path
+                assert m.relative_venv_bin_path == Path("venv") / VENV_BIN
 
-            # Verify activate.sh file content
-            with activate_sh.open() as f:
-                lines = [line.strip("\r\n") for line in f.readlines()]
-            assert f"source venv/{VENV_BIN}/activate" in lines
-
-            # Verify activate.cmd file content
-            if activate_cmd.is_file():
-                with activate_cmd.open() as f:
+                # Verify activate.sh file content
+                with activate_sh.open() as f:
                     lines = [line.strip("\r\n") for line in f.readlines()]
-                assert f"venv\\{VENV_BIN}\\activate.bat" in lines
+                assert f"source venv/{VENV_BIN}/activate" in lines
+
+                # Verify activate.cmd file content
+                if activate_cmd.is_file():
+                    with activate_cmd.open() as f:
+                        lines = [line.strip("\r\n") for line in f.readlines()]
+                    assert f"venv\\{VENV_BIN}\\activate.bat" in lines
 
             # First loop: clean before loop
             if i == 0:
                 generated_files.remove(self.test_folder / "venv" / BUILDENV_OK)
-                for f in generated_files:
-                    f.unlink()
+                if expect_files:
+                    for f in generated_files:
+                        f.unlink()
 
-    @pytest.fixture
-    def fake_linux_shell(self):
-        # Fake SHELL environment
-        old_shell_value = os.environ["SHELL"] if "SHELL" in os.environ else None
-        os.environ["SHELL"] = "/bin/bash"
+    def test_init_windows(self, monkeypatch):
+        self.check_manager(monkeypatch, "init", True, False)
 
-        # yield to test
-        yield
+    def test_init_linux(self, monkeypatch):
+        self.check_manager(monkeypatch, "init", False, True)
 
-        # Restore previous environment
-        if old_shell_value is not None:
-            os.environ["SHELL"] = old_shell_value
-        else:
-            del os.environ["SHELL"]
+    def test_shell_refused(self, monkeypatch):
+        try:
+            self.check_manager(monkeypatch, "shell", expect_files=False, options=Namespace(from_loader=False))
+        except AssertionError as e:
+            assert str(e).startswith("Can't use shell command")
 
-    @pytest.fixture
-    def fake_windows_shell(self):
-        # Fake SHELL environment
-        if "SHELL" in os.environ:
-            old_shell_value = os.environ["SHELL"]
-            del os.environ["SHELL"]
-        else:
-            old_shell_value = None
-
-        # yield to test
-        yield
-
-        # Restore previous environment
-        if old_shell_value is not None:
-            os.environ["SHELL"] = old_shell_value
-
-    def test_setup_windows(self, monkeypatch, fake_windows_shell):
-        self.check_setup(True, False, f"cmd /k {Path('.buildenv')/'shell.cmd'}", monkeypatch)
-
-    def test_setup_linux(self, monkeypatch, fake_linux_shell):
-        self.check_setup(False, True, "/bin/bash --rcfile .buildenv/shell.sh", monkeypatch)
+    def test_shell_from_loader(self, monkeypatch):
+        try:
+            self.check_manager(monkeypatch, "shell", options=Namespace(from_loader=True))
+        except RCHolder as e:
+            assert e.rc == 100
