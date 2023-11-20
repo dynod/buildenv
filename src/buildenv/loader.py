@@ -60,7 +60,6 @@ class BuildEnvLoader:
         self.venv_folder = self.read_config("venv_folder", "venv")  # Venv folder name
         self.venv_path = self.project_path / self.venv_folder  # Venv path for current project
         self.requirements_file = self.read_config("requirements", "requirements.txt")  # Requirements file name
-        self.build_env_manager = self.read_config("build_env_manager", "buildenv")  # Python module for build env manager
 
     def read_config(self, name: str, default: str) -> str:
         """
@@ -172,7 +171,7 @@ class BuildEnvLoader:
         context = self.setup_venv()
 
         # Delegate to build env manager
-        return subprocess.run([str(context.executable), "-m", self.build_env_manager] + args, cwd=self.project_path, check=False).returncode
+        return subprocess.run([str(context.executable), "-m", "buildenv"] + args, cwd=self.project_path, check=False).returncode
 
 
 # Loading script entry point

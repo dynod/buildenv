@@ -57,7 +57,6 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         assert loader.venv_folder == "venv"
         assert loader.venv_path == self.test_folder / "venv"
         assert loader.requirements_file == "requirements.txt"
-        assert loader.build_env_manager == "buildenv"
 
     def test_loader_local_config(self, fake_local):
         # Populate a config file with some local profile values
@@ -65,7 +64,6 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         loader = BuildEnvLoader(self.test_folder)
         assert loader.config_parser is not None
         assert loader.venv_folder == "MyVenv"
-        assert loader.build_env_manager == "buildenv"
         assert loader.requirements_file == "requirements.txt"
 
     def test_loader_ci_config(self, fake_ci):
@@ -74,8 +72,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         loader = BuildEnvLoader(self.test_folder)
         assert loader.config_parser is not None
         assert loader.venv_folder == "MyCiVenv"
-        assert loader.build_env_manager == "buildenv-foo"
-        assert loader.requirements_file == "requirements.txt"
+        assert loader.requirements_file == "foo.txt"
 
     def test_loader_find_real_venv(self):
         # Test for current project venv detection
