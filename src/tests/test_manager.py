@@ -120,14 +120,20 @@ class TestBuildEnvManager(BuildEnvTestHelper):
     def test_init_linux(self, monkeypatch):
         self.check_manager(monkeypatch, "init", False, True)
 
-    def test_shell_refused(self, monkeypatch):
+    def test_shell_refused_no_loader(self, monkeypatch, fake_no_venv):
         try:
-            self.check_manager(monkeypatch, "shell", expect_files=False, options=Namespace(from_loader=False))
+            self.check_manager(monkeypatch, "shell", expect_files=False, options=Namespace(from_loader=None))
         except AssertionError as e:
             assert str(e).startswith("Can't use shell command")
 
-    def test_shell_from_loader(self, monkeypatch):
+    def test_shell_refused_from_venv(self, monkeypatch, fake_venv):
         try:
-            self.check_manager(monkeypatch, "shell", options=Namespace(from_loader=True))
+            self.check_manager(monkeypatch, "shell", expect_files=False, options=Namespace(from_loader="xxx"))
+        except AssertionError as e:
+            assert str(e).startswith("Already running in build environment shell")
+
+    def test_shell_from_loader(self, monkeypatch, fake_no_venv):
+        try:
+            self.check_manager(monkeypatch, "shell", options=Namespace(from_loader="xxx"))
         except RCHolder as e:
             assert e.rc == 100

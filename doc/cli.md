@@ -17,18 +17,19 @@ Here is the general **`buildenv`** command help page:
 
 ```
 > buildenv -h
-usage: buildenv [-h] [-V] {init,shell} ...
+usage: buildenv [-h] [-V] {init,shell,run} ...
 
 Build environment manager
 
 positional arguments:
-  {init,shell}   sub-commands:
-    init         initialize the build environment and exit
-    shell        start an interactive shell with loaded build environment
+  {init,shell,run}  sub-commands:
+    init            initialize the build environment and exit
+    shell           start an interactive shell with loaded build environment
+    run             run command in build environment
 
 optional arguments:
-  -h, --help     show this help message and exit
-  -V, --version  show program's version number and exit
+  -h, --help        show this help message and exit
+  -V, --version     show program's version number and exit
 ```
 
 ### Arguments
@@ -78,4 +79,27 @@ Just type **`exit`** to quit this interactive shell.
 ````{warning}
 Shell "inception" (i.e. shell within shell) is not supported. \
 In other words, **`shell`** sub-command is refused if executed from an existing shell.
+````
+
+## `run` sub-command
+
+Usage:
+```
+> buildenv run -h
+usage: buildenv run [-h] ...
+
+run command in build environment
+
+positional arguments:
+  CMD         Command and arguments to be executed in build environment
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+This sub-command invokes the provided command with the build environment enabled (i.e. original python venv + all enabled extensions provided by **`buildenv`** tool), then returns.
+
+````{warning}
+Run "inception" (i.e. run within shell) is not supported. \
+In other words, **`run`** sub-command is refused if executed from an existing shell.
 ````

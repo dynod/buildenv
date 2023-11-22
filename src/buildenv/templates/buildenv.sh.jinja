@@ -11,9 +11,20 @@ if test $? -ne 0; then
 fi
 
 # Wrap to buildenv script
-${_BUILDENV_PYTHON} buildenv-loader.py --from-loader "$@"
+${_BUILDENV_PYTHON} buildenv-loader.py --from-loader=sh "$@"
+_BUILDENV_RC=$?
 
-# Spawn shell if required
-if test $? -eq {{ rcStartShell }}; then
-    $SHELL --rcfile .buildenv/shell.sh
+# Check for specific RC
+if test ${_BUILDENV_RC} -eq {{ rcStartShell }}; then
+    # Spawn shell if required
+    ${SHELL} --rcfile .buildenv/shell.sh
+    _BUILDENV_RC=$?
+elif test ${_BUILDENV_RC} -gt {{ rcStartShell }}; then
+    # Execute command if required
+    ${SHELL} -c .buildenv/command.${_BUILDENV_RC}.sh
+    _BUILDENV_RC=$?
+    rm .buildenv/command.${_BUILDENV_RC}.sh
 fi
+
+# Forward RC
+exit ${_BUILDENV_RC}

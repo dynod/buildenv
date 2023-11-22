@@ -1,16 +1,27 @@
 :: Check if python is installed
 {{ windowsPython }} --version > NUL 2> NUL
-if %ERRORLEVEL% NEQ 0 (
+set _BUILDENV_RC=%ERRORLEVEL%
+if %_BUILDENV_RC% NEQ 0 (
     echo|set /p=">> ERROR: {{ windowsPython }} is not installed" & echo.
     goto end
 )
 
 :: Wrap to buildenv script
-{{ windowsPython }} buildenv-loader.py --from-loader %*
+{{ windowsPython }} buildenv-loader.py --from-loader=cmd %*
+set _BUILDENV_RC=%ERRORLEVEL%
 
-:: Spawn shell if required
-if %ERRORLEVEL% EQU {{ rcStartShell }} (
+:: Check for specific RC
+if %_BUILDENV_RC% EQU {{ rcStartShell }} (
+    :: Spawn shell if required
     cmd /k .buildenv\shell.cmd
+    set _BUILDENV_RC=%ERRORLEVEL%
+)
+if %_BUILDENV_RC% GTR {{ rcStartShell }} (
+    :: Execute command if required
+    cmd /c .buildenv\command.%_BUILDENV_RC%.cmd
+    set _BUILDENV_RC=%ERRORLEVEL%
+    del .buildenv\command.%_BUILDENV_RC%.cmd
 )
 
 :end
+exit /b %_BUILDENV_RC%

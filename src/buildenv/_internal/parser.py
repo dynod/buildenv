@@ -1,4 +1,4 @@
-from argparse import SUPPRESS, ArgumentParser
+from argparse import REMAINDER, SUPPRESS, ArgumentParser
 from typing import Callable, List
 
 import argcomplete
@@ -27,15 +27,16 @@ class BuildEnvParser:
 
     :param init_cb: Callback for **buildenv init** command
     :param shell_cb: Callback for **buildenv shell** command
+    :param run_cb: Callback for **buildenv run** command
     """
 
-    def __init__(self, init_cb: Callable, shell_cb: Callable):
+    def __init__(self, init_cb: Callable, shell_cb: Callable, run_cb: Callable):
         # Setup arguments parser
         self._parser = ArgumentParser(prog="buildenv", description="Build environment manager")
 
         # Version handling
         self._parser.add_argument("-V", "--version", action="version", version=f"buildenv version {__version__}")
-        self._parser.add_argument("--from-loader", help=SUPPRESS, default=False, action="store_true")
+        self._parser.add_argument("--from-loader", help=SUPPRESS, default=None, action="store")
         self._parser.set_defaults(func=None, init_func=init_cb, shell_func=shell_cb)
 
         # Add subcommands:
@@ -50,6 +51,12 @@ class BuildEnvParser:
         shell_help = "start an interactive shell with loaded build environment"
         shell_parser = sub_parsers.add_parser("shell", help=shell_help, description=shell_help)
         shell_parser.set_defaults(func=shell_cb)
+
+        # run sub-command
+        run_help = "run command in build environment"
+        run_parser = sub_parsers.add_parser("run", help=run_help, description=run_help)
+        run_parser.set_defaults(func=run_cb)
+        run_parser.add_argument("CMD", nargs=REMAINDER, help="Command and arguments to be executed in build environment")
 
         # Handle completion
         argcomplete.autocomplete(self._parser)
@@ -67,7 +74,7 @@ class BuildEnvParser:
         # Check for sub-command
         if options.func is None:
             # No sub-command
-            if options.from_loader:
+            if options.from_loader is not None:
                 # From loading script: default command is shell
                 options.shell_func(options)
             else:

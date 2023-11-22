@@ -1,9 +1,10 @@
 import os
+import random
 import stat
 import sys
 from argparse import Namespace
 from pathlib import Path
-from typing import List
+from typing import Dict
 
 from jinja2 import Template
 
@@ -41,6 +42,8 @@ _RECOMMENDED_GIT_FILES = {
 
 # Return codes
 _RC_START_SHELL = 100  # RC used to tell loading script to spawn an interactive shell
+_RC_RUN_CMD = 101  # Start of RC range for running a command
+_RC_MAX = 255  # Max RC
 
 
 class BuildEnvManager:
@@ -97,7 +100,7 @@ class BuildEnvManager:
             self._verify_git_files()
             self._make_ready()
 
-    def _render_template(self, template: List[Path], target: Path, executable: bool = False):
+    def _render_template(self, template: Path, target: Path, executable: bool = False, keywords: Dict[str, str] = None):
         """
         Render template template to target file
 
@@ -108,23 +111,26 @@ class BuildEnvManager:
         # Check target file suffix
         target_type = target.suffix
 
+        # Build keywords map
+        all_keywords = {
+            "header": _HEADERS_PER_TYPE[target_type],
+            "comment": _COMMENT_PER_TYPE[target_type],
+            "windowsPython": self.loader.read_config("windowsPython", "python"),
+            "linuxPython": self.loader.read_config("linuxPython", "python3"),
+            "windowsVenvBinPath": str(self.relative_venv_bin_path).replace("/", "\\"),
+            "linuxVenvBinPath": str(self.relative_venv_bin_path).replace("\\", "/"),
+            "rcStartShell": _RC_START_SHELL,
+        }
+        if keywords is not None:
+            all_keywords.update(keywords)
+
         # Iterate on fragments
         generated_content = ""
         for fragment in [_TEMPLATES_FOLDER / "warning.jinja", template]:
             # Load template
             with fragment.open() as f:
                 t = Template(f.read())
-                generated_content += t.render(
-                    {
-                        "header": _HEADERS_PER_TYPE[target_type],
-                        "comment": _COMMENT_PER_TYPE[target_type],
-                        "windowsPython": self.loader.read_config("windowsPython", "python"),
-                        "linuxPython": self.loader.read_config("linuxPython", "python3"),
-                        "windowsVenvBinPath": str(self.relative_venv_bin_path).replace("/", "\\"),
-                        "linuxVenvBinPath": str(self.relative_venv_bin_path).replace("\\", "/"),
-                        "rcStartShell": _RC_START_SHELL,
-                    }
-                )
+                generated_content += t.render(all_keywords)
                 generated_content += "\n\n"
 
         # Create target directory if needed
@@ -135,14 +141,11 @@ class BuildEnvManager:
             f.write(generated_content)
 
         # Make script executable if required
-        if executable:
+        if executable and target_type == ".sh":
             target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
+    # Copy/update loading scripts in project folder
     def _update_scripts(self):
-        """
-        Copy/update loading scripts in project folder
-        """
-
         # Generate all scripts
         self._render_template(_MODULE_FOLDER / "loader.py", self.project_path / "buildenv-loader.py")
         self._render_template(_TEMPLATES_FOLDER / "buildenv.sh.jinja", self.project_path / "buildenv.sh", executable=True)
@@ -154,20 +157,27 @@ class BuildEnvManager:
             self._render_template(_TEMPLATES_FOLDER / "activate.cmd.jinja", self.project_script_path / "activate.cmd")
             self._render_template(_TEMPLATES_FOLDER / "shell.cmd.jinja", self.project_script_path / "shell.cmd")
 
+    # Check for recommended git files, and display warning if they're missing
     def _verify_git_files(self):
-        """
-        Check for recommended git files, and display warning if they're missing
-        """
         for file, content in _RECOMMENDED_GIT_FILES.items():
             if not (self.project_path / file).is_file():
                 print(f">> WARNING: missing {file} file in project", "   Recommended content is:", "", content, sep="\n", file=sys.stderr)
 
+    # Just touch "buildenv ready" file
     def _make_ready(self):
-        """
-        Just touch "buildenv ready" file
-        """
         print(">> Buildenv is ready!")
         (self.venv_path / BUILDENV_OK).touch()
+
+    # Preliminary checks before env loading
+    def _command_checks(self, command: str, options: Namespace):
+        # Refuse to execute if already in venv
+        assert "VIRTUAL_ENV" not in os.environ, "Already running in build environment shell; just type commands :-)"
+
+        # Refuse to execute if not started from loading script
+        assert options.from_loader is not None, f"Can't use {command} command if not invoked from loading script."
+
+        # Always implicitely init
+        self.init(options)
 
     def shell(self, options: Namespace):
         """
@@ -177,11 +187,50 @@ class BuildEnvManager:
         :param options: Input command line parsed options
         """
 
-        # Refuse to execute if not started from loading script
-        assert options.from_loader, "Can't use shell command if not invoked from loading script."
-
-        # Always implicitely init
-        self.init(options)
+        # Checks
+        self._command_checks("shell", options)
 
         # Nothing more to do than telling loading script to spawn an interactive shell
         raise RCHolder(_RC_START_SHELL)
+
+    def run(self, options: Namespace):
+        """
+        Verify that the context is OK to run a command, then:
+
+        * generates command script containing the command to be executed
+        * throws a specific return code so that loading script is told to execute the generated command script
+
+        :param options: Input command line parsed options
+        """
+
+        # Checks
+        self._command_checks("run", options)
+
+        # Verify command is not empty
+        assert len(options.CMD) > 0, "no command provided"
+
+        # Find a script name
+        script_path = None
+        script_index = None
+        possible_indexes = list(range(_RC_RUN_CMD, _RC_MAX + 1))
+        while script_path is None:
+            # Candidate script name
+            candidate_index = random.choice(possible_indexes)
+            candidate_script = self.project_script_path / f"command.{candidate_index}.{options.from_loader}"
+
+            # Script not already used?
+            if not candidate_script.is_file():
+                script_path = candidate_script
+                script_index = candidate_index
+            else:
+                # Security to avoid infinite loop
+                # Command script is supposed to be deleted by loading script, but "just in case"...
+                # (e.g. launched command killed without giving a chance to remove the file)
+                possible_indexes.remove(candidate_index)
+                assert len(possible_indexes) > 0, "[internal] can't find any available command script number"
+
+        # Generate command script
+        self._render_template(_TEMPLATES_FOLDER / f"command.{options.from_loader}.jinja", script_path, True, {"command": " ".join(options.CMD)})
+
+        # Tell loading script about command script ID
+        raise RCHolder(script_index)
