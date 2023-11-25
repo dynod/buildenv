@@ -64,17 +64,24 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         # List generated file + verify they don't exist yet
         m = BuildEnvManager(self.test_folder, self.test_folder / "venv" / VENV_BIN)
         m.is_windows = with_windows  # Force windows files behavior
-        generated_files = [
+        generated_buildenv_files = [
             self.test_folder / "venv" / BUILDENV_OK,
-            self.test_folder / "buildenv-loader.py",
-            self.test_folder / "buildenv.sh",
-            self.test_folder / "buildenv.cmd",
-            activate_sh,
-            self.test_folder / ".buildenv" / "shell.sh",
-        ] + ([activate_cmd, self.test_folder / ".buildenv" / "shell.cmd"] if with_windows else [])
+            self.test_folder / "venv" / VENV_BIN / "activate.d" / "01_set_prompt.sh",
+        ]
+        generated_files = (
+            generated_buildenv_files
+            + [
+                self.test_folder / "buildenv-loader.py",
+                self.test_folder / "buildenv.sh",
+                self.test_folder / "buildenv.cmd",
+                activate_sh,
+                self.test_folder / ".buildenv" / "shell.sh",
+            ]
+            + ([activate_cmd, self.test_folder / ".buildenv" / "shell.cmd"] if with_windows else [])
+        )
         missing_files = [] if with_windows else [activate_cmd, self.test_folder / ".buildenv" / "shell.cmd"]
 
-        # Loop to verify files are created again even with buildenvOK
+        # Loop to verify some files are created again even with buildenvOK
         for i in range(2):
             # Check files are missing
             for f in generated_files + missing_files:
@@ -109,7 +116,8 @@ class TestBuildEnvManager(BuildEnvTestHelper):
 
             # First loop: clean before loop
             if i == 0:
-                generated_files.remove(self.test_folder / "venv" / BUILDENV_OK)
+                for p_to_remove in generated_buildenv_files:
+                    generated_files.remove(p_to_remove)
                 if expect_files:
                     for f in generated_files:
                         f.unlink()

@@ -178,6 +178,10 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         # Check venv is marked as created
         assert (self.test_folder / "venv" / "venvOK").is_file()
 
+        # Check created venv files
+        assert (self.test_folder / "venv" / BIN_FOLDER / ("activate.bat" if is_windows() else "activate")).is_file()
+        assert (self.test_folder / "venv" / BIN_FOLDER / "activate.d" / ("00_activate.bat" if is_windows() else "00_activate.sh")).is_file()
+
     def test_setup_venv_create_empty(self, monkeypatch):
         # Check with empty folder
         self.check_venv_creation(monkeypatch, False)

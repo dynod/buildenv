@@ -9,6 +9,7 @@ and is designed to be:
 """
 
 import os
+import shutil
 import subprocess
 import sys
 from configparser import ConfigParser
@@ -19,6 +20,30 @@ from venv import EnvBuilder
 
 VENV_OK = "venvOK"
 """Valid venv tag file"""
+
+NEWLINE_PER_TYPE = {".py": None, ".sh": "\n", ".cmd": "\r\n", ".bat": "\r\n"}
+"""Map of newline styles per file extension"""
+
+
+def to_linux_path(path: Path) -> str:
+    """
+    Turn provided path to a Linux style path.
+    On Windows, this means turning drive "X:\" to "/x/" format (git-bash style path)
+
+    :param path: Path to be converted
+    :return: Converted path, in Linux style
+    """
+    return f"/{path.drive[0].lower()}/{path.as_posix()[3:]}" if len(path.drive) else path.as_posix()
+
+
+def to_windows_path(path: Path) -> str:
+    """
+    Turn provided path to a Windows style path.
+
+    :param path: Path to be converted
+    :return: Converted path, in Windows style
+    """
+    return str(path).replace("/", "\\")
 
 
 class EnvContext:
@@ -34,12 +59,50 @@ class EnvContext:
     @property
     def root(self) -> Path:
         """Path to environment root folder"""
-        return self.context.env_dir
+        return self.context.env_dir if isinstance(self.context.env_dir, Path) else Path(self.context.env_dir)
+
+    @property
+    def bin_folder(self) -> Path:
+        """Path to bin folder in environment"""
+        return self.root / self.context.bin_name
 
     @property
     def executable(self) -> Path:
         """Path to python executable in environment"""
-        return self.root / self.context.bin_name / self.context.python_exe
+        return self.bin_folder / self.context.python_exe
+
+    @property
+    def activation_scripts_folder(self) -> Path:
+        """Path to activation scripts folder in environment"""
+        return self.bin_folder / "activate.d"
+
+
+class _MyEnvBuilder(EnvBuilder):
+    """Custom env builder class used to customize venv loading scripts"""
+
+    def post_setup(self, context: SimpleNamespace):
+        """Custom scripts setup"""
+
+        # Prepare activation scripts folder
+        e = EnvContext(context)
+        d = e.activation_scripts_folder
+        d.mkdir(parents=True, exist_ok=True)
+
+        # Prepare activation loop, per supported script extension
+        activation_loop = {
+            ".sh": f"for i in {to_linux_path(d)}/*.sh; do source $i; done",
+            ".bat": f"@echo off\nfor /f %%i in ('dir /b /o:n {to_windows_path(d)}\\*.bat') do (\n    call {to_windows_path(d)}\\%%i\n)",
+        }
+
+        # Iterate on supported and existing activation scripts
+        for original_script in filter(lambda s: s.is_file(), [e.bin_folder / s for s in ["activate", "activate.bat"]]):
+            # Move to activation folder
+            dest_script = d / ("00_" + original_script.name + ("" if len(original_script.suffix) else ".sh"))
+            shutil.move(original_script, dest_script)
+
+            # Generate new root activation script, iterating on all scripts in activation folder
+            with original_script.open("w", newline=NEWLINE_PER_TYPE[dest_script.suffix]) as f:
+                f.write(activation_loop[dest_script.suffix] + NEWLINE_PER_TYPE[dest_script.suffix])
 
 
 class BuildEnvLoader:
@@ -60,6 +123,7 @@ class BuildEnvLoader:
         self.venv_folder = self.read_config("venv_folder", "venv")  # Venv folder name
         self.venv_path = self.project_path / self.venv_folder  # Venv path for current project
         self.requirements_file = self.read_config("requirements", "requirements.txt")  # Requirements file name
+        self.prompt = self.read_config("prompt", "buildenv")  # Prompt for buildenv
 
     def read_config(self, name: str, default: str) -> str:
         """
@@ -124,21 +188,20 @@ class BuildEnvLoader:
         # Can't find any valid venv
         return None
 
-    def setup_venv(self) -> EnvContext:
+    def setup_venv(self, with_venv: Path = None) -> EnvContext:
         """
         Prepare python environment builder, and create environment if it doesn't exist yet
 
+        :param with_venv: Existing venv path (typically used for testing purpose)
         :return: Environment context object
         """
 
         # Look for venv
-        venv_path = self.find_venv()
+        venv_path = with_venv if with_venv is not None and with_venv.is_dir() else self.find_venv()
         missing_venv = venv_path is None
 
         # Create env builder and remember context
-        env_builder = EnvBuilder(
-            clear=missing_venv and self.venv_path.is_dir(), symlinks=os.name != "nt", with_pip=True, prompt=self.read_config("prompt", "buildenv")
-        )
+        env_builder = _MyEnvBuilder(clear=missing_venv and self.venv_path.is_dir(), symlinks=os.name != "nt", with_pip=True, prompt=self.prompt)
         context = EnvContext(env_builder.ensure_directories(self.venv_path if missing_venv else venv_path))
 
         if missing_venv:

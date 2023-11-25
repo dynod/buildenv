@@ -13,7 +13,10 @@ class TestBuildenvParser(BuildEnvTestHelper):
         return self.test_folder / "venv" / VENV_BIN
 
     def run_buildenv(self, args: List[str]) -> int:
-        self.venv_bin.mkdir(parents=True, exist_ok=True)
+        activate = self.venv_bin / "activate.d"
+        activate.mkdir(parents=True, exist_ok=True)
+        (activate / "00_activate.sh").touch()
+        (activate / "00_activate.bat").touch()
         return buildenv(args, self.test_folder, self.venv_bin)
 
     def test_default_cmd_no_loader(self):

@@ -9,7 +9,7 @@ from typing import Dict
 from jinja2 import Template
 
 from buildenv._internal.parser import RCHolder
-from buildenv.loader import BuildEnvLoader
+from buildenv.loader import NEWLINE_PER_TYPE, BuildEnvLoader, to_linux_path, to_windows_path
 
 BUILDENV_OK = "buildenvOK"
 """Valid buildenv tag file"""
@@ -22,9 +22,6 @@ _TEMPLATES_FOLDER = _MODULE_FOLDER / "templates"
 
 # Map of comment styles per file extension
 _COMMENT_PER_TYPE = {".py": "# ", ".sh": "# ", ".cmd": ":: "}
-
-# Map of newline styles per file extension
-_NEWLINE_PER_TYPE = {".py": None, ".sh": "\n", ".cmd": "\r\n"}
 
 # Map of file header per file extension
 _HEADERS_PER_TYPE = {".py": "", ".sh": "#!/usr/bin/bash\n", ".cmd": "@ECHO OFF\n"}
@@ -65,6 +62,7 @@ class BuildEnvManager:
         self.project_script_path = self.project_path / ".buildenv"  # Current project generated scripts path
         self.loader = BuildEnvLoader(self.project_path)  # Loader instance
         self.is_windows = (self.venv_bin_path / "activate.bat").is_file()  # Is Windows venv?
+        self.venv_context = self.loader.setup_venv(self.venv_bin_path.parent)
 
         try:
             # Relative venv bin path string for local scripts
@@ -98,6 +96,7 @@ class BuildEnvManager:
         if not ((self.venv_path / BUILDENV_OK)).is_file():
             print(">> Customizing buildenv...")
             self._verify_git_files()
+            self._add_activation_files()
             self._make_ready()
 
     def _render_template(self, template: Path, target: Path, executable: bool = False, keywords: Dict[str, str] = None):
@@ -117,9 +116,10 @@ class BuildEnvManager:
             "comment": _COMMENT_PER_TYPE[target_type],
             "windowsPython": self.loader.read_config("windowsPython", "python"),
             "linuxPython": self.loader.read_config("linuxPython", "python3"),
-            "windowsVenvBinPath": str(self.relative_venv_bin_path).replace("/", "\\"),
-            "linuxVenvBinPath": str(self.relative_venv_bin_path).replace("\\", "/"),
+            "windowsVenvBinPath": to_windows_path(self.relative_venv_bin_path),
+            "linuxVenvBinPath": to_linux_path(self.relative_venv_bin_path),
             "rcStartShell": _RC_START_SHELL,
+            "buildenv_prompt": self.loader.prompt,
         }
         if keywords is not None:
             all_keywords.update(keywords)
@@ -137,7 +137,7 @@ class BuildEnvManager:
         target.parent.mkdir(parents=True, exist_ok=True)
 
         # Generate target
-        with target.open("w", newline=_NEWLINE_PER_TYPE[target_type]) as f:
+        with target.open("w", newline=NEWLINE_PER_TYPE[target_type]) as f:
             f.write(generated_content)
 
         # Make script executable if required
@@ -162,6 +162,26 @@ class BuildEnvManager:
         for file, content in _RECOMMENDED_GIT_FILES.items():
             if not (self.project_path / file).is_file():
                 print(f">> WARNING: missing {file} file in project", "   Recommended content is:", "", content, sep="\n", file=sys.stderr)
+
+    # Add activation files in venv
+    def _add_activation_files(self):
+        # Iterate on required activation files
+        for name, extensions, templates in [("set_prompt", [".sh"], ["venv_prompt.sh.jinja"])]:
+            # Iterate on extensions and templates
+            for extension, template in zip(extensions, templates):
+                # Add script to activation folder
+                self._add_activation_file(name, extension, template)
+
+    # Add activation file in venv
+    def _add_activation_file(self, name: str, extension: str, template: str):
+        # Find next index for activation script
+        next_index = max(int(n.name[0:2]) for n in self.venv_context.activation_scripts_folder.glob(f"*{extension}")) + 1
+
+        # Build script name
+        script_name = self.venv_context.activation_scripts_folder / f"{next_index:02}_{name}{extension}"
+
+        # Generate from template
+        self._render_template(_TEMPLATES_FOLDER / template, script_name)
 
     # Just touch "buildenv ready" file
     def _make_ready(self):

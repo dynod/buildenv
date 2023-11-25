@@ -1,0 +1,4 @@
+# Set venv prompt if not done yet
+if test -z "${VIRTUAL_ENV_PROMPT}"; then
+    export VIRTUAL_ENV_PROMPT="({{ buildenv_prompt }})"
+fi
