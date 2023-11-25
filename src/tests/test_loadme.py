@@ -139,7 +139,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
     def venv_exe(self) -> str:
         return self.wrap_exe((self.test_folder / "venv" / BIN_FOLDER / PYTHON_EXE).as_posix())
 
-    def check_venv_creation(self, monkeypatch, requirements: bool):
+    def check_venv_creation(self, monkeypatch, requirements: bool, pip_args: bool):
         received_commands = []
 
         def fake_subprocess(args, cwd=None, **kwargs):
@@ -156,6 +156,12 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         # Check venv doesn't exist yet
         assert not (self.test_folder / "venv" / "venvOK").is_file()
 
+        # Add config file for pip args
+        extra_pip_params = ""
+        if pip_args:
+            self.prepare_config("buildenv-pip-args.cfg")
+            extra_pip_params = " --no-color --no-cache-dir"
+
         # Create venv
         loader = BuildEnvLoader(self.test_folder)
         c = loader.setup_venv()
@@ -167,9 +173,9 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
             [
                 "git rev-parse --show-toplevel",
                 f"{self.venv_exe} -I?m ensurepip --upgrade --default-pip",
-                f"{self.venv_exe} -m pip install pip wheel buildenv --upgrade",
+                f"{self.venv_exe} -m pip install pip wheel buildenv --upgrade{extra_pip_params}",
             ]
-            + [f"{self.venv_exe} -m pip install -r requirements.txt"]
+            + [f"{self.venv_exe} -m pip install -r requirements.txt{extra_pip_params}"]
             if requirements
             else []
         )
@@ -184,7 +190,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
 
     def test_setup_venv_create_empty(self, monkeypatch):
         # Check with empty folder
-        self.check_venv_creation(monkeypatch, False)
+        self.check_venv_creation(monkeypatch, False, True)
 
     def test_setup_venv_create_with_clean(self, monkeypatch):
         # Prepare venv folder with dummy content
@@ -198,7 +204,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         (self.test_folder / "requirements.txt").touch()
 
         # Check with existing (but corrupted) venv folder
-        self.check_venv_creation(monkeypatch, True)
+        self.check_venv_creation(monkeypatch, True, False)
 
     def test_setup_venv_project_path(self):
         # Check with current project venv

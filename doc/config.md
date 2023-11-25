@@ -26,10 +26,11 @@ In this case, in order to enable some parameters to be overridden in automated b
 
 This table describes all the parameters supported by the **buildenv** tool:
 
-|Name               |Default value          |Usage|
-|-                  |-                      |-
-|**`venvFolder`**   | `venv`                | Name of the folder where to python virtual env will be created in the project
-|**`requirements`** | `requirements.txt`    | Name of the pip requirements file to be installed when creating the python virtual env
-|**`prompt`**       | `buildenv`            | Build environment name, to be diplayed on the command line in front of the system prompt, when running the **`buildenv`** shell
-|**`windowsPython`**| `python`              | Python command to be used on Windows to create the virtual env
-|**`linuxPython`**  | `python3`             | Python command to be used on Linux to create the virtual env
+|Name                   |Default value          |Usage|
+|-                      |-                      |-
+|**`venvFolder`**       | `venv`                | Name of the folder where to python virtual env will be created in the project
+|**`requirements`**     | `requirements.txt`    | Name of the pip requirements file to be installed when creating the python virtual env
+|**`prompt`**           | `buildenv`            | Build environment name, to be diplayed on the command line in front of the system prompt, when running the **`buildenv`** shell
+|**`windowsPython`**    | `python`              | Python command to be used on Windows to create the virtual env
+|**`linuxPython`**      | `python3`             | Python command to be used on Linux to create the virtual env
+|**`pipInstallArgs`**   | empty                 | Extra arguments to be added to all `pip install` commands used to create the virtual env
