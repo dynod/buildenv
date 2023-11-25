@@ -63,3 +63,11 @@ When the build env manager prepares the build environment, it will verify if som
 * **.gitattributes** should be configured to handle platform-specific files with correct line endings:
   * **.bat** and **.cmd** files must always use **`crlf`** line endings
   * **.sh** files must always use **`lf`** line endings
+
+## Completion
+
+When running on Linux (or in Git bash on Windows), completion is automatically enabled when running in **`buildenv`** shell for following commands:
+* **`buildenv`**
+* **`pip`**
+
+Completion can be enabled for other commands from **`buildenv`** extensions.
