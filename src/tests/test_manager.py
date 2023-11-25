@@ -21,7 +21,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         assert m.project_path == self.test_folder
         assert m.venv_path == Path(sys.executable).parent.parent
         assert m.venv_bin_path == Path(sys.executable).parent
-        assert (self.test_folder / m.relative_venv_bin_path).resolve() == Path(sys.executable).parent
+        assert (self.test_folder / m.renderer.relative_venv_bin_path).resolve() == Path(sys.executable).parent
         assert m.project_script_path == self.test_folder / ".buildenv"
         assert m.is_windows == is_windows()
 
@@ -67,6 +67,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         generated_buildenv_files = [
             self.test_folder / "venv" / BUILDENV_OK,
             self.test_folder / "venv" / VENV_BIN / "activate.d" / "01_set_prompt.sh",
+            self.test_folder / "venv" / VENV_BIN / "activate.d" / "02_completion.sh",
         ]
         generated_files = (
             generated_buildenv_files
@@ -101,7 +102,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
 
             if expect_files:
                 # Verify relative venv path
-                assert m.relative_venv_bin_path == Path("venv") / VENV_BIN
+                assert m.renderer.relative_venv_bin_path == Path("venv") / VENV_BIN
 
                 # Verify activate.sh file content
                 with activate_sh.open() as f:

@@ -1,30 +1,18 @@
 import os
 import random
-import stat
 import sys
 from argparse import Namespace
 from pathlib import Path
-from typing import Dict
-
-from jinja2 import Template
 
 from buildenv._internal.parser import RCHolder
-from buildenv.loader import NEWLINE_PER_TYPE, BuildEnvLoader, to_linux_path, to_windows_path
+from buildenv._internal.render import RC_START_SHELL, TemplatesRenderer
+from buildenv.loader import BuildEnvLoader
 
 BUILDENV_OK = "buildenvOK"
 """Valid buildenv tag file"""
 
 # Path to buildenv module
 _MODULE_FOLDER = Path(__file__).parent
-
-# Path to bundled template files
-_TEMPLATES_FOLDER = _MODULE_FOLDER / "templates"
-
-# Map of comment styles per file extension
-_COMMENT_PER_TYPE = {".py": "# ", ".sh": "# ", ".cmd": ":: "}
-
-# Map of file header per file extension
-_HEADERS_PER_TYPE = {".py": "", ".sh": "#!/usr/bin/bash\n", ".cmd": "@ECHO OFF\n"}
 
 # Recommended git files
 _RECOMMENDED_GIT_FILES = {
@@ -38,7 +26,6 @@ _RECOMMENDED_GIT_FILES = {
 }
 
 # Return codes
-_RC_START_SHELL = 100  # RC used to tell loading script to spawn an interactive shell
 _RC_RUN_CMD = 101  # Start of RC range for running a command
 _RC_MAX = 255  # Max RC
 
@@ -66,13 +53,16 @@ class BuildEnvManager:
 
         try:
             # Relative venv bin path string for local scripts
-            self.relative_venv_bin_path = self.venv_bin_path.relative_to(self.project_path)
+            relative_venv_bin_path = self.venv_bin_path.relative_to(self.project_path)
         except ValueError:
             # Venv is not relative to current project: reverse logic
             upper_levels_count = len(self.project_path.relative_to(self.venv_root_path).parts)
-            self.relative_venv_bin_path = Path(os.pardir)
+            relative_venv_bin_path = Path(os.pardir)
             for part in [os.pardir] * (upper_levels_count - 1) + [self.venv_path.name, self.venv_bin_path.name]:
-                self.relative_venv_bin_path /= part
+                relative_venv_bin_path /= part
+
+        # Prepare template renderer
+        self.renderer = TemplatesRenderer(self.loader, relative_venv_bin_path)
 
     def init(self, options: Namespace = None):
         """
@@ -99,63 +89,18 @@ class BuildEnvManager:
             self._add_activation_files()
             self._make_ready()
 
-    def _render_template(self, template: Path, target: Path, executable: bool = False, keywords: Dict[str, str] = None):
-        """
-        Render template template to target file
-
-        :param template: Path to template file
-        :param target: Target file to be generated
-        """
-
-        # Check target file suffix
-        target_type = target.suffix
-
-        # Build keywords map
-        all_keywords = {
-            "header": _HEADERS_PER_TYPE[target_type],
-            "comment": _COMMENT_PER_TYPE[target_type],
-            "windowsPython": self.loader.read_config("windowsPython", "python"),
-            "linuxPython": self.loader.read_config("linuxPython", "python3"),
-            "windowsVenvBinPath": to_windows_path(self.relative_venv_bin_path),
-            "linuxVenvBinPath": to_linux_path(self.relative_venv_bin_path),
-            "rcStartShell": _RC_START_SHELL,
-            "buildenv_prompt": self.loader.prompt,
-        }
-        if keywords is not None:
-            all_keywords.update(keywords)
-
-        # Iterate on fragments
-        generated_content = ""
-        for fragment in [_TEMPLATES_FOLDER / "warning.jinja", template]:
-            # Load template
-            with fragment.open() as f:
-                t = Template(f.read())
-                generated_content += t.render(all_keywords)
-                generated_content += "\n\n"
-
-        # Create target directory if needed
-        target.parent.mkdir(parents=True, exist_ok=True)
-
-        # Generate target
-        with target.open("w", newline=NEWLINE_PER_TYPE[target_type]) as f:
-            f.write(generated_content)
-
-        # Make script executable if required
-        if executable and target_type == ".sh":
-            target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-
     # Copy/update loading scripts in project folder
     def _update_scripts(self):
         # Generate all scripts
-        self._render_template(_MODULE_FOLDER / "loader.py", self.project_path / "buildenv-loader.py")
-        self._render_template(_TEMPLATES_FOLDER / "buildenv.sh.jinja", self.project_path / "buildenv.sh", executable=True)
-        self._render_template(_TEMPLATES_FOLDER / "buildenv.cmd.jinja", self.project_path / "buildenv.cmd")
-        self._render_template(_TEMPLATES_FOLDER / "activate.sh.jinja", self.project_script_path / "activate.sh")
-        self._render_template(_TEMPLATES_FOLDER / "shell.sh.jinja", self.project_script_path / "shell.sh")
+        self.renderer.render(_MODULE_FOLDER / "loader.py", self.project_path / "buildenv-loader.py")
+        self.renderer.render("buildenv.sh.jinja", self.project_path / "buildenv.sh", executable=True)
+        self.renderer.render("buildenv.cmd.jinja", self.project_path / "buildenv.cmd")
+        self.renderer.render("activate.sh.jinja", self.project_script_path / "activate.sh")
+        self.renderer.render("shell.sh.jinja", self.project_script_path / "shell.sh")
         if self.is_windows:
             # Only if venv files are generated for Windows
-            self._render_template(_TEMPLATES_FOLDER / "activate.cmd.jinja", self.project_script_path / "activate.cmd")
-            self._render_template(_TEMPLATES_FOLDER / "shell.cmd.jinja", self.project_script_path / "shell.cmd")
+            self.renderer.render("activate.cmd.jinja", self.project_script_path / "activate.cmd")
+            self.renderer.render("shell.cmd.jinja", self.project_script_path / "shell.cmd")
 
     # Check for recommended git files, and display warning if they're missing
     def _verify_git_files(self):
@@ -166,7 +111,7 @@ class BuildEnvManager:
     # Add activation files in venv
     def _add_activation_files(self):
         # Iterate on required activation files
-        for name, extensions, templates in [("set_prompt", [".sh"], ["venv_prompt.sh.jinja"])]:
+        for name, extensions, templates in [("set_prompt", [".sh"], ["venv_prompt.sh.jinja"]), ("completion", [".sh"], ["completion.sh.jinja"])]:
             # Iterate on extensions and templates
             for extension, template in zip(extensions, templates):
                 # Add script to activation folder
@@ -181,7 +126,7 @@ class BuildEnvManager:
         script_name = self.venv_context.activation_scripts_folder / f"{next_index:02}_{name}{extension}"
 
         # Generate from template
-        self._render_template(_TEMPLATES_FOLDER / template, script_name)
+        self.renderer.render(template, script_name)
 
     # Just touch "buildenv ready" file
     def _make_ready(self):
@@ -211,7 +156,7 @@ class BuildEnvManager:
         self._command_checks("shell", options)
 
         # Nothing more to do than telling loading script to spawn an interactive shell
-        raise RCHolder(_RC_START_SHELL)
+        raise RCHolder(RC_START_SHELL)
 
     def run(self, options: Namespace):
         """
@@ -250,7 +195,7 @@ class BuildEnvManager:
                 assert len(possible_indexes) > 0, "[internal] can't find any available command script number"
 
         # Generate command script
-        self._render_template(_TEMPLATES_FOLDER / f"command.{options.from_loader}.jinja", script_path, True, {"command": " ".join(options.CMD)})
+        self.renderer.render(f"command.{options.from_loader}.jinja", script_path, True, {"command": " ".join(options.CMD)})
 
         # Tell loading script about command script ID
         raise RCHolder(script_index)

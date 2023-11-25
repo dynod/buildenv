@@ -1,0 +1,15 @@
+if test -f /git-bash.exe; then
+    # On git bash, handle completion through temporary files rather than descriptors
+    # see https://github.com/kislyuk/argcomplete#git-bash-support
+    export ARGCOMPLETE_USE_TEMPFILES=1
+fi
+
+# Enable completion for buildenv
+eval "$(register-python-argcomplete buildenv)"
+
+# Enable completion for pip
+if test -n "${ZSH_VERSION:-}"; then
+    eval "$(pip completion --zsh)"
+else
+    eval "$(pip completion --bash)"
+fi
