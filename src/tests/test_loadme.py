@@ -139,7 +139,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
     def venv_exe(self) -> str:
         return self.wrap_exe((self.test_folder / "venv" / BIN_FOLDER / PYTHON_EXE).as_posix())
 
-    def check_venv_creation(self, monkeypatch, requirements: str):
+    def check_venv_creation(self, monkeypatch, requirements: bool):
         received_commands = []
 
         def fake_subprocess(args, cwd=None, **kwargs):
@@ -163,21 +163,24 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         self.check_strings(str(c.executable), self.venv_exe)
 
         # Check used commands
-        self.check_strings(
-            received_commands,
+        expected_commands = (
             [
                 "git rev-parse --show-toplevel",
                 f"{self.venv_exe} -I?m ensurepip --upgrade --default-pip",
-                f"{self.venv_exe} -m pip install pip buildenv " + requirements + " --upgrade",
-            ],
+                f"{self.venv_exe} -m pip install pip wheel buildenv --upgrade",
+            ]
+            + [f"{self.venv_exe} -m pip install -r requirements.txt"]
+            if requirements
+            else []
         )
+        self.check_strings(received_commands, expected_commands)
 
         # Check venv is marked as created
         assert (self.test_folder / "venv" / "venvOK").is_file()
 
     def test_setup_venv_create_empty(self, monkeypatch):
         # Check with empty folder
-        self.check_venv_creation(monkeypatch, "buildenv")
+        self.check_venv_creation(monkeypatch, False)
 
     def test_setup_venv_create_with_clean(self, monkeypatch):
         # Prepare venv folder with dummy content
@@ -191,7 +194,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         (self.test_folder / "requirements.txt").touch()
 
         # Check with existing (but corrupted) venv folder
-        self.check_venv_creation(monkeypatch, "-r requirements.txt")
+        self.check_venv_creation(monkeypatch, True)
 
     def test_setup_venv_project_path(self):
         # Check with current project venv
