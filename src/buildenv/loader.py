@@ -120,7 +120,7 @@ class BuildEnvLoader:
         self.config_file = self.project_path / "buildenv.cfg"  # Path to config file (in project folder)
         self.config_parser = None  # Config parser object (lazy init)
         self.is_ci = "CI" in os.environ and len(os.environ["CI"]) > 0  # Check if running in CI
-        self.venv_folder = self.read_config("venv_folder", "venv")  # Venv folder name
+        self.venv_folder = self.read_config("venvFolder", "venv")  # Venv folder name
         self.venv_path = self.project_path / self.venv_folder  # Venv path for current project
         self.requirements_file = self.read_config("requirements", "requirements.txt")  # Requirements file name
         self.prompt = self.read_config("prompt", "buildenv")  # Prompt for buildenv
