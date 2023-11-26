@@ -54,12 +54,18 @@ class BuildEnvManager:
         try:
             # Relative venv bin path string for local scripts
             relative_venv_bin_path = self.venv_bin_path.relative_to(self.project_path)
+
+            # Venv is relative to current project
+            self.is_project_venv = True
         except ValueError:
             # Venv is not relative to current project: reverse logic
             upper_levels_count = len(self.project_path.relative_to(self.venv_root_path).parts)
             relative_venv_bin_path = Path(os.pardir)
             for part in [os.pardir] * (upper_levels_count - 1) + [self.venv_path.name, self.venv_bin_path.name]:
                 relative_venv_bin_path /= part
+
+            # Venv is *not* relative to current project
+            self.is_project_venv = False
 
         # Prepare template renderer
         self.renderer = TemplatesRenderer(self.loader, relative_venv_bin_path)
@@ -86,6 +92,11 @@ class BuildEnvManager:
         if not ((self.venv_path / BUILDENV_OK)).is_file():
             print(">> Customizing buildenv...")
             self._verify_git_files()
+
+            # Make sure we're not updating a parent build env
+            assert self.is_project_venv, f"Can't update a parent project buildenv; please update buildenv in {self.venv_path.parent} folder"
+
+            # Delegate to sub-methods
             self._add_activation_files()
             self._make_ready()
 
