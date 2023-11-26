@@ -112,7 +112,7 @@ class BuildEnvManager:
         for file in _RECOMMENDED_GIT_FILES:
             if not (self.project_path / file).is_file():
                 print(f">> WARNING: missing {file} file in project; generating a default one")
-                self.renderer.render(f"{file}.jinja", self.project_path / file)
+                self.renderer.render(f"{file[1:]}.jinja", self.project_path / file)
 
     # Add activation files in venv
     def _add_activation_files(self):
