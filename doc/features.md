@@ -57,10 +57,11 @@ When loading scripts are used in **projectB** or **projectC**, the **venv** of *
 
 ## Suggested git files
 
-When the build env manager prepares the build environment, it will verify if some recommended git files exist in current project:
+When the build env manager prepares the build environment, it will verify if some recommended git files exist in current project.
+If not, these files will be generated with default content:
 
-* **.gitignore** should be configured so that **venv** and **.buildenv** folders are ignored and not pushed to source control
-* **.gitattributes** should be configured to handle platform-specific files with correct line endings:
+* **.gitignore** is configured so that virtual env and **.buildenv** folders are ignored and not pushed to source control
+* **.gitattributes** is configured to handle platform-specific files with correct line endings:
   * **.bat** and **.cmd** files must always use **`crlf`** line endings
   * **.sh** files must always use **`lf`** line endings
 

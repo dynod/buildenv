@@ -79,6 +79,14 @@ class TestBuildEnvManager(BuildEnvTestHelper):
                 self.test_folder / ".buildenv" / "shell.sh",
             ]
             + ([activate_cmd, self.test_folder / ".buildenv" / "shell.cmd"] if with_windows else [])
+            + (
+                [
+                    self.test_folder / ".gitignore",
+                    self.test_folder / ".gitattributes",
+                ]
+                if not with_git_files
+                else []
+            )
         )
         missing_files = [] if with_windows else [activate_cmd, self.test_folder / ".buildenv" / "shell.cmd"]
 

@@ -15,15 +15,7 @@ BUILDENV_OK = "buildenvOK"
 _MODULE_FOLDER = Path(__file__).parent
 
 # Recommended git files
-_RECOMMENDED_GIT_FILES = {
-    ".gitignore": """/venv/
-/.buildenv/
-""",
-    ".gitattributes": """*.sh text eol=lf
-*.bat text eol=crlf
-*.cmd text eol=crlf
-""",
-}
+_RECOMMENDED_GIT_FILES = [".gitignore", ".gitattributes"]
 
 # Return codes
 _RC_RUN_CMD = 101  # Start of RC range for running a command
@@ -88,10 +80,12 @@ class BuildEnvManager:
         # Always update script
         self._update_scripts()
 
+        # Check for git files if they don't exist
+        self._verify_git_files()
+
         # Refresh buildenv if not done yet
         if not ((self.venv_path / BUILDENV_OK)).is_file():
             print(">> Customizing buildenv...")
-            self._verify_git_files()
 
             # Make sure we're not updating a parent build env
             assert self.is_project_venv, f"Can't update a parent project buildenv; please update buildenv in {self.venv_path.parent} folder"
@@ -115,9 +109,10 @@ class BuildEnvManager:
 
     # Check for recommended git files, and display warning if they're missing
     def _verify_git_files(self):
-        for file, content in _RECOMMENDED_GIT_FILES.items():
+        for file in _RECOMMENDED_GIT_FILES:
             if not (self.project_path / file).is_file():
-                print(f">> WARNING: missing {file} file in project", "   Recommended content is:", "", content, sep="\n", file=sys.stderr)
+                print(f">> WARNING: missing {file} file in project; generating a default one")
+                self.renderer.render(f"{file}.jinja", self.project_path / file)
 
     # Add activation files in venv
     def _add_activation_files(self):

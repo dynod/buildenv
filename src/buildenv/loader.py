@@ -21,7 +21,7 @@ from venv import EnvBuilder
 VENV_OK = "venvOK"
 """Valid venv tag file"""
 
-NEWLINE_PER_TYPE = {".py": None, ".sh": "\n", ".cmd": "\r\n", ".bat": "\r\n"}
+NEWLINE_PER_TYPE = {".sh": "\n", ".cmd": "\r\n", ".bat": "\r\n"}
 """Map of newline styles per file extension"""
 
 

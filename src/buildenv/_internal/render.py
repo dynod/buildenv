@@ -41,24 +41,38 @@ class TemplatesRenderer:
 
         # Build keywords map
         all_keywords = {
-            "header": _HEADERS_PER_TYPE[target_type],
-            "comment": _COMMENT_PER_TYPE[target_type],
             "windowsPython": self.loader.read_config("windowsPython", "python"),
             "linuxPython": self.loader.read_config("linuxPython", "python3"),
             "windowsVenvBinPath": to_windows_path(self.relative_venv_bin_path),
             "linuxVenvBinPath": to_linux_path(self.relative_venv_bin_path),
             "rcStartShell": RC_START_SHELL,
             "buildenv_prompt": self.loader.prompt,
+            "venvName": self.relative_venv_bin_path.parent.name,
         }
         if keywords is not None:
             all_keywords.update(keywords)
 
+        # Build fragments list
+        fragments = [
+            template if (isinstance(template, Path) and template.is_absolute()) else (_TEMPLATES_FOLDER / template),
+        ]
+
+        # Check for know type
+        if target_type in _HEADERS_PER_TYPE and target_type in _COMMENT_PER_TYPE:
+            # Known type: handle header and comments
+            all_keywords.update(
+                {
+                    "header": _HEADERS_PER_TYPE[target_type],
+                    "comment": _COMMENT_PER_TYPE[target_type],
+                }
+            )
+
+            # Add warning header
+            fragments.insert(0, _TEMPLATES_FOLDER / "warning.jinja")
+
         # Iterate on fragments
         generated_content = ""
-        for fragment in [
-            _TEMPLATES_FOLDER / "warning.jinja",
-            template if (isinstance(template, Path) and template.is_absolute()) else (_TEMPLATES_FOLDER / template),
-        ]:
+        for fragment in fragments:
             # Load template
             with fragment.open() as f:
                 t = Template(f.read())
@@ -69,7 +83,8 @@ class TemplatesRenderer:
         target.parent.mkdir(parents=True, exist_ok=True)
 
         # Generate target
-        with target.open("w", newline=NEWLINE_PER_TYPE[target_type]) as f:
+        newline = NEWLINE_PER_TYPE[target_type] if target_type in NEWLINE_PER_TYPE else None
+        with target.open("w", newline=newline) as f:
             f.write(generated_content)
 
         # Make script executable if required
