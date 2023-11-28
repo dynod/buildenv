@@ -40,13 +40,15 @@ class TemplatesRenderer:
         target_type = target.suffix
 
         # Build keywords map
+        windows_python = self.loader.read_config("windowsPython", "python")
         all_keywords = {
-            "windowsPython": self.loader.read_config("windowsPython", "python"),
+            "shWindowsPython": windows_python,
+            "cmdWindowsPython": windows_python.replace("${", "%").replace("}", "%"),
             "linuxPython": self.loader.read_config("linuxPython", "python3"),
-            "windowsVenvBinPath": to_windows_path(self.relative_venv_bin_path),
-            "linuxVenvBinPath": to_linux_path(self.relative_venv_bin_path),
+            "cmdVenvBinPath": to_windows_path(self.relative_venv_bin_path),
+            "shVenvBinPath": to_linux_path(self.relative_venv_bin_path),
             "rcStartShell": RC_START_SHELL,
-            "buildenv_prompt": self.loader.prompt,
+            "buildenvPrompt": self.loader.prompt,
             "venvName": self.relative_venv_bin_path.parent.name,
         }
         if keywords is not None:

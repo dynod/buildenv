@@ -9,6 +9,7 @@ and is designed to be:
 """
 
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -23,6 +24,9 @@ VENV_OK = "venvOK"
 
 NEWLINE_PER_TYPE = {".sh": "\n", ".cmd": "\r\n", ".bat": "\r\n"}
 """Map of newline styles per file extension"""
+
+# Regular expression pattern for environment variable reference in config file
+_ENV_VAR_PATTERN = re.compile("\\$\\{([a-zA-Z0-9_]+)\\}")
 
 
 def to_linux_path(path: Path) -> str:
@@ -124,8 +128,9 @@ class BuildEnvLoader:
         self.venv_path = self.project_path / self.venv_folder  # Venv path for current project
         self.requirements_file = self.read_config("requirements", "requirements.txt")  # Requirements file name
         self.prompt = self.read_config("prompt", "buildenv")  # Prompt for buildenv
+        self.pip_args = self.read_config("pipInstallArgs", "", resolve=True)  # Args for pip install
 
-    def read_config(self, name: str, default: str) -> str:
+    def read_config(self, name: str, default: str, resolve: bool = False) -> str:
         """
         Read configuration parameter from config file (**buildenv.cfg**).
 
@@ -135,6 +140,7 @@ class BuildEnvLoader:
 
         :param name: parameter name
         :param default: default value if parameter is not set
+        :param resolve: resolve environment variables used in parameter value
         :return: parameter value
         """
 
@@ -147,7 +153,23 @@ class BuildEnvLoader:
         # Read config
         if self.config_parser is not None:
             local_value = self.config_parser.get("local", name, fallback=default)
-            return self.config_parser.get("ci", name, fallback=local_value) if self.is_ci else local_value
+            value = self.config_parser.get("ci", name, fallback=local_value) if self.is_ci else local_value
+
+            # Resolve env vars if required
+            go_on = True
+            while resolve and go_on:
+                # Look for pattern
+                m = _ENV_VAR_PATTERN.search(value)
+                go_on = m is not None
+                if go_on:
+                    # Check for value
+                    var_name = m.group(1)
+                    assert var_name in os.environ, f"Environment variable '{var_name}' not found while reading '{name}' config parameter value"
+
+                    # Replace value
+                    value = value[0 : m.start()] + os.environ[var_name] + value[m.end() :]
+
+            return value
         else:
             return default
 
@@ -212,8 +234,7 @@ class BuildEnvLoader:
 
             # Install requirements
             print(">> Installing requirements...")
-            pip_args = self.read_config("pipInstallArgs", "")
-            pip_args = pip_args.split(" ") if len(pip_args) else []
+            pip_args = self.pip_args.split(" ") if len(self.pip_args) else []
             subprocess.run(
                 [str(context.executable), "-m", "pip", "install", "pip", "wheel", "buildenv", "--upgrade"] + pip_args, cwd=self.project_path, check=True
             )

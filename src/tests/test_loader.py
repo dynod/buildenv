@@ -1,4 +1,3 @@
-import os
 import re
 import subprocess
 from pathlib import Path
@@ -21,32 +20,24 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
     @pytest.fixture
     def fake_ci(self):
         # Fake CI environment
-        old_ci_value = os.environ["CI"] if "CI" in os.environ else None
-        os.environ["CI"] = "true"
+        old_value = self.set_env("CI", "true")
 
         # yield to test
         yield
 
         # Restore previous environment
-        if old_ci_value is not None:
-            os.environ["CI"] = old_ci_value
-        else:
-            del os.environ["CI"]
+        self.restore_env("CI", old_value)
 
     @pytest.fixture
     def fake_local(self):
         # Fake local environment
-        old_ci_value = os.environ["CI"] if "CI" in os.environ else None
-        os.environ["CI"] = ""
+        old_value = self.remove_env("CI")
 
         # yield to test
         yield
 
         # Restore previous environment
-        if old_ci_value is not None:
-            os.environ["CI"] = old_ci_value
-        else:
-            del os.environ["CI"]
+        self.restore_env("CI", old_value)
 
     def test_loader_class(self):
         # Verify default attributes
@@ -73,6 +64,32 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         assert loader.config_parser is not None
         assert loader.venv_folder == "MyCiVenv"
         assert loader.requirements_file == "foo.txt"
+
+    def test_loader_missing_env(self):
+        # Populate a config file with env reference
+        self.prepare_config("buildenv-env.cfg")
+        try:
+            BuildEnvLoader(self.test_folder)
+            raise AssertionError("Should not getting here")
+        except AssertionError as e:
+            assert "Environment variable 'SOME_USER_ENV_VAR' not found" in str(e)
+
+    @pytest.fixture
+    def fake_env(self):
+        # Fake local environment
+        old_value = self.set_env("SOME_USER_ENV_VAR", "johnsmith")
+
+        # yield to test
+        yield
+
+        # Restore previous environment
+        self.restore_env("SOME_USER_ENV_VAR", old_value)
+
+    def test_loader_with_env(self, fake_env):
+        # Populate a config file with env reference
+        self.prepare_config("buildenv-env.cfg")
+        loader = BuildEnvLoader(self.test_folder)
+        assert loader.pip_args == "--extra-index-url http://johnsmith@foo.org"
 
     def test_loader_find_real_venv(self):
         # Test for current project venv detection
