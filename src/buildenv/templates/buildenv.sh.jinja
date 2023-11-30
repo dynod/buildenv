@@ -21,9 +21,10 @@ if test ${_BUILDENV_RC} -eq {{ rcStartShell }}; then
     _BUILDENV_RC=$?
 elif test ${_BUILDENV_RC} -gt {{ rcStartShell }}; then
     # Execute command if required
-    ${SHELL} -c .buildenv/command.${_BUILDENV_RC}.sh
+    _BUILDENV_CMD=.buildenv/command.${_BUILDENV_RC}.sh
+    ${SHELL} -c ${_BUILDENV_CMD}
     _BUILDENV_RC=$?
-    rm .buildenv/command.${_BUILDENV_RC}.sh
+    rm ${_BUILDENV_CMD}
 fi
 
 # Forward RC

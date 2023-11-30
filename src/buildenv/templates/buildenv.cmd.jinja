@@ -18,9 +18,10 @@ if %_BUILDENV_RC% EQU {{ rcStartShell }} (
 )
 if %_BUILDENV_RC% GTR {{ rcStartShell }} (
     :: Execute command if required
-    cmd /c .buildenv\command.%_BUILDENV_RC%.cmd
+    set _BUILDENV_CMD=.buildenv\command.%_BUILDENV_RC%.cmd
+    cmd /c %_BUILDENV_CMD%
     set _BUILDENV_RC=%ERRORLEVEL%
-    del .buildenv\command.%_BUILDENV_RC%.cmd
+    del %_BUILDENV_CMD%
 )
 
 :end
