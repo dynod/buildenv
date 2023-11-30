@@ -33,12 +33,15 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         with_git_files: bool = False,
         expect_files: bool = True,
         options: Namespace = DEFAULT_OPTIONS,
+        git_update_index_rc: int = 1,
     ):
         received_commands = []
 
         def fake_subprocess(args, cwd=None, **kwargs):
             received_commands.append(" ".join(args))
             if args[0] == "git":
+                if args[1] == "update-index":
+                    return subprocess.CompletedProcess(args, git_update_index_rc, "".encode())
                 return subprocess.CompletedProcess(args, 1, "".encode())
             return subprocess.CompletedProcess(args, 0, "".encode())
 
@@ -135,7 +138,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         self.check_manager(monkeypatch, "init", True, False)
 
     def test_init_linux(self, monkeypatch):
-        self.check_manager(monkeypatch, "init", False, True)
+        self.check_manager(monkeypatch, "init", False, True, git_update_index_rc=0)
 
     def test_shell_refused_no_loader(self, monkeypatch, fake_no_venv):
         try:

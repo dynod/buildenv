@@ -1,4 +1,5 @@
 import stat
+import subprocess
 from pathlib import Path
 from typing import Dict
 
@@ -92,3 +93,6 @@ class TemplatesRenderer:
         # Make script executable if required
         if executable and target_type == ".sh":
             target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+            cp = subprocess.run(["git", "update-index", "--chmod=+x", str(target)], capture_output=True, check=False)
+            if cp.returncode != 0:
+                print(f">> WARNING: failed to chmod {target.name} file with git (git not installed?)")
