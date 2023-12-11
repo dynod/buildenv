@@ -35,6 +35,8 @@ class TemplatesRenderer:
 
         :param template: Path to template file
         :param target: Target file to be generated
+        :param executable: States if target file as to be set as executable
+        :param keyword: Map of keywords provided to template
         """
 
         # Check target file suffix

@@ -72,3 +72,18 @@ When running on Linux (or in Git bash on Windows), completion is automatically e
 * **`pip`**
 
 Completion can be enabled for other commands from **`buildenv`** extensions.
+
+## Extensions
+
+The **`buildenv`** tool behavior can be extended, to perform:
+* extra steps during the build environment initialization
+* add activation scripts to be executed each time the build environment is loaded
+
+Extensions are contributed by registering classes into the **buildenv_init** entry point in a given python module setup configuration. Referenced class must extend the {py:class}`buildenv.extension.BuildEnvExtension` class.
+
+Example syntax for entry point contribution:
+```
+[options.entry_points]
+buildenv_init = 
+	my_extension = my_package.my_module:MyExtensionClass
+```

@@ -3,9 +3,13 @@ import random
 import sys
 from argparse import Namespace
 from pathlib import Path
+from typing import Dict
+
+import pkg_resources
 
 from buildenv._internal.parser import RCHolder
 from buildenv._internal.render import RC_START_SHELL, TemplatesRenderer
+from buildenv.extension import BuildEnvExtension
 from buildenv.loader import BuildEnvLoader
 
 BUILDENV_OK = "buildenvOK"
@@ -42,6 +46,10 @@ class BuildEnvManager:
         self.loader = BuildEnvLoader(self.project_path)  # Loader instance
         self.is_windows = (self.venv_bin_path / "activate.bat").is_file()  # Is Windows venv?
         self.venv_context = self.loader.setup_venv(self.venv_bin_path.parent)
+
+        # Private data
+        self._completion_commands = set()
+        self.register_completion("buildenv")
 
         try:
             # Relative venv bin path string for local scripts
@@ -83,12 +91,15 @@ class BuildEnvManager:
         # Check for git files if they don't exist
         self._verify_git_files()
 
-        # Refresh buildenv if not done yet
-        if not ((self.venv_path / BUILDENV_OK)).is_file():
-            print(">> Customizing buildenv...")
+        # Make sure we're not updating a parent build env
+        assert self.is_project_venv, f"Can't update a parent project buildenv; please update buildenv in {self.venv_path.parent} folder"
 
-            # Make sure we're not updating a parent build env
-            assert self.is_project_venv, f"Can't update a parent project buildenv; please update buildenv in {self.venv_path.parent} folder"
+        # Handle entry points
+        self._run_entry_points()
+
+        # Refresh buildenv if not done yet
+        if not (self.venv_path / BUILDENV_OK).is_file():
+            print(">> Customizing buildenv...")
 
             # Delegate to sub-methods
             self._add_activation_files()
@@ -117,14 +128,35 @@ class BuildEnvManager:
     # Add activation files in venv
     def _add_activation_files(self):
         # Iterate on required activation files
-        for name, extensions, templates in [("set_prompt", [".sh"], ["venv_prompt.sh.jinja"]), ("completion", [".sh"], ["completion.sh.jinja"])]:
+        for name, extensions, templates, keywords in [
+            ("set_prompt", [".sh"], ["venv_prompt.sh.jinja"], None),
+            ("completion", [".sh"], ["completion.sh.jinja"], {"commands": list(self._completion_commands)}),
+        ]:
             # Iterate on extensions and templates
             for extension, template in zip(extensions, templates):
                 # Add script to activation folder
-                self._add_activation_file(name, extension, template)
+                self.add_activation_file(name, extension, template, keywords)
 
-    # Add activation file in venv
-    def _add_activation_file(self, name: str, extension: str, template: str):
+    def register_completion(self, command: str):
+        """
+        Register a new command for completion in activation scripts.
+        This command must be a python entry point supporting argcomplete completion.
+
+        :param command: New command to be registered
+        """
+        self._completion_commands.add(command)
+
+    def add_activation_file(self, name: str, extension: str, template: str, keywords: Dict[str, str] = None):
+        """
+        Add activation file in venv (in "<venv>/<bin or Script>/activate.d" folder).
+        This file will be loaded each time the venv is activated.
+
+        :param name: Name of the activation script
+        :param extension: Extension of the activation script
+        :param template: Path to Jinja template file to be rendered for this script
+        :param keyword: Map of keywords provided to template
+        """
+
         # Find next index for activation script
         next_index = max(int(n.name[0:2]) for n in self.venv_context.activation_scripts_folder.glob(f"*{extension}")) + 1
 
@@ -132,7 +164,40 @@ class BuildEnvManager:
         script_name = self.venv_context.activation_scripts_folder / f"{next_index:02}_{name}{extension}"
 
         # Generate from template
-        self.renderer.render(template, script_name)
+        self.renderer.render(template, script_name, keywords=keywords)
+
+    # Iterate on entry points to delegate init to buildenv extensions
+    def _run_entry_points(self):
+        # Build entry points map (to handle duplicate names)
+        all_entry_points = {}
+        for p in pkg_resources.iter_entry_points("buildenv_init"):
+            all_entry_points[p.name] = p
+
+        # Iterate on entry points
+        for name, point in all_entry_points.items():
+            # Check if init was already done
+            init_file = self.venv_path / f"{name}OK"
+            if init_file.is_file():
+                # Skip this one, already done
+                continue
+
+            # Get initializer, and verify type
+            print(f"  >> with {name} extension")
+            # Instantiate and call init method
+            try:
+                initializer = point.load()
+                assert issubclass(initializer, BuildEnvExtension), f"{name} extension class is not extending buildenv.BuildEnvExtension"
+            except Exception as e:
+                raise AssertionError(f"Failed to load {name} extension: {e}")
+
+            # Instantiate and call init method
+            try:
+                initializer(self).init()
+            except Exception as e:
+                raise AssertionError(f"Failed to execute {name} extension init: {e}")
+
+            # Init ok: touch init file
+            init_file.touch()
 
     # Just touch "buildenv ready" file
     def _make_ready(self):

@@ -3,11 +3,12 @@ import sys
 from argparse import Namespace
 from pathlib import Path
 
+import pkg_resources
 from nmk.utils import is_windows
 
+from buildenv import BuildEnvExtension, BuildEnvLoader, BuildEnvManager
 from buildenv._internal.parser import RCHolder
-from buildenv.loader import BuildEnvLoader
-from buildenv.manager import BUILDENV_OK, BuildEnvManager
+from buildenv.manager import BUILDENV_OK
 from tests.commons import VENV_BIN, BuildEnvTestHelper
 
 # Default (empty) namespace
@@ -34,6 +35,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         expect_files: bool = True,
         options: Namespace = DEFAULT_OPTIONS,
         git_update_index_rc: int = 1,
+        check_files: bool = True,
     ):
         received_commands = []
 
@@ -97,10 +99,14 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         for i in range(2):
             # Check files are missing
             for f in generated_files + missing_files:
-                assert not f.is_file()
+                assert not check_files or not f.is_file()
 
             # Call manager method
             getattr(m, method)(options)
+
+            # Stop here if not required to check files
+            if not check_files:
+                return
 
             # Verify generated + missing files
             for f in generated_files:
@@ -157,3 +163,103 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             self.check_manager(monkeypatch, "shell", options=Namespace(from_loader="xxx"))
         except RCHolder as e:
             assert e.rc == 100
+
+    def test_extension(self, monkeypatch):
+        init_passed = False
+
+        # Fake extension class
+        class FakeExtension(BuildEnvExtension):
+            def get_version(self) -> str:
+                return "1.2.3"
+
+            def init(self):
+                nonlocal init_passed
+                init_passed = True
+
+        # Fake entry point class
+        class FakeEntryPoint:
+            name = "foo"
+
+            def load(self):
+                return FakeExtension
+
+        # Patch entry points iteration
+        monkeypatch.setattr(pkg_resources, "iter_entry_points", lambda _name: [FakeEntryPoint()])
+
+        # Trigger init
+        self.check_manager(monkeypatch, "init")
+
+        # Check we gone through init method
+        assert init_passed
+        assert (self.test_folder / "venv" / "fooOK").is_file()
+
+        # Trigger init again
+        init_passed = False
+        self.check_manager(monkeypatch, "init", check_files=False)
+        assert not init_passed
+
+    def test_extension_bad_class(self, monkeypatch):
+        # Fake extension class
+        class FakeExtension:
+            pass
+
+        # Fake entry point class
+        class FakeEntryPoint:
+            name = "foo"
+
+            def load(self):
+                return FakeExtension
+
+        # Patch entry points iteration
+        monkeypatch.setattr(pkg_resources, "iter_entry_points", lambda _name: [FakeEntryPoint()])
+
+        # Trigger init
+        try:
+            self.check_manager(monkeypatch, "init")
+            raise AssertionError("Shouldn't get here")
+        except AssertionError as e:
+            assert str(e) == "Failed to load foo extension: foo extension class is not extending buildenv.BuildEnvExtension"
+
+    def test_extension_unknown_ref(self, monkeypatch):
+        # Fake entry point class
+        class FakeEntryPoint:
+            name = "foo"
+
+            def load(self):
+                raise ValueError("some error")
+
+        # Patch entry points iteration
+        monkeypatch.setattr(pkg_resources, "iter_entry_points", lambda _name: [FakeEntryPoint()])
+
+        # Trigger init
+        try:
+            self.check_manager(monkeypatch, "init")
+            raise AssertionError("Shouldn't get here")
+        except AssertionError as e:
+            assert str(e) == "Failed to load foo extension: some error"
+
+    def test_extension_failed_init(self, monkeypatch):
+        # Fake extension class
+        class FakeExtension(BuildEnvExtension):
+            def get_version(self) -> str:
+                return "1.2.3"
+
+            def init(self):
+                raise ValueError("init error")
+
+        # Fake entry point class
+        class FakeEntryPoint:
+            name = "foo"
+
+            def load(self):
+                return FakeExtension
+
+        # Patch entry points iteration
+        monkeypatch.setattr(pkg_resources, "iter_entry_points", lambda _name: [FakeEntryPoint()])
+
+        # Trigger init
+        try:
+            self.check_manager(monkeypatch, "init")
+            raise AssertionError("Shouldn't get here")
+        except AssertionError as e:
+            assert str(e) == "Failed to execute foo extension init: init error"
