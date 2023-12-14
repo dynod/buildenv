@@ -49,15 +49,22 @@ Depending on the calling context (see above), when invoked without sub-command, 
 Usage:
 ```
 > buildenv init -h
-usage: buildenv init [-h]
+usage: buildenv init [-h] [--force]
 
 initialize the build environment and exit
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help   show this help message and exit
+  --force, -f  force buildenv init to be triggered again
 ```
 
-This sub-command generates the buildenv files in the current project folder. It is implicitely called when using the **`shell`** sub-command.
+This sub-command generates the buildenv files in the current project folder. It is implicitely called when using the **`shell`** or the **`run`** sub-commands.
+
+If the initialization was previously fully completed, this command has no effect.
+
+The initialization will be performed again only if:
+* the **`--force`** option is used
+* any version (**`buildenv`** itself one and all extensions ones) has changed since last initialization
 
 ## `shell` sub-command
 
@@ -91,7 +98,7 @@ usage: buildenv run [-h] ...
 run command in build environment
 
 positional arguments:
-  CMD         Command and arguments to be executed in build environment
+  CMD         command and arguments to be executed in build environment
 
 optional arguments:
   -h, --help  show this help message and exit

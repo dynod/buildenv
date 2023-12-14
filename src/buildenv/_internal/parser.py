@@ -46,6 +46,7 @@ class BuildEnvParser:
         init_help = "initialize the build environment and exit"
         init_parser = sub_parsers.add_parser("init", help=init_help, description=init_help)
         init_parser.set_defaults(func=init_cb)
+        init_parser.add_argument("--force", "-f", action="store_true", default=False, help="force buildenv init to be triggered again")
 
         # shell sub-command
         shell_help = "start an interactive shell with loaded build environment"
@@ -56,7 +57,7 @@ class BuildEnvParser:
         run_help = "run command in build environment"
         run_parser = sub_parsers.add_parser("run", help=run_help, description=run_help)
         run_parser.set_defaults(func=run_cb)
-        run_parser.add_argument("CMD", nargs=REMAINDER, help="Command and arguments to be executed in build environment")
+        run_parser.add_argument("CMD", nargs=REMAINDER, help="command and arguments to be executed in build environment")
 
         # Handle completion
         argcomplete.autocomplete(self._parser)

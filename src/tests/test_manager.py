@@ -191,12 +191,35 @@ class TestBuildEnvManager(BuildEnvTestHelper):
 
         # Check we gone through init method
         assert init_passed
-        assert (self.test_folder / "venv" / "fooOK").is_file()
+        v_file = self.test_folder / "venv" / "fooOK"
+        assert v_file.is_file()
 
         # Trigger init again
         init_passed = False
         self.check_manager(monkeypatch, "init", check_files=False)
         assert not init_passed
+
+        # Trigger init again with force
+        init_passed = False
+        self.check_manager(monkeypatch, "init", check_files=False, options=Namespace(force=True))
+        assert init_passed
+
+        # Fake version in persisted file
+        with v_file.open("w") as f:
+            f.write("0.0.0")
+
+        # Trigger init again with bad version
+        init_passed = False
+        self.check_manager(monkeypatch, "init", check_files=False)
+        assert init_passed
+
+        # Verify that, even after N init, generated activation files are still the same
+        venv_activate = self.test_folder / "venv" / VENV_BIN / "activate.d"
+        activate_files = [f.name for f in filter(lambda f: f.is_file(), venv_activate.glob("*"))]
+        expected_files = ["00_activate.sh", "01_set_prompt.sh", "02_completion.sh"]
+        if is_windows():
+            expected_files += ["00_activate.bat"]
+        assert len(expected_files) == len(activate_files)
 
     def test_extension_bad_class(self, monkeypatch):
         # Fake extension class

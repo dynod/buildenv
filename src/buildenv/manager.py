@@ -7,6 +7,7 @@ from typing import Dict
 
 import pkg_resources
 
+from buildenv import __version__
 from buildenv._internal.parser import RCHolder
 from buildenv._internal.render import RC_START_SHELL, TemplatesRenderer
 from buildenv.extension import BuildEnvExtension
@@ -46,6 +47,7 @@ class BuildEnvManager:
         self.loader = BuildEnvLoader(self.project_path)  # Loader instance
         self.is_windows = (self.venv_bin_path / "activate.bat").is_file()  # Is Windows venv?
         self.venv_context = self.loader.setup_venv(self.venv_bin_path.parent)
+        self.buildenv_ok = self.venv_path / BUILDENV_OK
 
         # Private data
         self._completion_commands = set()
@@ -95,13 +97,16 @@ class BuildEnvManager:
         assert self.is_project_venv, f"Can't update a parent project buildenv; please update buildenv in {self.venv_path.parent} folder"
 
         # Handle entry points
-        self._run_entry_points()
+        all_extensions = self._parse_extensions()
 
         # Refresh buildenv if not done yet
-        if not (self.venv_path / BUILDENV_OK).is_file():
+        force = False if not hasattr(options, "force") else options.force
+        if force or not self._check_versions(all_extensions):
             print(">> Customizing buildenv...")
 
             # Delegate to sub-methods
+            self._clean_activation_files()
+            self._run_extensions(all_extensions)
             self._add_activation_files()
             self._make_ready()
 
@@ -124,6 +129,12 @@ class BuildEnvManager:
             if not (self.project_path / file).is_file():
                 print(f">> WARNING: missing {file} file in project; generating a default one")
                 self.renderer.render(f"{file[1:]}.jinja", self.project_path / file)
+
+    # Clean extra activation files in venv
+    def _clean_activation_files(self):
+        # Browse existing files
+        for f in filter(lambda f: f.is_file() and not f.name.startswith("00_"), self.venv_context.activation_scripts_folder.glob("*")):
+            f.unlink()
 
     # Add activation files in venv
     def _add_activation_files(self):
@@ -166,43 +177,70 @@ class BuildEnvManager:
         # Generate from template
         self.renderer.render(template, script_name, keywords=keywords)
 
-    # Iterate on entry points to delegate init to buildenv extensions
-    def _run_entry_points(self):
+    # Iterate on entry points to load extensions
+    def _parse_extensions(self) -> Dict[str, object]:
         # Build entry points map (to handle duplicate names)
         all_entry_points = {}
         for p in pkg_resources.iter_entry_points("buildenv_init"):
             all_entry_points[p.name] = p
 
-        # Iterate on entry points
+        out = {}
         for name, point in all_entry_points.items():
-            # Check if init was already done
-            init_file = self.venv_path / f"{name}OK"
-            if init_file.is_file():
-                # Skip this one, already done
-                continue
-
-            # Get initializer, and verify type
-            print(f"  >> with {name} extension")
-            # Instantiate and call init method
+            # Instantiate extension
             try:
-                initializer = point.load()
-                assert issubclass(initializer, BuildEnvExtension), f"{name} extension class is not extending buildenv.BuildEnvExtension"
+                extension_class = point.load()
+                assert issubclass(extension_class, BuildEnvExtension), f"{name} extension class is not extending buildenv.BuildEnvExtension"
+                extension = extension_class(self)
             except Exception as e:
                 raise AssertionError(f"Failed to load {name} extension: {e}")
+            out[name] = extension
 
-            # Instantiate and call init method
+        return out
+
+    # Check for persisted versions
+    def _check_versions(self, all_extensions: Dict[str, object]) -> bool:
+        # Build map of version files
+        version_files = {self.buildenv_ok: __version__}
+        version_files.update({self.venv_path / f"{n}OK": p.get_version() for n, p in all_extensions.items()})
+
+        # Verify that all persisted versions are in line
+        for v_file, v_str in version_files.items():
+            # If any file doesn't exist: give up
+            if not v_file.is_file():
+                return False
+
+            # Check version
+            with v_file.open() as f:
+                if f.read() != v_str:
+                    # Version mismatch: give up
+                    return False
+
+        # If we get here, all versions (buildenv + extensions) are OK
+        return True
+
+    # Iterate on extensions to delegate init
+    def _run_extensions(self, all_extensions: Dict[str, object]):
+        # Iterate on entry points
+        for name, extension in all_extensions.items():
+            # Get initializer, and verify type
+            print(f"  >> with {name} extension")
+
+            # Call init method
             try:
-                initializer(self).init()
+                extension.init()
             except Exception as e:
                 raise AssertionError(f"Failed to execute {name} extension init: {e}")
 
             # Init ok: touch init file
-            init_file.touch()
+            init_file = self.venv_path / f"{name}OK"
+            with init_file.open("w") as f:
+                f.write(extension.get_version())
 
     # Just touch "buildenv ready" file
     def _make_ready(self):
         print(">> Buildenv is ready!")
-        (self.venv_path / BUILDENV_OK).touch()
+        with (self.venv_path / BUILDENV_OK).open("w") as f:
+            f.write(__version__)
 
     # Preliminary checks before env loading
     def _command_checks(self, command: str, options: Namespace):
