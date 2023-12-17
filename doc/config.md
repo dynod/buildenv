@@ -1,6 +1,6 @@
 # Configuration
 
-The **`buildenv`** tool can be configured thanks to a **`buildenv.cfg`**, located in the project root folder.
+The **`buildenv`** tool can be configured thanks to a **`buildenv.cfg`** file, located in the project root folder.
 
 If this file doesn't exist, all parameters will be initialized to default values.
 
@@ -40,3 +40,4 @@ This table describes all the parameters supported by the **buildenv** tool:
 |**`windowsPython`**    | `python`              | yes | Python command to be used on Windows to create the virtual env
 |**`linuxPython`**      | `python3`             | yes | Python command to be used on Linux to create the virtual env
 |**`pipInstallArgs`**   | empty                 | yes | Extra arguments to be added to all `pip install` commands used to create the virtual env
+|**`lookUp`**           | `true`                | no  | Look up for git root folder if not matching with current project root

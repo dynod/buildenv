@@ -12,9 +12,9 @@ VENV_BIN = "Scripts" if is_windows() else "bin"
 
 
 class BuildEnvTestHelper(TestHelper):
-    def prepare_config(self, name: str):
+    def prepare_config(self, name: str, dest: Path = None):
         # Create buildenv folder, and copy template config file
-        shutil.copyfile(Path(__file__).parent / "templates" / name, self.test_folder / "buildenv.cfg")
+        shutil.copyfile(Path(__file__).parent / "templates" / name, (self.test_folder if dest is None else dest) / "buildenv.cfg")
 
     def remove_env(self, name: str) -> Union[str, None]:
         # Remove environment var and remember previous value

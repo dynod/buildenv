@@ -129,6 +129,7 @@ class BuildEnvLoader:
         self.requirements_file = self.read_config("requirements", "requirements.txt")  # Requirements file name
         self.prompt = self.read_config("prompt", "buildenv")  # Prompt for buildenv
         self.pip_args = self.read_config("pipInstallArgs", "", resolve=True)  # Args for pip install
+        self.look_up = self.read_config("lookUp", "true").lower() not in ["false", "0", ""]  # Look up for git root folder
 
     def read_config(self, name: str, default: str, resolve: bool = False) -> str:
         """
@@ -180,10 +181,10 @@ class BuildEnvLoader:
         :return: venv folder path, or None if no venv found
         """
 
-        # Look up to find venv folder (even in parent projects)
+        # Look up (unless disabled by config) to find venv folder (even in parent projects)
         current_path = self.project_path
         go_on = True
-        while go_on:
+        while self.look_up and go_on:
             # Ask git
             cp = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, cwd=current_path, check=False)
             if cp.returncode == 0:

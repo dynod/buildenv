@@ -55,6 +55,11 @@ projectA/
 ```
 When loading scripts are used in **projectB** or **projectC**, the **venv** of **projectA** will be used.
 
+````{note}
+This behavior can be disabled by setting **`lookUp`** parameter to **`false`** in the [configuration file](config.md).\
+In this case, the **venv** will always be created in project root folder.
+````
+
 ## Suggested git files
 
 When the build env manager prepares the build environment, it will verify if some recommended git files exist in current project.
