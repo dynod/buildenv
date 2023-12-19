@@ -55,13 +55,13 @@ class BuildEnvManager:
 
         try:
             # Relative venv bin path string for local scripts
-            relative_venv_bin_path = self.venv_bin_path.relative_to(self.project_path)
+            relative_venv_bin_path = self.venv_bin_path.resolve().relative_to(self.project_path.resolve())
 
             # Venv is relative to current project
             self.is_project_venv = True
         except ValueError:
             # Venv is not relative to current project: reverse logic
-            upper_levels_count = len(self.project_path.relative_to(self.venv_root_path).parts)
+            upper_levels_count = len(self.project_path.resolve().relative_to(self.venv_root_path.resolve()).parts)
             relative_venv_bin_path = Path(os.pardir)
             for part in [os.pardir] * (upper_levels_count - 1) + [self.venv_path.name, self.venv_bin_path.name]:
                 relative_venv_bin_path /= part
