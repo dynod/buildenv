@@ -107,7 +107,7 @@ class BuildEnvManager:
 
             # Delegate to sub-methods
             self._clean_activation_files()
-            self._run_extensions(all_extensions)
+            self._run_extensions(all_extensions, force)
             self._add_activation_files()
             self._make_ready()
 
@@ -220,7 +220,7 @@ class BuildEnvManager:
         return True
 
     # Iterate on extensions to delegate init
-    def _run_extensions(self, all_extensions: Dict[str, object]):
+    def _run_extensions(self, all_extensions: Dict[str, object], force: bool):
         # Iterate on entry points
         for name, extension in all_extensions.items():
             # Get initializer, and verify type
@@ -228,7 +228,7 @@ class BuildEnvManager:
 
             # Call init method
             try:
-                extension.init()
+                extension.init(force)
             except Exception as e:
                 raise AssertionError(f"Failed to execute {name} extension init: {e}")
 

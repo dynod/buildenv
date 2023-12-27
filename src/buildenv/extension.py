@@ -14,7 +14,7 @@ class BuildEnvExtension(ABC):
         pass
 
     @abstractmethod
-    def init(self):  # pragma: no cover
+    def init(self, force: bool):  # pragma: no cover
         """
         Method called by manager when delegating its own "init" method to extensions.
 
@@ -23,7 +23,9 @@ class BuildEnvExtension(ABC):
         * to perform some build logic initialization (once for all)
         * to contribute to activation scripts (loaded each time the buildenv is activated)
 
-        The self.manager attribute can be used to access to the manager instance
+        The self.manager attribute can be used to access to the manager instance.
+
+        :param force: Tells the extension if the **--force** argument was used on the **buildenv init** command line.
         """
         pass
 

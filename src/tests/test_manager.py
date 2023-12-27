@@ -172,7 +172,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             def get_version(self) -> str:
                 return "1.2.3"
 
-            def init(self):
+            def init(self, force: bool):
                 nonlocal init_passed
                 init_passed = True
 
@@ -267,7 +267,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             def get_version(self) -> str:
                 return "1.2.3"
 
-            def init(self):
+            def init(self, force: bool):
                 raise ValueError("init error")
 
         # Fake entry point class
