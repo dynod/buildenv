@@ -63,13 +63,15 @@ class TestFunctional(BuildEnvTestHelper):
         # Check for generated files
         self.check_generated_buildenv(buildenv)
 
+        # Prepare environment, to look like not running from a venv
+        new_env = dict(os.environ)
+        new_env.pop("VIRTUAL_ENV", None)
+
         # Run some command through loading script
         if is_windows():
             args = ["cmd", "/c", f"{buildenv / 'buildenv.cmd'} run echo hello from buildenv"]
         else:
             args = [f"{buildenv / 'buildenv.sh'}", "run", "echo", "hello from buildenv"]
-        new_env = dict(os.environ)
-        new_env.pop("VIRTUAL_ENV", None)
         cp = subprocess.run(args, cwd=buildenv, check=False, capture_output=True, env=new_env)
         output = cp.stdout.decode().splitlines()
         logging.info("buildenv run stdout:\n" + "\n".join(output))
@@ -79,3 +81,30 @@ class TestFunctional(BuildEnvTestHelper):
 
         # Check for generated files (generated run script shall be removed by loading script)
         self.check_generated_buildenv(buildenv)
+
+        # Check for return code propagation
+        if is_windows():
+            args = ["cmd", "/c", f"{buildenv / 'buildenv.cmd'} run exit /b 74"]
+        else:
+            args = [f"{buildenv / 'buildenv.sh'}", "run", "exit", "74"]
+        cp = subprocess.run(args, cwd=buildenv, check=False, capture_output=True, env=new_env)
+        assert cp.returncode == 74
+
+        # Copy config to disable git look up and configure bad python
+        self.prepare_config("buildenv-dontLookUp+badPython.cfg", buildenv)
+
+        # Regenerate wrapping scripts
+        cp = subprocess.run([sys.executable, str(tgt_loader)], cwd=buildenv, check=False, capture_output=True, env=new_env)
+        logging.info("buildenv init stdout:\n" + "\n".join(cp.stdout.decode().splitlines()))
+        logging.info("buildenv init stderr:\n" + "\n".join(cp.stderr.decode().splitlines()))
+        assert cp.returncode == 0
+
+        # Try again: shall fail because of bad python path
+        if is_windows():
+            args = ["cmd", "/c", f"{buildenv / 'buildenv.cmd'} init"]
+        else:
+            args = [f"{buildenv / 'buildenv.sh'}", "init"]
+        cp = subprocess.run(args, cwd=buildenv, check=False, capture_output=True, env=new_env)
+        logging.info("buildenv init stdout:\n" + "\n".join(cp.stdout.decode().splitlines()))
+        logging.info("buildenv init stderr:\n" + "\n".join(cp.stderr.decode().splitlines()))
+        assert cp.returncode == (9009 if is_windows() else 1)

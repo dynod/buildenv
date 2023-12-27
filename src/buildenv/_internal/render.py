@@ -25,9 +25,10 @@ class TemplatesRenderer:
     Build env templates renderer
     """
 
-    def __init__(self, loader: BuildEnvLoader, relative_venv_bin_path: Path) -> None:
+    def __init__(self, loader: BuildEnvLoader, relative_venv_bin_path: Path, project_script_path: Path) -> None:
         self.loader = loader
         self.relative_venv_bin_path = relative_venv_bin_path
+        self.project_script_path = project_script_path
 
     def render(self, template: Path, target: Path, executable: bool = False, keywords: Dict[str, str] = None):
         """
@@ -94,7 +95,11 @@ class TemplatesRenderer:
 
         # Make script executable if required
         if executable and target_type == ".sh":
+            # System chmod
             target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-            cp = subprocess.run(["git", "update-index", "--chmod=+x", str(target)], capture_output=True, check=False)
-            if cp.returncode != 0:
-                print(f">> WARNING: failed to chmod {target.name} file with git (git not installed?)")
+
+            # Git chmod: only if not a .buildenv relative script (not persisted on git)
+            if target.parent != self.project_script_path:
+                cp = subprocess.run(["git", "update-index", "--chmod=+x", str(target)], capture_output=True, check=False)
+                if cp.returncode != 0:
+                    print(f">> WARNING: failed to chmod {target.name} file with git (file not in index yet, or maybe git not installed?)")

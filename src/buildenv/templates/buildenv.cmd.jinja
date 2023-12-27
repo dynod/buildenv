@@ -23,8 +23,9 @@ set _BUILDENV_RC=%ERRORLEVEL%
 goto end
 
 :run
-:: Execute command if required
+:: Execute command if required (and command script found)
 set _BUILDENV_CMD=.buildenv\command.%_BUILDENV_RC%.cmd
+if not exist %_BUILDENV_CMD% goto end
 cmd /c %_BUILDENV_CMD%
 set _BUILDENV_RC=%ERRORLEVEL%
 del %_BUILDENV_CMD%

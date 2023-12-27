@@ -70,13 +70,13 @@ class BuildEnvManager:
             self.is_project_venv = False
 
         # Prepare template renderer
-        self.renderer = TemplatesRenderer(self.loader, relative_venv_bin_path)
+        self.renderer = TemplatesRenderer(self.loader, relative_venv_bin_path, self.project_script_path)
 
     def init(self, options: Namespace = None):
         """
         Build environment initialization.
 
-        This method always generates loading scripts in current project folder.
+        This method generates loading scripts in current project folder (if not invoked from loading scripts; can't update them while they're running).
 
         If the buildenv is not marked as ready yet, this method also:
 
@@ -87,8 +87,9 @@ class BuildEnvManager:
         :param options: Input command line parsed options
         """
 
-        # Always update script
-        self._update_scripts()
+        # Update scripts (if not invoked from loading scripts)
+        if not hasattr(options, "from_loader") or options.from_loader is None:
+            self._update_scripts()
 
         # Check for git files if they don't exist
         self._verify_git_files()
@@ -304,7 +305,7 @@ class BuildEnvManager:
                 assert len(possible_indexes) > 0, "[internal] can't find any available command script number"
 
         # Generate command script
-        self.renderer.render(f"command.{options.from_loader}.jinja", script_path, True, {"command": " ".join(options.CMD)})
+        self.renderer.render(f"command.{options.from_loader}.jinja", script_path, executable=True, keywords={"command": " ".join(options.CMD)})
 
         # Tell loading script about command script ID
         raise RCHolder(script_index)
