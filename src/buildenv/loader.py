@@ -128,7 +128,6 @@ class BuildEnvLoader:
         self.venv_path = self.project_path / self.venv_folder  # Venv path for current project
         self.requirements_file = self.read_config("requirements", "requirements.txt")  # Requirements file name
         self.prompt = self.read_config("prompt", "buildenv")  # Prompt for buildenv
-        self.pip_args = self.read_config("pipInstallArgs", "", resolve=True)  # Args for pip install
         self.look_up = self.read_config("lookUp", "true").lower() not in ["false", "0", ""]  # Look up for git root folder
 
     def read_config(self, name: str, default: str, resolve: bool = False) -> str:
@@ -211,6 +210,13 @@ class BuildEnvLoader:
         # Can't find any valid venv
         return None
 
+    @property
+    def pip_args(self) -> str:
+        """
+        Additional arguments for "pip install" commands, read from **buildenv.cfg** project config file.
+        """
+        return self.read_config("pipInstallArgs", "", resolve=True)
+
     def setup_venv(self, with_venv: Path = None) -> EnvContext:
         """
         Prepare python environment builder, and create environment if it doesn't exist yet
@@ -228,6 +234,10 @@ class BuildEnvLoader:
         context = EnvContext(env_builder.ensure_directories(self.venv_path if missing_venv else venv_path))
 
         if missing_venv:
+            # Prepare pip install extra args, if any
+            pip_args = self.pip_args
+            pip_args = pip_args.split(" ") if len(pip_args) else []
+
             # Setup venv
             print(">> Creating venv...")
             env_builder.clear = False
@@ -235,7 +245,6 @@ class BuildEnvLoader:
 
             # Install requirements
             print(">> Installing requirements...")
-            pip_args = self.pip_args.split(" ") if len(self.pip_args) else []
             subprocess.run(
                 [str(context.executable), "-m", "pip", "install", "pip", "wheel", "buildenv", "--upgrade"] + pip_args, cwd=self.project_path, check=True
             )

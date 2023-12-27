@@ -69,7 +69,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         # Populate a config file with env reference
         self.prepare_config("buildenv-env.cfg")
         try:
-            BuildEnvLoader(self.test_folder)
+            BuildEnvLoader(self.test_folder).setup_venv()
             raise AssertionError("Should not getting here")
         except AssertionError as e:
             assert "Environment variable 'SOME_USER_ENV_VAR' not found" in str(e)
