@@ -3,7 +3,7 @@ setlocal
 {{ cmdWindowsPython }} --version > NUL 2> NUL
 set _BUILDENV_RC=%ERRORLEVEL%
 if %_BUILDENV_RC% NEQ 0 (
-    echo|set /p=">> ERROR: {{ cmdWindowsPython }} is not installed" & echo.
+    echo|set /p="[ERROR] {{ cmdWindowsPython }} is not installed" & echo.
     goto end
 )
 

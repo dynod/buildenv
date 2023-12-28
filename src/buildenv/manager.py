@@ -11,7 +11,7 @@ from buildenv import __version__
 from buildenv._internal.parser import RCHolder
 from buildenv._internal.render import RC_START_SHELL, TemplatesRenderer
 from buildenv.extension import BuildEnvExtension
-from buildenv.loader import BuildEnvLoader
+from buildenv.loader import BuildEnvLoader, logger
 
 BUILDENV_OK = "buildenvOK"
 """Valid buildenv tag file"""
@@ -103,7 +103,7 @@ class BuildEnvManager:
         # Refresh buildenv if not done yet
         force = False if not hasattr(options, "force") else options.force
         if force or not self._check_versions(all_extensions):
-            print(">> Customizing buildenv...")
+            logger.info("Customizing buildenv...")
 
             # Delegate to sub-methods
             self._clean_activation_files()
@@ -128,7 +128,7 @@ class BuildEnvManager:
     def _verify_git_files(self):
         for file in _RECOMMENDED_GIT_FILES:
             if not (self.project_path / file).is_file():
-                print(f">> WARNING: missing {file} file in project; generating a default one")
+                logger.warning(f"Missing {file} file in project; generating a default one")
                 self.renderer.render(f"{file[1:]}.jinja", self.project_path / file)
 
     # Clean extra activation files in venv
@@ -224,7 +224,7 @@ class BuildEnvManager:
         # Iterate on entry points
         for name, extension in all_extensions.items():
             # Get initializer, and verify type
-            print(f"  >> with {name} extension")
+            logger.info(f" - with {name} extension")
 
             # Call init method
             try:
@@ -239,7 +239,7 @@ class BuildEnvManager:
 
     # Just touch "buildenv ready" file
     def _make_ready(self):
-        print(">> Buildenv is ready!")
+        logger.info("Buildenv is ready!")
         with (self.venv_path / BUILDENV_OK).open("w") as f:
             f.write(__version__)
 

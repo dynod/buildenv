@@ -1,8 +1,10 @@
+import logging
 import sys
 from pathlib import Path
 from typing import List
 
 from buildenv._internal.parser import BuildEnvParser, RCHolder
+from buildenv.loader import logger
 from buildenv.manager import BuildEnvManager
 
 # Current directory
@@ -32,11 +34,12 @@ def buildenv(args: List[str], project_path: Path = _CWD, venv_bin_path: Path = N
         return e.rc
     except Exception as e:
         # An error occurred
-        print(f">> ERROR: {e}", file=sys.stderr)
+        logger.error(str(e))
         return 1
 
 
 def main() -> int:  # pragma: no cover
+    logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
     return buildenv(sys.argv[1:])
 
 

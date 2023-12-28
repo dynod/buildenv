@@ -5,7 +5,7 @@ from typing import Dict
 
 from jinja2 import Template
 
-from buildenv.loader import NEWLINE_PER_TYPE, BuildEnvLoader, to_linux_path, to_windows_path
+from buildenv.loader import NEWLINE_PER_TYPE, BuildEnvLoader, logger, to_linux_path, to_windows_path
 
 # Path to bundled template files
 _TEMPLATES_FOLDER = Path(__file__).parent.parent / "templates"
@@ -102,4 +102,4 @@ class TemplatesRenderer:
             if target.parent != self.project_script_path:
                 cp = subprocess.run(["git", "update-index", "--chmod=+x", str(target)], capture_output=True, check=False)
                 if cp.returncode != 0:
-                    print(f">> WARNING: failed to chmod {target.name} file with git (file not in index yet, or maybe git not installed?)")
+                    logger.warning(f"Failed to chmod {target.name} file with git (file not in index yet, or maybe git not installed?)")

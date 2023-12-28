@@ -8,6 +8,7 @@ and is designed to be:
 - kept in source control, so that the script is ready to run just after project clone
 """
 
+import logging
 import os
 import re
 import shutil
@@ -24,6 +25,9 @@ VENV_OK = "venvOK"
 
 NEWLINE_PER_TYPE = {".sh": "\n", ".cmd": "\r\n", ".bat": "\r\n"}
 """Map of newline styles per file extension"""
+
+logger = logging.getLogger("buildenv")
+"""Logger instance for buildenv module"""
 
 # Regular expression pattern for environment variable reference in config file
 _ENV_VAR_PATTERN = re.compile("\\$\\{([a-zA-Z0-9_]+)\\}")
@@ -231,7 +235,7 @@ class BuildEnvLoader:
 
         # Create env builder and remember context
         env_builder = _MyEnvBuilder(clear=missing_venv and self.venv_path.is_dir(), symlinks=os.name != "nt", with_pip=True, prompt=self.prompt)
-        context = EnvContext(env_builder.ensure_directories(self.venv_path if missing_venv else venv_path))
+        context = EnvContext(env_builder.ensure_directories((self.venv_path if missing_venv else venv_path).resolve()))
 
         if missing_venv:
             # Prepare pip install extra args, if any
@@ -239,12 +243,12 @@ class BuildEnvLoader:
             pip_args = pip_args.split(" ") if len(pip_args) else []
 
             # Setup venv
-            print(">> Creating venv...")
+            logger.info("Creating venv...")
             env_builder.clear = False
-            env_builder.create(self.venv_path)
+            env_builder.create(self.venv_path.resolve())
 
             # Install requirements
-            print(">> Installing requirements...")
+            logger.info("Installing requirements...")
             subprocess.run(
                 [str(context.executable), "-m", "pip", "install", "pip", "wheel", "buildenv", "--upgrade"] + pip_args, cwd=self.project_path, check=True
             )
@@ -252,7 +256,7 @@ class BuildEnvLoader:
                 subprocess.run([str(context.executable), "-m", "pip", "install", "-r", self.requirements_file] + pip_args, cwd=self.project_path, check=True)
 
             # If we get here, venv is valid
-            print(">> Python venv is ready!")
+            logger.info("Python venv is ready!")
             (self.venv_path / VENV_OK).touch()
 
         return context
@@ -261,6 +265,7 @@ class BuildEnvLoader:
         """
         Prepare python venv if not done yet. Then invoke build env manager.
 
+        :param args: Command line arguments
         :returns: Forwarded **buildenv** command return code
         """
 
@@ -274,7 +279,8 @@ class BuildEnvLoader:
 # Loading script entry point
 if __name__ == "__main__":  # pragma: no cover
     try:
+        logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
         sys.exit(BuildEnvLoader(Path(__file__).parent).setup(sys.argv[1:]))
     except Exception as e:
-        print(f"ERROR: {e}", file=sys.stderr)
+        logger.error(str(e))
         sys.exit(1)

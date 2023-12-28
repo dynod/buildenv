@@ -6,7 +6,7 @@ else
 fi
 ${_BUILDENV_PYTHON} --version 2>/dev/null 1>&2
 if test $? -ne 0; then
-    echo ">> ERROR: ${_BUILDENV_PYTHON} is not installed"
+    echo "[ERROR] ${_BUILDENV_PYTHON} is not installed"
     exit 1
 fi
 
