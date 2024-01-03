@@ -12,3 +12,37 @@ Build environment setup system, based on Python venv
 [![Code coverage](https://img.shields.io/codecov/c/github/dynod/buildenv)](https://app.codecov.io/gh/dynod/buildenv)
 [![Documentation Status](https://readthedocs.org/projects/buildenv/badge/?version=stable)](https://buildenv.readthedocs.io/)
 <!-- NMK-BADGES-END -->
+
+## Features
+
+The **`buildenv`** tool provides following features:
+* simple build environment setup through loading scripts generated in your project
+* configuration through a simple **`buildenv.cfg`** file
+* extendable activation scripts, loaded with the build environment
+
+The whole **`buildenv`** documentation is available at [https://buildenv.readthedocs.io](https://buildenv.readthedocs.io)
+
+## Usage
+
+### Project already configured with buildenv
+
+Any project already using the **`buildenv`** tool has generated loading scripts in its root folder. Setting up the build environment is as easy as:
+1. clone the project
+1. launch the loading script (**`buildenv.cmd`** or **`buildenv.sh`** depending on your preferred shell)
+1. enjoy, build environment (i.e. python venv + extensions) is now installed and loaded in your terminal
+
+### Make a project using buildenv
+
+To install loading scripts in your project:
+1. download main python loading script -- `wget https://raw.githubusercontent.com/dynod/buildenv/main/buildenv-loader.py`
+1. launch it:
+    * on Linux: `python3 buildenv-loader.py`
+    * on Windows: `python buildenv-loader.py`
+1. you're done, loading scripts are generated in your project
+
+## Local build
+
+If you want to build locally the **`buildenv`** wheel, just:
+1. clone the **`buildenv`** project
+1. launch the loading script (see above)
+1. build the project: `nmk build`

@@ -3,12 +3,12 @@
 The **buildenv** tools comes with a command-line interface, described on this page.
 
 This interface is supported by the different ways to invoke the **buildenv** tool:
-* by calling one of the generated loading scripts:
+* by calling one of the generated [loading scripts](scripts):
   * on Linux: `./buildenv.sh <args>`
   * on Windows: `buildenv.cmd <args>`
 * by calling the **`buildenv`** command once the venv is loaded:
   * in venv: `buildenv <args>`
-* by launching manually the python loading scripts (as described by bootstrap instructions):
+* by launching manually the python loading script (as described by bootstrap instructions):
   * bootstrap script: `python buildenv-loader.py <args>`
 
 ## General arguments
@@ -41,7 +41,7 @@ optional arguments:
 
 Depending on the calling context (see above), when invoked without sub-command, the **buildenv** command line interface will execute:
 
-* the **`shell`** sub-command if invoked through a loading script
+* the **`shell`** sub-command if invoked through a [loading script](scripts)
 * the **`init`** sub-command otherwise
 
 ## `init` sub-command
@@ -58,7 +58,7 @@ optional arguments:
   --force, -f  force buildenv init to be triggered again
 ```
 
-This sub-command generates the buildenv files in the current project folder. It is implicitely called when using the **`shell`** or the **`run`** sub-commands.
+This sub-command generates the [loading and activation scripts](scripts) in the current project folder. It is implicitely called when using the **`shell`** or the **`run`** sub-commands.
 
 If the initialization was previously fully completed, this command has no effect.
 
@@ -85,7 +85,7 @@ Just type **`exit`** to quit this interactive shell.
 
 ````{warning}
 Shell "inception" (i.e. shell within shell) is not supported. \
-In other words, **`shell`** sub-command is refused if executed from an existing shell.
+In other words, **`shell`** sub-command is refused if executed from a running buildenv shell instance.
 ````
 
 ## `run` sub-command
@@ -108,5 +108,5 @@ This sub-command invokes the provided command with the build environment enabled
 
 ````{warning}
 Run "inception" (i.e. run within shell) is not supported. \
-In other words, **`run`** sub-command is refused if executed from an existing shell.
+In other words, **`run`** sub-command is refused if executed from a running buildenv shell instance.
 ````

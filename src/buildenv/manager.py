@@ -32,7 +32,7 @@ class BuildEnvManager:
     **buildenv** manager entry point
 
     :param project_path: Path to the current project root folder
-    :param venv_bin_path: Path to venv binary folder to be used (mainly for test purpose; if None, will use current executable venv)
+    :param venv_bin_path: Path to venv binary folder to be used (mainly for test purpose; if None, will use current venv executable)
     """
 
     def __init__(self, project_path: Path, venv_bin_path: Path = None):

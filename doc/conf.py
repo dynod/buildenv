@@ -7,7 +7,7 @@
 
 # Project information
 project = "buildenv"
-copyright = "2023, The dynod project"
+copyright = "2024, The dynod project"
 author = "The dynod project"
 
 # Extensions configuration
@@ -21,3 +21,5 @@ html_theme = "sphinx_rtd_theme"
 autoapi_dirs = ['../src']
 autoapi_ignore = ['*tests*', '*templates*']
 autoapi_options = ['members', 'undoc-members', 'show-inheritance', 'show-module-summary']
+html_static_path = ['_static']
+html_css_files = ['css/custom.css']

@@ -2,11 +2,11 @@
 
 The purpose of the **`buildenv`** tool is to help projects to setup easily a build environment (based on [Python virtual environment](https://docs.python.org/3/library/venv.html), or "**venv**"), just after clone, with minimal dependencies (i.e. only [**git**](https://git-scm.com/) and [**python**](https://www.python.org/)).
 
-## Simple setup with "buildenv" loading scripts
+## Simple setup with loading scripts
 
 ### Existing project
 
-The main feature of the **`buildenv`** tool is to generate loading scripts in the project root folder, ready to be executed just after the project is cloned, and loading everything so that the project is ready to build (whatever is the used build system).
+The main feature of the **`buildenv`** tool is to generate [loading scripts](scripts) in the project root folder, ready to be executed just after the project is cloned, and loading everything so that the project is ready to build (whatever is the used build system).
 
 In other words, the typical project setup scenario with **`buildenv`** is:
 1. clone the project -- `git clone git@github.com:xxx/yyy.git`
@@ -22,11 +22,11 @@ Any project can be simply setup to use **`buildenv`** by running a simple standa
 1. launch it:
     * on Linux: `python3 buildenv-loader.py`
     * on Windows: `python buildenv-loader.py`
-1. you're done, the project now also embeds **buildenv** loading scripts for a more convenient day to day use
+1. you're done, the project now also embeds **buildenv** [loading scripts](scripts) for a more convenient day to day use
 
 ## Launch build terminal from explorer
 
-By default, the loading scripts are spawning a new shell process. It means that when launched from the OS explorer (Windows/Linux), a build terminal will be launched, initialized with the build environment context, and stay openned to let you entering shell commands.
+By default, the [loading scripts](scripts) are spawning a new shell process. It means that when launched from the OS explorer (Windows/Linux), a build terminal will be launched, initialized with the build environment context, and stay openned to let you entering shell commands.
 
 On Windows, it works with both:
 * **buildenv.cmd**: that will open the terminal in a **cmd** window (or better, in [Windows Terminal](https://github.com/microsoft/terminal) if installed)
@@ -36,7 +36,7 @@ On Windows, it works with both:
 
 You may work on multiple projects, and want to avoid to setup multiple build environments for each project.
 
-The loading script automatically looks up in parent git folders to find an existing **venv**.
+The [loading scripts](scripts) automatically looks up in parent git folders to find an existing **venv**.
 If it finds one, it loads it instead of creating a new one in the current project folder.
 
 Example layout:
@@ -53,7 +53,7 @@ projectA/
      |--+ .git/
      |--+ buildenv.*
 ```
-When loading scripts are used in **projectB** or **projectC**, the **venv** of **projectA** will be used.
+When [loading scripts](scripts) are used in **projectB** or **projectC**, the **venv** of **projectA** will be used.
 
 ````{note}
 This behavior can be disabled by setting **`lookUp`** parameter to **`false`** in the [configuration file](config.md).\
