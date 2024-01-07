@@ -94,15 +94,15 @@ class BuildEnvManager:
         # Check for git files if they don't exist
         self._verify_git_files()
 
-        # Make sure we're not updating a parent build env
-        assert self.is_project_venv, f"Can't update a parent project buildenv; please update buildenv in {self.venv_path.parent} folder"
-
         # Handle entry points
         all_extensions = self._parse_extensions()
 
         # Refresh buildenv if not done yet
         force = False if not hasattr(options, "force") else options.force
         if force or not self._check_versions(all_extensions):
+            # Make sure we're not updating a parent build env
+            assert self.is_project_venv, f"Can't update a parent project buildenv; please update buildenv in {self.venv_path.parent} folder"
+
             logger.info("Customizing buildenv...")
 
             # Delegate to sub-methods

@@ -25,11 +25,6 @@ config:
         - Jinja2
         - argcomplete
 
-    # Extra known words for spell check
-    vscodeSettingsItems:
-        cSpell.words:
-            - buildenv
-
     # Customize CSS for wider page
     docExtraConfig:
         html_static_path:
