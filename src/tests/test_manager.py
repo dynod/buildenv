@@ -155,6 +155,18 @@ class TestBuildEnvManager(BuildEnvTestHelper):
 
         self.check_logs("venv wasn't created by buildenv; can't work on activation scripts")
 
+    def test_init_parent_venv(self):
+        venv_bin = self.test_folder / "venv" / "fakeBin"
+        venv_bin.mkdir(parents=True, exist_ok=True)
+        prj = self.test_folder / "venv" / "project"
+        prj.mkdir(parents=True, exist_ok=True)
+        m = BuildEnvManager(prj, venv_bin)
+
+        # Try to init with a fake venv: give up as it was not created by loader
+        m.init()
+
+        self.check_logs("Can't update a parent project buildenv; please update buildenv")
+
     def test_shell_refused_no_loader(self, monkeypatch, fake_no_venv):
         try:
             self.check_manager(monkeypatch, "shell", expect_files=False, options=Namespace(from_loader=None))
