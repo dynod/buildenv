@@ -3,7 +3,7 @@ import random
 import sys
 from argparse import Namespace
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import pkg_resources
 
@@ -105,8 +105,15 @@ class BuildEnvManager:
 
             logger.info("Customizing buildenv...")
 
-            # Delegate to sub-methods
-            self._clean_activation_files()
+            try:
+                # Clean existing scripts
+                self._clean_activation_files()
+            except AssertionError as e:
+                # Clean failed: print warning and give up
+                logger.warning(str(e))
+                return
+
+            # Clean was successful: continue with initialization
             self._run_extensions(all_extensions, force)
             self._add_activation_files()
             self._make_ready()
@@ -131,10 +138,17 @@ class BuildEnvManager:
                 logger.warning(f"Missing {file} file in project; generating a default one")
                 self.renderer.render(f"{file[1:]}.jinja", self.project_path / file)
 
+    # List activation files
+    @property
+    def _existing_activation_files(self) -> List[Path]:
+        out = list(filter(lambda f: f.is_file(), self.venv_context.activation_scripts_folder.glob("*")))
+        assert len(out) > 0, "venv wasn't created by buildenv; can't work on activation scripts"
+        return out
+
     # Clean extra activation files in venv
     def _clean_activation_files(self):
-        # Browse existing files
-        for f in filter(lambda f: f.is_file() and not f.name.startswith("00_"), self.venv_context.activation_scripts_folder.glob("*")):
+        # Browse existing files (all but initial ones, i.e. those with a prefix greater than 00_)
+        for f in filter(lambda f: not f.name.startswith("00_"), self._existing_activation_files):
             f.unlink()
 
     # Add activation files in venv
@@ -170,7 +184,7 @@ class BuildEnvManager:
         """
 
         # Find next index for activation script
-        next_index = max(int(n.name[0:2]) for n in self.venv_context.activation_scripts_folder.glob(f"*{extension}")) + 1
+        next_index = max(int(n.name[0:2]) for n in filter(lambda f: f.name.endswith(extension), self._existing_activation_files)) + 1
 
         # Build script name
         script_name = self.venv_context.activation_scripts_folder / f"{next_index:02}_{name}{extension}"

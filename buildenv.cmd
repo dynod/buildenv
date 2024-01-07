@@ -7,7 +7,7 @@ setlocal
 python --version > NUL 2> NUL
 set _BUILDENV_RC=%ERRORLEVEL%
 if %_BUILDENV_RC% NEQ 0 (
-    echo|set /p=">> ERROR: python is not installed" & echo.
+    echo|set /p="[ERROR] python is not installed" & echo.
     goto end
 )
 
@@ -27,8 +27,9 @@ set _BUILDENV_RC=%ERRORLEVEL%
 goto end
 
 :run
-:: Execute command if required
+:: Execute command if required (and command script found)
 set _BUILDENV_CMD=.buildenv\command.%_BUILDENV_RC%.cmd
+if not exist %_BUILDENV_CMD% goto end
 cmd /c %_BUILDENV_CMD%
 set _BUILDENV_RC=%ERRORLEVEL%
 del %_BUILDENV_CMD%

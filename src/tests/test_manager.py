@@ -146,6 +146,15 @@ class TestBuildEnvManager(BuildEnvTestHelper):
     def test_init_linux(self, monkeypatch):
         self.check_manager(monkeypatch, "init", False, True, git_update_index_rc=0)
 
+    def test_init_invalid_venv(self):
+        venv_bin = self.test_folder / "venv" / "fakeBin"
+        m = BuildEnvManager(self.test_folder, venv_bin)
+
+        # Try to init with a fake venv: give up as it was not created by loader
+        m.init()
+
+        self.check_logs("venv wasn't created by buildenv; can't work on activation scripts")
+
     def test_shell_refused_no_loader(self, monkeypatch, fake_no_venv):
         try:
             self.check_manager(monkeypatch, "shell", expect_files=False, options=Namespace(from_loader=None))
