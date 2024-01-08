@@ -87,9 +87,8 @@ class BuildEnvManager:
         :param options: Input command line parsed options
         """
 
-        # Update scripts (if not invoked from loading scripts)
-        if not hasattr(options, "from_loader") or options.from_loader is None:
-            self._update_scripts()
+        # Update scripts
+        self._update_scripts(hasattr(options, "from_loader") and options.from_loader is not None)
 
         # Check for git files if they don't exist
         self._verify_git_files()
@@ -121,11 +120,14 @@ class BuildEnvManager:
             self._make_ready()
 
     # Copy/update loading scripts in project folder
-    def _update_scripts(self):
-        # Generate all scripts
-        self.renderer.render(_MODULE_FOLDER / "loader.py", self.project_path / "buildenv-loader.py")
-        self.renderer.render("buildenv.sh.jinja", self.project_path / "buildenv.sh", executable=True)
-        self.renderer.render("buildenv.cmd.jinja", self.project_path / "buildenv.cmd")
+    def _update_scripts(self, from_loader: bool):
+        # Generate loading scripts (only if not invoked from loading script)
+        if not from_loader:
+            self.renderer.render(_MODULE_FOLDER / "loader.py", self.project_path / "buildenv-loader.py")
+            self.renderer.render("buildenv.sh.jinja", self.project_path / "buildenv.sh", executable=True)
+            self.renderer.render("buildenv.cmd.jinja", self.project_path / "buildenv.cmd")
+
+        # Generate temporary scripts for run/shell commands
         self.renderer.render("activate.sh.jinja", self.project_script_path / "activate.sh")
         self.renderer.render("shell.sh.jinja", self.project_script_path / "shell.sh")
         if self.is_windows:
