@@ -35,6 +35,9 @@ logger = logging.getLogger("buildenv")
 # Regular expression pattern for environment variable reference in config file
 _ENV_VAR_PATTERN = re.compile("\\$\\{([a-zA-Z0-9_]+)\\}")
 
+# Systematically filter venv logs < ERROR (to avoid cumbersome warning messages when using junction folders on Windows)
+logging.getLogger("venv").setLevel(logging.ERROR)
+
 
 def to_linux_path(path: Path) -> str:
     """
@@ -238,7 +241,7 @@ class BuildEnvLoader:
 
         # Create env builder and remember context
         env_builder = _MyEnvBuilder(clear=missing_venv and self.venv_path.is_dir(), symlinks=os.name != "nt", with_pip=True, prompt=self.prompt)
-        context = EnvContext(env_builder.ensure_directories((self.venv_path if missing_venv else venv_path).resolve()))
+        context = EnvContext(env_builder.ensure_directories(self.venv_path if missing_venv else venv_path))
 
         if missing_venv:
             # Prepare pip install extra args, if any
@@ -248,7 +251,7 @@ class BuildEnvLoader:
             # Setup venv
             logger.info("Creating venv...")
             env_builder.clear = False
-            env_builder.create(self.venv_path.resolve())
+            env_builder.create(self.venv_path)
 
             # Install requirements
             logger.info("Installing requirements...")
