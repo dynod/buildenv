@@ -29,6 +29,7 @@ class TemplatesRenderer:
         self.loader = loader
         self.relative_venv_bin_path = relative_venv_bin_path
         self.project_script_path = project_script_path
+        self.project_path = self.project_script_path.parent
 
     def render(self, template: Path, target: Path, executable: bool = False, keywords: Dict[str, str] = None):
         """
@@ -99,7 +100,11 @@ class TemplatesRenderer:
             target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
             # Git chmod: only if not a .buildenv relative script (not persisted on git)
-            if target.parent != self.project_script_path:
-                cp = subprocess.run(["git", "update-index", "--chmod=+x", str(target)], capture_output=True, check=False)
+            try:
+                rel_path = target.relative_to(self.project_path)
+            except ValueError:  # pragma: no cover
+                rel_path = None
+            if (target.parent != self.project_script_path) and (rel_path is not None):
+                cp = subprocess.run(["git", "update-index", "--chmod=+x", str(rel_path)], capture_output=True, check=False, cwd=self.project_path)
                 if cp.returncode != 0:
                     logger.warning(f"Failed to chmod {target.name} file with git (file not in index yet, or maybe git not installed?)")

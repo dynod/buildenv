@@ -31,7 +31,3 @@ config:
           - _static
         html_css_files:
           - css/custom.css
-
-    # Temporary buildenv ignored files (should be integrated in nmk-base soon)
-    gitIgnoredFiles:
-      - .buildenv/
