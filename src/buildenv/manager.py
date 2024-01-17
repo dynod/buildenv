@@ -98,7 +98,8 @@ class BuildEnvManager:
 
         # Refresh buildenv if not done yet
         force = False if not hasattr(options, "force") else options.force
-        if force or not self._check_versions(all_extensions):
+        skip = False if not hasattr(options, "skip") else options.skip
+        if not skip and (force or not self._check_versions(all_extensions)):
             # Make sure we're not updating a parent build env
             if not self.is_project_venv:
                 logger.warning(f"Can't update a parent project buildenv; please update buildenv in {self.venv_path.parent} folder")

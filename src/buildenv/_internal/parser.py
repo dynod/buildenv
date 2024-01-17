@@ -46,7 +46,9 @@ class BuildEnvParser:
         init_help = "initialize the build environment and exit"
         init_parser = sub_parsers.add_parser("init", help=init_help, description=init_help)
         init_parser.set_defaults(func=init_cb)
-        init_parser.add_argument("--force", "-f", action="store_true", default=False, help="force buildenv init to be triggered again")
+        g = init_parser.add_mutually_exclusive_group()
+        g.add_argument("--force", "-f", action="store_true", default=False, help="force buildenv init to be triggered again")
+        g.add_argument("--skip", "-s", action="store_true", default=False, help="skip extensions and activation scripts generation")
 
         # shell sub-command
         shell_help = "start an interactive shell with loaded build environment"
