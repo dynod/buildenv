@@ -30,6 +30,6 @@ Any project can be simply setup to use **`buildenv`**, by following one of these
 ### Bootstrap from an existing python install
 
 If you already have a python environment with **`buildenv`** tool installed, you can use the `buildenv init --new <path>` {ref}`command<init>`
-to generate the loading scripts in a new folder.
+to bootstrap a new build environment in the specified folder.
 
-Then, just run the generated script for your preferred shell to initialize the new build environment.
+Then, just run the generated [loading script](./scripts.md) for your preferred shell to load the new build environment.

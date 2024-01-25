@@ -50,7 +50,9 @@ class BuildEnvParser:
         g = init_parser.add_mutually_exclusive_group()
         g.add_argument("--force", "-f", action="store_true", default=False, help="force buildenv init to be triggered again")
         g.add_argument("--skip", "-s", action="store_true", default=False, help="skip extensions and activation scripts generation")
-        init_parser.add_argument("--new", action="store", type=Path, default=None, help="create loading scripts in a new folder; implies --skip")
+        init_parser.add_argument(
+            "--new", metavar="FOLDER", action="store", type=Path, default=None, help="create a new buildenv in specified folder"
+        ).completer = argcomplete.DirectoriesCompleter()
 
         # shell sub-command
         shell_help = "start an interactive shell with loaded build environment"

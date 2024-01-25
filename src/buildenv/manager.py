@@ -87,10 +87,10 @@ class BuildEnvManager:
         :param options: Input command line parsed options
         """
 
-        # If --new option is used, spawn a new manager to dump loading scripts in specified folder
+        # If --new option is used, spawn a new loader to create a new build environment
         if hasattr(options, "new") and options.new is not None:
             options.new.mkdir(parents=True, exist_ok=True)
-            BuildEnvManager(options.new).init(Namespace(skip=True))
+            BuildEnvLoader(options.new).setup(["init"])
             return
 
         # Update scripts

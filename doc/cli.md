@@ -50,15 +50,15 @@ Depending on the calling context (see above), when invoked without sub-command, 
 Usage:
 ```
 > buildenv init -h
-usage: buildenv init [-h] [--force | --skip] [--new NEW]
+usage: buildenv init [-h] [--force | --skip] [--new FOLDER]
 
 initialize the build environment and exit
 
 optional arguments:
-  -h, --help   show this help message and exit
-  --force, -f  force buildenv init to be triggered again
-  --skip, -s   skip extensions and activation scripts generation
-  --new NEW    create loading scripts in a new folder; implies --skip
+  -h, --help    show this help message and exit
+  --force, -f   force buildenv init to be triggered again
+  --skip, -s    skip extensions and activation scripts generation
+  --new FOLDER  create a new buildenv in specified folder
 ```
 
 This sub-command generates the [loading and activation scripts](scripts) in the current project folder. It is implicitely called when using the **`shell`** or the **`run`** sub-commands.
@@ -71,8 +71,7 @@ The initialization will be performed again only if:
 
 The **`--skip`** option can be used to only generate the project loading scripts. It will skip the extensions init, and the activation scripts generation.
 
-The **`--new`** option doesn't modify the current build environment, but bootstrap a new one
-by generating [loading scripts](scripts.md) in the specified folder.
+The **`--new`** option doesn't modify the current build environment, but bootstrap a new one in the specified folder.
 
 ## `shell` sub-command
 

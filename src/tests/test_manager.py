@@ -311,14 +311,19 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             assert str(e) == "Failed to execute foo extension init: init error"
 
     def test_init_new(self):
-        # Trigger init in a new folder to generate loading scripts
-        m = BuildEnvManager(self.test_folder)
+        # Copy config to disable git look up
         new_env = self.test_folder / "new"
         if new_env.is_dir():
             shutil.rmtree(new_env)
+        new_env.mkdir()
+        self.prepare_config("buildenv-dontLookUp.cfg", new_env)
+
+        # Trigger init in a new folder to generate loading scripts
+        m = BuildEnvManager(self.test_folder)
         m.init(Namespace(new=new_env))
 
         # Verify generated files
         assert (new_env / "buildenv-loader.py").is_file()
         assert (new_env / "buildenv.sh").is_file()
         assert (new_env / "buildenv.cmd").is_file()
+        assert (new_env / "venv").is_dir()
