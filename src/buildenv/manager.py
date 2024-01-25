@@ -90,7 +90,7 @@ class BuildEnvManager:
         # If --new option is used, spawn a new manager to dump loading scripts in specified folder
         if hasattr(options, "new") and options.new is not None:
             options.new.mkdir(parents=True, exist_ok=True)
-            BuildEnvManager(options.new).init()
+            BuildEnvManager(options.new).init(Namespace(skip=True))
             return
 
         # Update scripts
