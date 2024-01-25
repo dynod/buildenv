@@ -6,6 +6,7 @@ The **`buildenv`** tool is a build environment setup system, based on [Python vi
 :caption: 'Contents'
 :maxdepth: 2
 features
+usage
 scripts
 cli
 config

@@ -4,16 +4,9 @@ The purpose of the **`buildenv`** tool is to help projects to setup easily a bui
 
 ## Simple setup with loading scripts
 
-### Existing project
-
 The main feature of the **`buildenv`** tool is to generate [loading scripts](scripts) in the project root folder, ready to be executed just after the project is cloned, and loading everything so that the project is ready to build (whatever is the used build system).
 
-In other words, the typical project setup scenario with **`buildenv`** is:
-1. clone the project -- `git clone git@github.com:xxx/yyy.git`
-1. launch the loading script:
-    * on Linux: `./buildenv.sh`
-    * on Windows: `buildenv.cmd`
-1. build the project
+See [usage instructions](./usage.md) for details.
 
 ### New project
 

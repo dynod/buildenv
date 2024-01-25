@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import sys
 from argparse import Namespace
@@ -148,6 +149,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
 
     def test_init_invalid_venv(self):
         venv_bin = self.test_folder / "venv" / "fakeBin"
+        venv_bin.mkdir(parents=True, exist_ok=True)
         m = BuildEnvManager(self.test_folder, venv_bin)
 
         # Try to init with a fake venv: give up as it was not created by loader
@@ -307,3 +309,16 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             raise AssertionError("Shouldn't get here")
         except AssertionError as e:
             assert str(e) == "Failed to execute foo extension init: init error"
+
+    def test_init_new(self):
+        # Trigger init in a new folder to generate loading scripts
+        m = BuildEnvManager(self.test_folder)
+        new_env = self.test_folder / "new"
+        if new_env.is_dir():
+            shutil.rmtree(new_env)
+        m.init(Namespace(new=new_env))
+
+        # Verify generated files
+        assert (new_env / "buildenv-loader.py").is_file()
+        assert (new_env / "buildenv.sh").is_file()
+        assert (new_env / "buildenv.cmd").is_file()
