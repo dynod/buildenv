@@ -89,7 +89,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         # Populate a config file with env reference
         self.prepare_config("buildenv-env.cfg")
         loader = BuildEnvLoader(self.test_folder)
-        assert loader.pip_args == "--extra-index-url http://johnsmith@foo.org"
+        assert loader.pip_args == "--require-virtualenv --extra-index-url http://johnsmith@foo.org"
 
     def test_loader_find_real_venv(self):
         # Test for current project venv detection
@@ -174,10 +174,10 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         assert not (self.test_folder / "venv" / "venvOK").is_file()
 
         # Add config file for pip args
-        extra_pip_params = ""
+        extra_pip_params = "--require-virtualenv"
         if pip_args:
             self.prepare_config("buildenv-pip-args.cfg")
-            extra_pip_params = " --no-color --no-cache-dir"
+            extra_pip_params += " --no-color --no-cache-dir"
 
         # Create venv
         loader = BuildEnvLoader(self.test_folder)
@@ -190,9 +190,9 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
             [
                 "git rev-parse --show-toplevel",
                 f"{self.venv_exe} -I?m ensurepip --upgrade --default-pip",
-                f"{self.venv_exe} -m pip install pip wheel buildenv --upgrade{extra_pip_params}",
+                f"{self.venv_exe} -m pip install --upgrade pip wheel setuptools buildenv {extra_pip_params}",
             ]
-            + [f"{self.venv_exe} -m pip install -r requirements.txt{extra_pip_params}"]
+            + [f"{self.venv_exe} -m pip install -r requirements.txt {extra_pip_params}"]
             if requirements
             else []
         )

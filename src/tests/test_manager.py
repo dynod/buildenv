@@ -284,6 +284,21 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         except AssertionError as e:
             assert str(e) == "Failed to load foo extension: some error"
 
+    def test_init_skip(self, monkeypatch):
+        # Fake entry point class
+        class FakeEntryPoint:
+            name = "foo"
+
+            def load(self):
+                raise ValueError("some error")
+
+        # Patch entry points iteration
+        monkeypatch.setattr(pkg_resources, "iter_entry_points", lambda _name: [FakeEntryPoint()])
+
+        # Trigger init with skip: shall not parse extensions, and above error won't be reported
+        m = BuildEnvManager(self.test_folder)
+        m.init(Namespace(skip=True))
+
     def test_extension_failed_init(self, monkeypatch):
         # Fake extension class
         class FakeExtension(BuildEnvExtension):
@@ -327,3 +342,30 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         assert (new_env / "buildenv.sh").is_file()
         assert (new_env / "buildenv.cmd").is_file()
         assert (new_env / "venv").is_dir()
+
+    def test_upgrade(self, monkeypatch):
+        received_commands = []
+
+        def fake_subprocess(args, cwd=None, **kwargs):
+            received_commands.append(" ".join(args))
+            return subprocess.CompletedProcess(args, 0, "".encode())
+
+        # Patch subprocess to record excuted commands
+        monkeypatch.setattr(subprocess, "run", fake_subprocess)
+
+        # Setup manager
+        m = BuildEnvManager(self.test_folder)
+
+        # Try upgrade: default strategy, no requirements file
+        received_commands.clear()
+        m.upgrade(Namespace())
+        assert len(received_commands) == 1
+        assert received_commands[0] == f"{sys.executable} -m pip install --upgrade pip wheel setuptools buildenv --require-virtualenv"
+
+        # Try upgrade: eager strategy, with requirements file
+        (self.test_folder / "requirements.txt").touch()
+        received_commands.clear()
+        m.upgrade(Namespace(eager=True))
+        assert len(received_commands) == 2
+        assert received_commands[0] == f"{sys.executable} -m pip install --upgrade --upgrade-strategy=eager pip wheel setuptools buildenv --require-virtualenv"
+        assert received_commands[1] == f"{sys.executable} -m pip install --upgrade --upgrade-strategy=eager -r requirements.txt --require-virtualenv"

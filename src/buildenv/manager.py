@@ -1,5 +1,6 @@
 import os
 import random
+import subprocess
 import sys
 from argparse import Namespace
 from pathlib import Path
@@ -99,13 +100,17 @@ class BuildEnvManager:
         # Check for git files if they don't exist
         self._verify_git_files()
 
-        # Handle entry points
+        # Stop here if required to skip
+        skip = False if not hasattr(options, "skip") else options.skip
+        if skip:
+            return
+
+        # Prepare entry points
         all_extensions = self._parse_extensions()
 
         # Refresh buildenv if not done yet
         force = False if not hasattr(options, "force") else options.force
-        skip = False if not hasattr(options, "skip") else options.skip
-        if not skip and (force or not self._check_versions(all_extensions)):
+        if force or not self._check_versions(all_extensions):
             # Make sure we're not updating a parent build env
             if not self.is_project_venv:
                 logger.warning(f"Can't update a parent project buildenv; please update buildenv in {self.venv_path.parent} folder")
@@ -334,3 +339,26 @@ class BuildEnvManager:
 
         # Tell loading script about command script ID
         raise RCHolder(script_index)
+
+    def upgrade(self, options: Namespace):
+        """
+        Upgrade python venv installed packages to latest version
+
+        :param options: Input command line parsed options
+        """
+
+        # Delegate upgrade to pip
+        eager = False if not hasattr(options, "eager") else options.eager
+
+        # Iterate on packages to be installed (default ones + requirement files, if any)
+        for to_install in [self.loader.default_packages] + (
+            [["-r", self.loader.requirements_file]] if (self.project_path / self.loader.requirements_file).is_file() else []
+        ):
+            subprocess.run(
+                [str(sys.executable), "-m", "pip", "install", "--upgrade"]
+                + (["--upgrade-strategy=eager"] if eager else [])  # Change upgrade strategy if specified
+                + to_install
+                + self.loader.pip_args.split(" "),
+                cwd=self.project_path,
+                check=True,
+            )

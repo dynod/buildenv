@@ -31,3 +31,22 @@ config:
           - _static
         html_css_files:
           - css/custom.css
+
+    # Python path
+    pythonPath:
+      - ${BASEDIR}
+
+tasks:
+    # Force buildenv-loader update after install (otherwise older buildenv version will be reinstalled...)
+    buildenv.refresh:
+        description: Refresh "buildenv" scripts
+        emoji: rocket
+        appendToDeps: build
+        deps:
+          - py.install
+        input: ${venvState}
+        output:
+          - ${PROJECTDIR}/buildenv.sh
+          - ${PROJECTDIR}/buildenv.cmd
+          - ${PROJECTDIR}/buildenv-loader.py
+        builder: refresh_scripts.RefreshBuilder

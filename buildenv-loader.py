@@ -225,7 +225,17 @@ class BuildEnvLoader:
         """
         Additional arguments for "pip install" commands, read from **buildenv.cfg** project config file.
         """
-        return self.read_config("pipInstallArgs", "", resolve=True)
+        config_args = self.read_config("pipInstallArgs", "", resolve=True)
+
+        # Systematically force the "--require-virtualenv" option
+        return "--require-virtualenv" + (" " if len(config_args) else "") + config_args
+
+    @property
+    def default_packages(self) -> List[str]:
+        """
+        List of packages installed by default when bootstrapping the buildenv
+        """
+        return ["pip", "wheel", "setuptools", "buildenv"]
 
     def setup_venv(self, with_venv: Path = None) -> EnvContext:
         """
@@ -245,8 +255,7 @@ class BuildEnvLoader:
 
         if missing_venv:
             # Prepare pip install extra args, if any
-            pip_args = self.pip_args
-            pip_args = pip_args.split(" ") if len(pip_args) else []
+            pip_args = self.pip_args.split(" ")
 
             # Setup venv
             logger.info("Creating venv...")
@@ -255,9 +264,7 @@ class BuildEnvLoader:
 
             # Install requirements
             logger.info("Installing requirements...")
-            subprocess.run(
-                [str(context.executable), "-m", "pip", "install", "pip", "wheel", "buildenv", "--upgrade"] + pip_args, cwd=self.project_path, check=True
-            )
+            subprocess.run([str(context.executable), "-m", "pip", "install", "--upgrade"] + self.default_packages + pip_args, cwd=self.project_path, check=True)
             if (self.project_path / self.requirements_file).is_file():
                 subprocess.run([str(context.executable), "-m", "pip", "install", "-r", self.requirements_file] + pip_args, cwd=self.project_path, check=True)
 

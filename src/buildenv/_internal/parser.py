@@ -29,9 +29,10 @@ class BuildEnvParser:
     :param init_cb: Callback for **buildenv init** command
     :param shell_cb: Callback for **buildenv shell** command
     :param run_cb: Callback for **buildenv run** command
+    :param upgrade_cb: Callback for **buildenv upgrade** command
     """
 
-    def __init__(self, init_cb: Callable, shell_cb: Callable, run_cb: Callable):
+    def __init__(self, init_cb: Callable, shell_cb: Callable, run_cb: Callable, upgrade_cb: Callable):
         # Setup arguments parser
         self._parser = ArgumentParser(prog="buildenv", description="Build environment manager")
 
@@ -64,6 +65,12 @@ class BuildEnvParser:
         run_parser = sub_parsers.add_parser("run", help=run_help, description=run_help)
         run_parser.set_defaults(func=run_cb)
         run_parser.add_argument("CMD", nargs=REMAINDER, help="command and arguments to be executed in build environment")
+
+        # upgrade sub-command
+        upgrade_help = "upgrade python venv installed packages"
+        upgrade_parser = sub_parsers.add_parser("upgrade", help=upgrade_help, description=upgrade_help)
+        upgrade_parser.set_defaults(func=upgrade_cb)
+        upgrade_parser.add_argument("--eager", action="store_true", default=False, help="toggle eager upgrade strategy")
 
         # Handle completion
         argcomplete.autocomplete(self._parser)

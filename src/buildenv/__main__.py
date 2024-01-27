@@ -22,6 +22,7 @@ def buildenv(args: List[str], project_path: Path = _CWD, venv_bin_path: Path = N
         b.init,  # Init callback
         b.shell,  # Shell callback
         b.run,  # Run callback
+        b.upgrade,  # Upgrade callback
     )
 
     # Execute parser

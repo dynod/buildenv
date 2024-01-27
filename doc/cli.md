@@ -17,19 +17,21 @@ Here is the general **`buildenv`** command help page:
 
 ```
 > buildenv -h
-usage: buildenv [-h] [-V] {init,shell,run} ...
+usage: buildenv [-h] [-V] {init,shell,run,upgrade} ...
 
 Build environment manager
 
 positional arguments:
-  {init,shell,run}  sub-commands:
-    init            initialize the build environment and exit
-    shell           start an interactive shell with loaded build environment
-    run             run command in build environment
+  {init,shell,run,upgrade}
+                        sub-commands:
+    init                initialize the build environment and exit
+    shell               start an interactive shell with loaded build environment
+    run                 run command in build environment
+    upgrade             upgrade python venv installed packages
 
 optional arguments:
-  -h, --help        show this help message and exit
-  -V, --version     show program's version number and exit
+  -h, --help            show this help message and exit
+  -V, --version         show program's version number and exit
 ```
 
 ### Arguments
@@ -117,3 +119,21 @@ This sub-command invokes the provided command with the build environment enabled
 Run "inception" (i.e. run within shell) is not supported. \
 In other words, **`run`** sub-command is refused if executed from a running buildenv shell instance.
 ````
+
+## `upgrade` sub-command
+
+Usage:
+```
+> buildenv upgrade -h
+usage: buildenv upgrade [-h] [--eager]
+
+upgrade python venv installed packages
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --eager     toggle eager upgrade strategy
+```
+
+This sub-command upgrades packages installed in python venv to their latest available version.
+
+When the **`--eager`** option is used, the [pip **eager** upgrade strategy](https://pip.pypa.io/en/stable/development/architecture/upgrade-options/#controlling-what-gets-installed) is used.
