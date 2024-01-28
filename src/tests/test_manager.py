@@ -74,7 +74,14 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             self.test_folder / "venv" / BUILDENV_OK,
             self.test_folder / "venv" / VENV_BIN / "activate.d" / "01_set_prompt.sh",
             self.test_folder / "venv" / VENV_BIN / "activate.d" / "02_completion.sh",
-        ]
+        ] + (
+            [
+                self.test_folder / ".gitignore",
+                self.test_folder / ".gitattributes",
+            ]
+            if not with_git_files
+            else []
+        )
         generated_files = (
             generated_buildenv_files
             + [
@@ -85,14 +92,6 @@ class TestBuildEnvManager(BuildEnvTestHelper):
                 self.test_folder / ".buildenv" / "shell.sh",
             ]
             + ([activate_cmd, self.test_folder / ".buildenv" / "shell.cmd"] if with_windows else [])
-            + (
-                [
-                    self.test_folder / ".gitignore",
-                    self.test_folder / ".gitattributes",
-                ]
-                if not with_git_files
-                else []
-            )
         )
         missing_files = [] if with_windows else [activate_cmd, self.test_folder / ".buildenv" / "shell.cmd"]
 

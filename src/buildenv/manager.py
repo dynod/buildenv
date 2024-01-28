@@ -17,6 +17,9 @@ from buildenv.loader import BuildEnvLoader, logger
 BUILDENV_OK = "buildenvOK"
 """Valid buildenv tag file"""
 
+# Temp buildenv scripts folder
+_BUILDENV_TEMP_FOLDER = ".buildenv"
+
 # Path to buildenv module
 _MODULE_FOLDER = Path(__file__).parent
 
@@ -44,7 +47,7 @@ class BuildEnvManager:
 
         # Other initializations
         self.project_path = project_path  # Current project path
-        self.project_script_path = self.project_path / ".buildenv"  # Current project generated scripts path
+        self.project_script_path = self.project_path / _BUILDENV_TEMP_FOLDER  # Current project generated scripts path
         self.loader = BuildEnvLoader(self.project_path)  # Loader instance
         self.is_windows = (self.venv_bin_path / "activate.bat").is_file()  # Is Windows venv?
         self.venv_context = self.loader.setup_venv(self.venv_bin_path.parent)
@@ -53,6 +56,9 @@ class BuildEnvManager:
         # Private data
         self._completion_commands = set()
         self.register_completion("buildenv")
+        self._ignored_patterns = []
+        self.register_ignored_pattern(self.venv_path.name + "/")
+        self.register_ignored_pattern(_BUILDENV_TEMP_FOLDER + "/")
 
         try:
             # Relative venv bin path string for local scripts
@@ -97,9 +103,6 @@ class BuildEnvManager:
         # Update scripts
         self._update_scripts(hasattr(options, "from_loader") and options.from_loader is not None)
 
-        # Check for git files if they don't exist
-        self._verify_git_files()
-
         # Stop here if required to skip
         skip = False if not hasattr(options, "skip") else options.skip
         if skip:
@@ -129,6 +132,7 @@ class BuildEnvManager:
             # Clean was successful: continue with initialization
             self._run_extensions(all_extensions, force)
             self._add_activation_files()
+            self._verify_git_files()
             self._make_ready()
 
     # Copy/update loading scripts in project folder
@@ -152,7 +156,7 @@ class BuildEnvManager:
         for file in _RECOMMENDED_GIT_FILES:
             if not (self.project_path / file).is_file():
                 logger.warning(f"Missing {file} file in project; generating a default one")
-                self.renderer.render(f"{file[1:]}.jinja", self.project_path / file)
+                self.renderer.render(f"{file[1:]}.jinja", self.project_path / file, keywords={"ignored_patterns": self._ignored_patterns})
 
     # List activation files
     @property
@@ -187,6 +191,14 @@ class BuildEnvManager:
         :param command: New command to be registered
         """
         self._completion_commands.add(command)
+
+    def register_ignored_pattern(self, pattern: str):
+        """
+        Register a new pattern to be added to generated .gitignore file
+
+        :param pattern: New pattern to be ignored
+        """
+        self._ignored_patterns.append(pattern)
 
     def add_activation_file(self, name: str, extension: str, template: str, keywords: Dict[str, str] = None):
         """
