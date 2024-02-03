@@ -36,6 +36,10 @@ config:
     pythonPath:
       - ${BASEDIR}
 
+    # Don't refresh buildenv scripts through nmk (see nmk-base)
+    # This will be done after build by buildenv.refresh task (see below)
+    buildenvRefresh: False
+
 tasks:
     # Force buildenv-loader update after install (otherwise older buildenv version will be reinstalled...)
     buildenv.refresh:
