@@ -53,4 +53,6 @@ tasks:
           - ${PROJECTDIR}/buildenv.sh
           - ${PROJECTDIR}/buildenv.cmd
           - ${PROJECTDIR}/buildenv-loader.py
-        builder: refresh_scripts.RefreshBuilder
+        builder: nmk_base.common.ProcessBuilder
+        params:
+            cmd: ${venvBin}/buildenv init --skip
