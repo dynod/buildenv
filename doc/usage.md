@@ -17,6 +17,15 @@ The typical project setup scenario with **`buildenv`** is:
 
 Any project can be simply setup to use **`buildenv`**, by following one of these methods:
 
+### Global user install
+
+**`buildenv`** tool can be installed as a shared user command using [pipx](https://pipx.pypa.io/stable/):
+> `pipx install buildenv`
+
+From there, use the `buildenv init --new <path>` {ref}`command<init>` to bootstrap a new build environment in the specified folder.
+
+Then, just run the generated [loading script](./scripts.md) for your preferred shell to load the new build environment.
+
 ### Script install
 
 1. download [main python loading script](https://raw.githubusercontent.com/dynod/buildenv/main/buildenv-loader.py):
@@ -26,10 +35,3 @@ Any project can be simply setup to use **`buildenv`**, by following one of these
     * on Linux: `python3 buildenv-loader.py`
     * on Windows: `python buildenv-loader.py`
 1. you're done, loading scripts are generated in your project
-
-### Bootstrap from an existing python install
-
-If you already have a python environment with **`buildenv`** tool installed, you can use the `buildenv init --new <path>` {ref}`command<init>`
-to bootstrap a new build environment in the specified folder.
-
-Then, just run the generated [loading script](./scripts.md) for your preferred shell to load the new build environment.

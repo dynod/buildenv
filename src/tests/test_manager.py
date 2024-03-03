@@ -1,11 +1,13 @@
 import shutil
 import subprocess
 import sys
+import tempfile
 from argparse import Namespace
 from pathlib import Path
 
 import pkg_resources
 from nmk.utils import is_windows
+from nmk_vscode.buildenv import BuildEnvInit as VsCodeInit
 
 from buildenv import BuildEnvExtension, BuildEnvLoader, BuildEnvManager
 from buildenv._internal.parser import RCHolder
@@ -52,6 +54,9 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         # - to fake git answer --> returns rc 1
         # - to accept other commands --> returns rc 0
         monkeypatch.setattr(subprocess, "run", fake_subprocess)
+
+        # Patch extensions loading
+        monkeypatch.setattr(VsCodeInit, "init", lambda _s, _f: None)
 
         # Fake git files
         if with_git_files:
@@ -323,6 +328,15 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             raise AssertionError("Shouldn't get here")
         except AssertionError as e:
             assert str(e) == "Failed to execute foo extension init: init error"
+
+    def test_init_out_of_venv(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            m = BuildEnvManager(Path(tmp_dir))
+            try:
+                m.init()
+                raise AssertionError("Shouldn't get here")
+            except AssertionError as e:
+                assert str(e) == "Out of project folder!"
 
     def test_init_new(self):
         # Copy config to disable git look up

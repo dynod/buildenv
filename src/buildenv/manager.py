@@ -59,6 +59,7 @@ class BuildEnvManager:
         self._ignored_patterns = []
         self.register_ignored_pattern(self.venv_path.name + "/")
         self.register_ignored_pattern(_BUILDENV_TEMP_FOLDER + "/")
+        self.is_valid_projet = True
 
         try:
             # Relative venv bin path string for local scripts
@@ -67,14 +68,20 @@ class BuildEnvManager:
             # Venv is relative to current project
             self.is_project_venv = True
         except ValueError:
-            # Venv is not relative to current project: reverse logic
-            upper_levels_count = len(self.project_path.resolve().relative_to(self.venv_root_path.resolve()).parts)
-            relative_venv_bin_path = Path(os.pardir)
-            for part in [os.pardir] * (upper_levels_count - 1) + [self.venv_path.name, self.venv_bin_path.name]:
-                relative_venv_bin_path /= part
-
             # Venv is *not* relative to current project
             self.is_project_venv = False
+
+            try:
+                # Venv is not relative to current project: reverse logic
+                upper_levels_count = len(self.project_path.resolve().relative_to(self.venv_root_path.resolve()).parts)
+                relative_venv_bin_path = Path(os.pardir)
+                for part in [os.pardir] * (upper_levels_count - 1) + [self.venv_path.name, self.venv_bin_path.name]:
+                    relative_venv_bin_path /= part
+            except ValueError:
+                # Project and venv are definitely not relative to each other
+                # We get in this case when command is executed out of venv/project folder
+                relative_venv_bin_path = None
+                self.is_valid_projet = False
 
         # Prepare template renderer
         self.renderer = TemplatesRenderer(self.loader, relative_venv_bin_path, self.project_script_path)
@@ -96,9 +103,13 @@ class BuildEnvManager:
 
         # If --new option is used, spawn a new loader to create a new build environment
         if hasattr(options, "new") and options.new is not None:
-            options.new.mkdir(parents=True, exist_ok=True)
-            BuildEnvLoader(options.new).setup(["init"])
+            new_folder = options.new if options.new.is_absolute() else Path.cwd() / options.new
+            new_folder.mkdir(parents=True, exist_ok=True)
+            BuildEnvLoader(new_folder).setup(["init"])
             return
+
+        # Check for valid project
+        assert self.is_valid_projet, "Out of project folder!"
 
         # Update scripts
         self._update_scripts(hasattr(options, "from_loader") and options.from_loader is not None)
