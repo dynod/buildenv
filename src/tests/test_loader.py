@@ -17,28 +17,6 @@ PYTHON_EXE = "python(.exe)?" if is_windows() else "python[0-9.]*"
 
 
 class TestBuildEnvLoader(BuildEnvTestHelper):
-    @pytest.fixture
-    def fake_ci(self):
-        # Fake CI environment
-        old_value = self.set_env("CI", "true")
-
-        # yield to test
-        yield
-
-        # Restore previous environment
-        self.restore_env("CI", old_value)
-
-    @pytest.fixture
-    def fake_local(self):
-        # Fake local environment
-        old_value = self.remove_env("CI")
-
-        # yield to test
-        yield
-
-        # Restore previous environment
-        self.restore_env("CI", old_value)
-
     def test_loader_class(self):
         # Verify default attributes
         loader = BuildEnvLoader(self.test_folder)

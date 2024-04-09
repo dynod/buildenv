@@ -62,3 +62,25 @@ class BuildEnvTestHelper(TestHelper):
 
         # Restore previous environment
         self.restore_env("VIRTUAL_ENV", old_value)
+
+    @pytest.fixture
+    def fake_ci(self):
+        # Fake CI environment
+        old_value = self.set_env("CI", "true")
+
+        # yield to test
+        yield
+
+        # Restore previous environment
+        self.restore_env("CI", old_value)
+
+    @pytest.fixture
+    def fake_local(self):
+        # Fake local environment
+        old_value = self.remove_env("CI")
+
+        # yield to test
+        yield
+
+        # Restore previous environment
+        self.restore_env("CI", old_value)

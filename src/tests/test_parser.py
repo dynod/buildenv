@@ -25,8 +25,8 @@ class TestBuildenvParser(BuildEnvTestHelper):
         assert rc == 0
         assert (self.venv_bin.parent / BUILDENV_OK).is_file()
 
-    def test_default_cmd_with_loader(self, fake_no_venv):
-        # Default command without loader: shell
+    def test_default_cmd_with_loader(self, fake_no_venv, fake_local):
+        # Default command without loader: shell (fake local env to make it working)
         rc = self.run_buildenv(["--from-loader=xx"])
         assert rc == 100
         assert (self.venv_bin.parent / BUILDENV_OK).is_file()

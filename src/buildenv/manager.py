@@ -318,6 +318,9 @@ class BuildEnvManager:
         # Checks
         self._command_checks("shell", options)
 
+        # Refuse to do anything in CI
+        assert not self.loader.is_ci, "Can't use shell command in CI environment."
+
         # Nothing more to do than telling loading script to spawn an interactive shell
         raise RCHolder(RC_START_SHELL)
 

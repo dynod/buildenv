@@ -173,23 +173,29 @@ class TestBuildEnvManager(BuildEnvTestHelper):
 
         self.check_logs("Can't update a parent project buildenv; please update buildenv")
 
-    def test_shell_refused_no_loader(self, monkeypatch, fake_no_venv):
+    def test_shell_refused_no_loader(self, monkeypatch, fake_no_venv, fake_local):
         try:
             self.check_manager(monkeypatch, "shell", expect_files=False, options=Namespace(from_loader=None))
         except AssertionError as e:
             assert str(e).startswith("Can't use shell command")
 
-    def test_shell_refused_from_venv(self, monkeypatch, fake_venv):
+    def test_shell_refused_from_venv(self, monkeypatch, fake_venv, fake_local):
         try:
             self.check_manager(monkeypatch, "shell", expect_files=False, options=Namespace(from_loader="xxx"))
         except AssertionError as e:
             assert str(e).startswith("Already running in build environment shell")
 
-    def test_shell_from_loader(self, monkeypatch, fake_no_venv):
+    def test_shell_from_loader(self, monkeypatch, fake_no_venv, fake_local):
         try:
             self.check_manager(monkeypatch, "shell", options=Namespace(from_loader="xxx"))
         except RCHolder as e:
             assert e.rc == 100
+
+    def test_shell_from_ci(self, monkeypatch, fake_no_venv, fake_ci):
+        try:
+            self.check_manager(monkeypatch, "shell", options=Namespace(from_loader="xxx"))
+        except AssertionError as e:
+            assert str(e).startswith("Can't use shell command in CI environment.")
 
     def test_extension(self, monkeypatch):
         init_passed = False
