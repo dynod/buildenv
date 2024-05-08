@@ -32,10 +32,6 @@ config:
         html_css_files:
           - css/custom.css
 
-    # Python path
-    pythonPath:
-      - ${BASEDIR}
-
     # Don't refresh buildenv scripts through nmk (see nmk-base)
     # This will be done after build by buildenv.refresh task (see below)
     buildenvRefresh: False
