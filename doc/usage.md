@@ -19,10 +19,10 @@ Any project can be simply setup to use **`buildenv`**, by following one of these
 
 ### Global user install
 
-**`buildenv`** tool can be installed as a shared user command using [pipx](https://pipx.pypa.io/stable/):
-> `pipx install buildenv`
+**`buildenv`** tool can be temporarily installed as a shared user command using [pipx](https://pipx.pypa.io/stable/):
+> `pipx run buildenv`
 
-From there, use the `buildenv init --new <path>` {ref}`command<init>` to bootstrap a new build environment in the specified folder.
+So it's possible to use the `pipx run buildenv init --new <path>` {ref}`command<init>` to bootstrap a new build environment in the specified folder.
 
 Then, just run the generated [loading script](./scripts.md) for your preferred shell to load the new build environment.
 

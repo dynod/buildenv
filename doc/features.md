@@ -85,3 +85,9 @@ Example syntax for entry point contribution:
 buildenv_init = 
 	my_extension = my_package.my_module:MyExtensionClass
 ```
+
+## Limitations
+
+The **`buildenv`** tool refuses to create a venv in a path containing space characters.\
+This decision has been made since in this case, some venv scripts (e.g. **register-python-argcomplete**) get their "shebang" line containing spaces, which is not supported.\
+It looks to be a limitation only on Linux, but using spaces in paths for development seems to be definitely a bad idea, so **`buildenv`** makes no difference and doesn't support them on all platforms.
