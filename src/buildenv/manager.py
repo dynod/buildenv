@@ -127,11 +127,6 @@ class BuildEnvManager:
 
         # Refresh buildenv if not done yet
         if force or not self._check_versions(all_extensions):
-            # Make sure we're not updating a parent build env
-            if not self.is_project_venv:
-                logger.warning(f"Can't update a parent project buildenv; please update buildenv in {self.venv_path.parent} folder")
-                return
-
             logger.info("Customizing buildenv...")
 
             try:
