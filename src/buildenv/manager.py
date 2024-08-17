@@ -52,6 +52,7 @@ class BuildEnvManager:
         self.is_windows = (self.venv_bin_path / "activate.bat").is_file()  # Is Windows venv?
         self.venv_context = self.loader.setup_venv(self.venv_bin_path.parent)
         self.buildenv_ok = self.venv_path / BUILDENV_OK
+        self.project_buildenv_ok = self.project_script_path / BUILDENV_OK
 
         # Private data
         self._completion_commands = set()
@@ -111,8 +112,10 @@ class BuildEnvManager:
         # Check for valid project
         assert self.is_valid_projet, "Out of project folder!"
 
-        # Update scripts
-        self._update_scripts(hasattr(options, "from_loader") and options.from_loader is not None)
+        # Update scripts if not done yet
+        force = False if not hasattr(options, "force") else options.force
+        if force or not self._check_versions({}):
+            self._update_scripts(hasattr(options, "from_loader") and options.from_loader is not None)
 
         # Stop here if required to skip
         skip = False if not hasattr(options, "skip") else options.skip
@@ -123,7 +126,6 @@ class BuildEnvManager:
         all_extensions = self._parse_extensions()
 
         # Refresh buildenv if not done yet
-        force = False if not hasattr(options, "force") else options.force
         if force or not self._check_versions(all_extensions):
             # Make sure we're not updating a parent build env
             if not self.is_project_venv:
@@ -144,7 +146,8 @@ class BuildEnvManager:
             self._run_extensions(all_extensions, force)
             self._add_activation_files()
             self._verify_git_files()
-            self._make_ready()
+            self._make_ready(self.buildenv_ok)
+            logger.info("Buildenv is ready!")
 
     # Copy/update loading scripts in project folder
     def _update_scripts(self, from_loader: bool):
@@ -161,6 +164,9 @@ class BuildEnvManager:
             # Only if venv files are generated for Windows
             self.renderer.render("activate.cmd.jinja", self.project_script_path / "activate.cmd")
             self.renderer.render("shell.cmd.jinja", self.project_script_path / "shell.cmd")
+
+        # Touch project buildenv file
+        self._make_ready(self.project_buildenv_ok)
 
     # Check for recommended git files, and display warning if they're missing
     def _verify_git_files(self):
@@ -254,7 +260,7 @@ class BuildEnvManager:
     # Check for persisted versions
     def _check_versions(self, all_extensions: Dict[str, object]) -> bool:
         # Build map of version files
-        version_files = {self.buildenv_ok: __version__}
+        version_files = {self.buildenv_ok: __version__, self.project_buildenv_ok: __version__}
         version_files.update({self.venv_path / f"{n}OK": p.get_version() for n, p in all_extensions.items()})
 
         # Verify that all persisted versions are in line
@@ -291,9 +297,8 @@ class BuildEnvManager:
                 f.write(extension.get_version())
 
     # Just touch "buildenv ready" file
-    def _make_ready(self):
-        logger.info("Buildenv is ready!")
-        with (self.venv_path / BUILDENV_OK).open("w") as f:
+    def _make_ready(self, tag_file: Path):
+        with tag_file.open("w") as f:
             f.write(__version__)
 
     # Preliminary checks before env loading

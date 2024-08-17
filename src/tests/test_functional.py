@@ -16,7 +16,7 @@ class TestFunctional(BuildEnvTestHelper):
     def check_generated_buildenv(self, buildenv: Path):
         exts = ["cmd", "sh"] if is_windows() else ["sh"]
         dot_buildenv = buildenv / ".buildenv"
-        expected = [dot_buildenv / f"{n}.{e}" for n in ["shell", "activate"] for e in exts]
+        expected = [dot_buildenv / f"{n}.{e}" for n in ["shell", "activate"] for e in exts] + [dot_buildenv / "buildenvOK"]
         logging.info(f"expected files: {expected}")
         found = list(filter(lambda f: f.is_file(), dot_buildenv.glob("*")))
         logging.info(f"found files: {found}")
@@ -93,8 +93,8 @@ class TestFunctional(BuildEnvTestHelper):
         # Copy config to disable git look up and configure bad python
         self.prepare_config("buildenv-dontLookUp+badPython.cfg", buildenv)
 
-        # Regenerate wrapping scripts
-        cp = subprocess.run([sys.executable, str(tgt_loader)], cwd=buildenv, check=False, capture_output=True, env=new_env)
+        # Regenerate wrapping scripts (with force, otherwise scripts are not rebuilt)
+        cp = subprocess.run([sys.executable, str(tgt_loader), "init", "--force"], cwd=buildenv, check=False, capture_output=True, env=new_env)
         logging.info("buildenv init stdout:\n" + "\n".join(cp.stdout.decode().splitlines()))
         logging.info("buildenv init stderr:\n" + "\n".join(cp.stderr.decode().splitlines()))
         assert cp.returncode == 0

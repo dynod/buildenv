@@ -95,6 +95,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
                 self.test_folder / "buildenv.cmd",
                 activate_sh,
                 self.test_folder / ".buildenv" / "shell.sh",
+                self.test_folder / ".buildenv" / "buildenvOK",
             ]
             + ([activate_cmd, self.test_folder / ".buildenv" / "shell.cmd"] if with_windows else [])
         )
