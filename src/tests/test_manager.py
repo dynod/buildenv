@@ -225,7 +225,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
 
         # Check we gone through init method
         assert init_passed
-        v_file = self.test_folder / "venv" / "fooOK"
+        v_file = self.test_folder / ".buildenv" / "fooOK"
         assert v_file.is_file()
 
         # Trigger init again

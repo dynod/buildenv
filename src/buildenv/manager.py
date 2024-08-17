@@ -261,7 +261,7 @@ class BuildEnvManager:
     def _check_versions(self, all_extensions: Dict[str, object]) -> bool:
         # Build map of version files
         version_files = {self.buildenv_ok: __version__, self.project_buildenv_ok: __version__}
-        version_files.update({self.venv_path / f"{n}OK": p.get_version() for n, p in all_extensions.items()})
+        version_files.update({self.project_script_path / f"{n}OK": p.get_version() for n, p in all_extensions.items()})
 
         # Verify that all persisted versions are in line
         for v_file, v_str in version_files.items():
@@ -292,7 +292,7 @@ class BuildEnvManager:
                 raise AssertionError(f"Failed to execute {name} extension init: {e}")
 
             # Init ok: touch init file
-            init_file = self.venv_path / f"{name}OK"
+            init_file = self.project_script_path / f"{name}OK"
             with init_file.open("w") as f:
                 f.write(extension.get_version())
 
