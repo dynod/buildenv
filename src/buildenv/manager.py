@@ -377,9 +377,8 @@ class BuildEnvManager:
         eager = False if not hasattr(options, "eager") else options.eager
 
         # Iterate on packages to be installed (default ones + requirement files, if any)
-        for to_install in [self.loader.default_packages] + (
-            [["-r", self.loader.requirements_file]] if (self.project_path / self.loader.requirements_file).is_file() else []
-        ):
+        all_requirements = self.loader.requirement_files
+        for to_install in [self.loader.default_packages] + ([[f"--requirement={req_file}" for req_file in all_requirements]] if len(all_requirements) else []):
             subprocess.run(
                 [str(sys.executable), "-m", "pip", "install", "--upgrade"]
                 + (["--upgrade-strategy=eager"] if eager else [])  # Change upgrade strategy if specified

@@ -376,4 +376,4 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         m.upgrade(Namespace(eager=True))
         assert len(received_commands) == 2
         assert received_commands[0] == f"{sys.executable} -m pip install --upgrade --upgrade-strategy=eager pip wheel setuptools buildenv --require-virtualenv"
-        assert received_commands[1] == f"{sys.executable} -m pip install --upgrade --upgrade-strategy=eager -r requirements.txt --require-virtualenv"
+        assert received_commands[1] == f"{sys.executable} -m pip install --upgrade --upgrade-strategy=eager --requirement=requirements.txt --require-virtualenv"

@@ -2,12 +2,12 @@
 Python main module for **buildenv** tool.
 """
 
-import pkg_resources
+from importlib.metadata import version
 
 __title__ = "buildenv"
 try:
-    __version__ = pkg_resources.get_distribution(__title__).version
-except pkg_resources.DistributionNotFound:  # pragma: no cover
+    __version__ = version(__title__)
+except Exception:  # pragma: no cover
     # For debug
     from configparser import ConfigParser
     from pathlib import Path

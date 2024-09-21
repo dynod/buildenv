@@ -35,7 +35,7 @@ This table describes all the parameters supported by the **buildenv** tool:
 |Name                   |Default value          |Resolved env vars|Usage|
 |-                      |-                      |-                |-
 |**`venvFolder`**       | `venv`                | no  | Name of the folder where to python virtual env will be created in the project
-|**`requirements`**     | `requirements.txt`    | no  | Name of the pip requirements file to be installed when creating the python virtual env, relative to project root folder
+|**`requirements`**     | `requirements*.txt`   | no  | Pattern for pip requirements files to be installed when creating the python virtual env, relative to project root folder
 |**`prompt`**           | `buildenv`            | no  | Build environment name, to be diplayed on the command line in front of the system prompt, when running the **`buildenv`** shell
 |**`windowsPython`**    | `python`              | yes | Python command to be used on Windows to create the virtual env
 |**`linuxPython`**      | `python3`             | yes | Python command to be used on Linux to create the virtual env

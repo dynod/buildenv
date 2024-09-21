@@ -16,7 +16,7 @@ When launched, the loading script logic follows these steps:
 * If **venv** is not found:
     * create it, and enable activation scripts folder (see below)
     * upgrade pip and install buildenv wheel
-    * if **`requirements.txt`** file exists in project, also install requirements
+    * if **`requirements*.txt`** files exist in project, also install packages required from these files
 * Delegate execution to **`buildenv`** [command](cli.md)
 
 ```{note}

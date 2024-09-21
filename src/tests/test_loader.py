@@ -25,7 +25,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         assert loader.config_parser is None
         assert loader.venv_folder == "venv"
         assert loader.venv_path == self.test_folder / "venv"
-        assert loader.requirements_file == "requirements.txt"
+        assert loader.requirements_file_pattern == "requirements*.txt"
 
     def test_loader_local_config(self, fake_local):
         # Populate a config file with some local profile values
@@ -33,7 +33,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         loader = BuildEnvLoader(self.test_folder)
         assert loader.config_parser is not None
         assert loader.venv_folder == "MyVenv"
-        assert loader.requirements_file == "requirements.txt"
+        assert loader.requirements_file_pattern == "requirements*.txt"
 
     def test_loader_ci_config(self, fake_ci):
         # Populate a config file with some ci profile values
@@ -41,7 +41,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         loader = BuildEnvLoader(self.test_folder)
         assert loader.config_parser is not None
         assert loader.venv_folder == "MyCiVenv"
-        assert loader.requirements_file == "foo.txt"
+        assert loader.requirements_file_pattern == "foo.txt"
 
     def test_loader_missing_env(self):
         # Populate a config file with env reference
@@ -170,7 +170,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
                 f"{self.venv_exe} -I?m ensurepip --upgrade --default-pip",
                 f"{self.venv_exe} -m pip install --upgrade pip wheel setuptools buildenv {extra_pip_params}",
             ]
-            + [f"{self.venv_exe} -m pip install -r requirements.txt {extra_pip_params}"]
+            + [f"{self.venv_exe} -m pip install --requirement=requirements.txt {extra_pip_params}"]
             if requirements
             else []
         )
