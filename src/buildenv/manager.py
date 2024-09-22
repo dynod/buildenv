@@ -1,3 +1,4 @@
+import importlib.metadata
 import os
 import random
 import subprocess
@@ -5,8 +6,6 @@ import sys
 from argparse import Namespace
 from pathlib import Path
 from typing import Dict, List
-
-import pkg_resources
 
 from buildenv import __version__
 from buildenv._internal.parser import RCHolder
@@ -235,9 +234,17 @@ class BuildEnvManager:
     # Iterate on entry points to load extensions
     def _parse_extensions(self) -> Dict[str, object]:
         # Build entry points map (to handle duplicate names)
+        unfiltered_entry_points = importlib.metadata.entry_points()
         all_entry_points = {}
-        for p in pkg_resources.iter_entry_points("buildenv_init"):
-            all_entry_points[p.name] = p
+        if isinstance(unfiltered_entry_points, dict):
+            # Python <3.10
+            if "buildenv_init" in unfiltered_entry_points:
+                for p in unfiltered_entry_points["buildenv_init"]:
+                    all_entry_points[p.name] = p
+        else:
+            # Python >=3.10
+            for p in unfiltered_entry_points.select(group="buildenv_init"):
+                all_entry_points[p.name] = p
 
         out = {}
         for name, point in all_entry_points.items():

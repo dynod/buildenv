@@ -1,3 +1,4 @@
+import importlib.metadata
 import shutil
 import subprocess
 import sys
@@ -5,7 +6,6 @@ import tempfile
 from argparse import Namespace
 from pathlib import Path
 
-import pkg_resources
 from nmk.utils import is_windows
 from nmk_vscode.buildenv import BuildEnvInit as VsCodeInit
 
@@ -16,6 +16,14 @@ from tests.commons import VENV_BIN, BuildEnvTestHelper
 
 # Default (empty) namespace
 DEFAULT_OPTIONS = Namespace()
+
+
+class FakeEntryPoints:
+    def __init__(self, entries: list):
+        self._entries = entries
+
+    def select(self, group: str):
+        return self._entries
 
 
 class TestBuildEnvManager(BuildEnvTestHelper):
@@ -150,6 +158,9 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         self.check_manager(monkeypatch, "init", True, False)
 
     def test_init_linux(self, monkeypatch):
+        # Fake entry point with empty dict (for coverage)
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: {})
+
         self.check_manager(monkeypatch, "init", False, True, git_update_index_rc=0)
 
     def test_init_invalid_venv(self):
@@ -206,7 +217,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(pkg_resources, "iter_entry_points", lambda _name: [FakeEntryPoint()])
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: FakeEntryPoints([FakeEntryPoint()]))
 
         # Trigger init
         self.check_manager(monkeypatch, "init")
@@ -256,7 +267,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(pkg_resources, "iter_entry_points", lambda _name: [FakeEntryPoint()])
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: {"buildenv_init": [FakeEntryPoint()]})
 
         # Trigger init
         try:
@@ -274,7 +285,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
                 raise ValueError("some error")
 
         # Patch entry points iteration
-        monkeypatch.setattr(pkg_resources, "iter_entry_points", lambda _name: [FakeEntryPoint()])
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: {"buildenv_init": [FakeEntryPoint()]})
 
         # Trigger init
         try:
@@ -292,7 +303,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
                 raise ValueError("some error")
 
         # Patch entry points iteration
-        monkeypatch.setattr(pkg_resources, "iter_entry_points", lambda _name: [FakeEntryPoint()])
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: {"buildenv_init": [FakeEntryPoint()]})
 
         # Trigger init with skip: shall not parse extensions, and above error won't be reported
         m = BuildEnvManager(self.test_folder)
@@ -315,7 +326,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(pkg_resources, "iter_entry_points", lambda _name: [FakeEntryPoint()])
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: {"buildenv_init": [FakeEntryPoint()]})
 
         # Trigger init
         try:
@@ -358,7 +369,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             received_commands.append(" ".join(args))
             return subprocess.CompletedProcess(args, 0, "".encode())
 
-        # Patch subprocess to record excuted commands
+        # Patch subprocess to record executed commands
         monkeypatch.setattr(subprocess, "run", fake_subprocess)
 
         # Setup manager
