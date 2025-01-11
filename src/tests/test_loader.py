@@ -160,7 +160,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
             [
                 "git rev-parse --show-toplevel",
                 f"{self.venv_exe} -I?m ensurepip --upgrade --default-pip",
-                f"{self.venv_exe} -m pip install --upgrade pip wheel setuptools buildenv {extra_pip_params}",
+                f"{self.venv_exe} -m pip install --upgrade pip wheel setuptools buildenv<2 {extra_pip_params}",
             ]
             + [f"{self.venv_exe} -m pip install --requirement=requirements.txt {extra_pip_params}"]
             if requirements

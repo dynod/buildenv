@@ -232,7 +232,7 @@ class BuildEnvLoader:
         """
         List of packages installed by default when bootstrapping the buildenv
         """
-        return ["pip", "wheel", "setuptools", "buildenv"]
+        return ["pip", "wheel", "setuptools", "buildenv<2"]
 
     @property
     def requirement_files(self) -> list[str]:

@@ -379,12 +379,14 @@ class TestBuildEnvManager(BuildEnvTestHelper):
         received_commands.clear()
         m.upgrade(Namespace())
         assert len(received_commands) == 1
-        assert received_commands[0] == f"{sys.executable} -m pip install --upgrade pip wheel setuptools buildenv --require-virtualenv"
+        assert received_commands[0] == f"{sys.executable} -m pip install --upgrade pip wheel setuptools buildenv<2 --require-virtualenv"
 
         # Try upgrade: eager strategy, with requirements file
         (self.test_folder / "requirements.txt").touch()
         received_commands.clear()
         m.upgrade(Namespace(eager=True))
         assert len(received_commands) == 2
-        assert received_commands[0] == f"{sys.executable} -m pip install --upgrade --upgrade-strategy=eager pip wheel setuptools buildenv --require-virtualenv"
+        assert (
+            received_commands[0] == f"{sys.executable} -m pip install --upgrade --upgrade-strategy=eager pip wheel setuptools buildenv<2 --require-virtualenv"
+        )
         assert received_commands[1] == f"{sys.executable} -m pip install --upgrade --upgrade-strategy=eager --requirement=requirements.txt --require-virtualenv"
