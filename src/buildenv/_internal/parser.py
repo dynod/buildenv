@@ -1,6 +1,6 @@
 from argparse import REMAINDER, SUPPRESS, ArgumentParser
 from pathlib import Path
-from typing import Callable, List
+from typing import Callable
 
 import argcomplete
 
@@ -75,7 +75,7 @@ class BuildEnvParser:
         # Handle completion
         argcomplete.autocomplete(self._parser)
 
-    def execute(self, args: List[str]):
+    def execute(self, args: list[str]):
         """
         Parse incoming arguments list, and execute command callback
 

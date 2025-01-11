@@ -1,7 +1,6 @@
 import logging
 import sys
 from pathlib import Path
-from typing import List
 
 from buildenv._internal.parser import BuildEnvParser, RCHolder
 from buildenv.loader import logger
@@ -11,7 +10,7 @@ from buildenv.manager import BuildEnvManager
 _CWD = Path.cwd()
 
 
-def buildenv(args: List[str], project_path: Path = _CWD, venv_bin_path: Path = None) -> int:
+def buildenv(args: list[str], project_path: Path = _CWD, venv_bin_path: Path = None) -> int:
     # This is the "buildenv" command logic
 
     # Invoke build env manager on current project directory

@@ -1,6 +1,5 @@
 import shutil
 from pathlib import Path
-from typing import List
 
 from buildenv.__main__ import buildenv
 from buildenv.manager import BUILDENV_OK
@@ -12,7 +11,7 @@ class TestBuildenvParser(BuildEnvTestHelper):
     def venv_bin(self) -> Path:
         return self.test_folder / "venv" / VENV_BIN
 
-    def run_buildenv(self, args: List[str]) -> int:
+    def run_buildenv(self, args: list[str]) -> int:
         activate = self.venv_bin / "activate.d"
         activate.mkdir(parents=True, exist_ok=True)
         (activate / "00_activate.sh").touch()

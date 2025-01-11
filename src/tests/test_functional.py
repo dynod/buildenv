@@ -3,12 +3,12 @@ import os
 import shutil
 import subprocess
 import sys
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
 from nmk.utils import is_windows
 
-from buildenv import __version__
 from tests.commons import BuildEnvTestHelper
 
 
@@ -25,7 +25,7 @@ class TestFunctional(BuildEnvTestHelper):
         assert len(found) == len(expected)
 
     @pytest.fixture
-    def buildenv(self) -> Path:
+    def buildenv(self) -> Generator[Path, None, None]:
         # Test buildenv folder
         buildenv = self.test_folder / "test"
         if buildenv.is_dir():
@@ -49,7 +49,10 @@ class TestFunctional(BuildEnvTestHelper):
         self.prepare_config("buildenv-dontLookUp.cfg", buildenv)
 
         # Build requirements file to install built buildenv wheel (not the pypi one)
-        buildenv_wheel = Path(__file__).parent.parent.parent / f"out/artifacts/buildenv-{__version__}-py3-none-any.whl"
+        artifacts_path = Path(__file__).parent.parent.parent / "out/artifacts"
+        buildenv_wheels = list(artifacts_path.glob("*.whl"))
+        assert len(buildenv_wheels) == 1
+        buildenv_wheel = buildenv_wheels[0]
         assert buildenv_wheel.is_file(), "buildenv wheel not found"
         with (buildenv / "requirements.txt").open("w") as f:
             f.write(str(buildenv_wheel))
@@ -83,10 +86,7 @@ class TestFunctional(BuildEnvTestHelper):
         self.check_generated_buildenv(buildenv)
 
         # Check for return code propagation
-        if is_windows():
-            args = ["cmd", "/c", f"{buildenv / 'buildenv.cmd'} run exit /b 74"]
-        else:
-            args = [f"{buildenv / 'buildenv.sh'}", "run", "exit", "74"]
+        args = ["cmd", "/c", f"{buildenv / 'buildenv.cmd'} run exit /b 74"] if is_windows() else [f"{buildenv / 'buildenv.sh'}", "run", "exit", "74"]
         cp = subprocess.run(args, cwd=buildenv, check=False, capture_output=True, env=new_env)
         assert cp.returncode == 74
 
@@ -100,10 +100,7 @@ class TestFunctional(BuildEnvTestHelper):
         assert cp.returncode == 0
 
         # Try again: shall fail because of bad python path
-        if is_windows():
-            args = ["cmd", "/c", f"{buildenv / 'buildenv.cmd'} init"]
-        else:
-            args = [f"{buildenv / 'buildenv.sh'}", "init"]
+        args = ["cmd", "/c", f"{buildenv / 'buildenv.cmd'} init"] if is_windows() else [f"{buildenv / 'buildenv.sh'}", "init"]
         cp = subprocess.run(args, cwd=buildenv, check=False, capture_output=True, env=new_env)
         logging.info("buildenv init stdout:\n" + "\n".join(cp.stdout.decode().splitlines()))
         logging.info("buildenv init stderr:\n" + "\n".join(cp.stderr.decode().splitlines()))

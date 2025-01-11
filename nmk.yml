@@ -10,15 +10,12 @@ refs:
         remote: github://dynod/workspace/main/shared
 
 config:
-    # Extra setup data
-    pythonSetupItems:
-        metadata:
+    # Extra project data
+    pythonProjectFileItems:
+        project:
             description: Build environment setup system, based on Python venv
-        options.entry_points:
-            console_scripts: "\nbuildenv = buildenv.__main__:main"
-        options.package_data:
-            buildenv.templates:
-                - "*.jinja"
+            scripts:
+                buildenv: buildenv.__main__:main
 
     # Dependencies
     pythonPackageRequirements:
@@ -43,7 +40,7 @@ tasks:
         emoji: rocket
         appendToDeps: build
         deps:
-          - py.install
+          - py.build
         input: ${venvState}
         output:
           - ${PROJECTDIR}/buildenv.sh

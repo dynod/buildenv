@@ -1,7 +1,6 @@
 import stat
 import subprocess
 from pathlib import Path
-from typing import Dict
 
 from jinja2 import Template
 
@@ -31,7 +30,7 @@ class TemplatesRenderer:
         self.project_script_path = project_script_path
         self.project_path = self.project_script_path.parent
 
-    def render(self, template: Path, target: Path, executable: bool = False, keywords: Dict[str, str] = None):
+    def render(self, template: Path, target: Path, executable: bool = False, keywords: dict[str, str] = None):
         """
         Render template template to target file
 
@@ -90,7 +89,7 @@ class TemplatesRenderer:
         target.parent.mkdir(parents=True, exist_ok=True)
 
         # Generate target
-        newline = NEWLINE_PER_TYPE[target_type] if target_type in NEWLINE_PER_TYPE else None
+        newline = NEWLINE_PER_TYPE.get(target_type, None)
         with target.open("w", newline=newline) as f:
             f.write(generated_content)
 

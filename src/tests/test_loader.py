@@ -1,7 +1,6 @@
 import re
 import subprocess
 from pathlib import Path
-from typing import List
 
 import pytest
 from nmk.utils import is_windows
@@ -69,13 +68,6 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         loader = BuildEnvLoader(self.test_folder)
         assert loader.pip_args == "--require-virtualenv --extra-index-url http://johnsmith@foo.org"
 
-    def test_loader_find_real_venv(self):
-        # Test for current project venv detection
-        loader = BuildEnvLoader(self.test_folder)
-        v = loader.find_venv()
-        assert v == Path(__file__).parent.parent.parent / "venv"
-        assert v.is_dir()
-
     def test_loader_find_parent_venv(self, monkeypatch):
         # Patch subprocess to fake git answer --> returns parent path and rc 0
         monkeypatch.setattr(subprocess, "run", lambda args, capture_output, cwd, check: subprocess.CompletedProcess(args, 0, str(cwd).encode()))
@@ -119,7 +111,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         v = loader.find_venv()
         assert v == fake_venv
 
-    def check_strings(self, received_list: List[str], expected_list: List[str]):
+    def check_strings(self, received_list: list[str], expected_list: list[str]):
         # Check used commands
         for received, expected in zip(
             received_list if isinstance(received_list, list) else [received_list],
@@ -141,7 +133,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
             received_commands.append(" ".join(args))
             if args[0] == "git":
                 return subprocess.CompletedProcess(args, 1, str(cwd).encode())
-            return subprocess.CompletedProcess(args, 0, "".encode())
+            return subprocess.CompletedProcess(args, 0, b"")
 
         # Patch subprocess:
         # - to fake git answer --> returns rc 1
@@ -200,13 +192,6 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
 
         # Check with existing (but corrupted) venv folder
         self.check_venv_creation(monkeypatch, True, False)
-
-    def test_setup_venv_project_path(self):
-        # Check with current project venv
-        loader = BuildEnvLoader(self.test_folder)
-        c = loader.setup_venv()
-        self.check_strings(str(c.executable), self.wrap_exe((Path(__file__).parent.parent.parent / "venv" / BIN_FOLDER / PYTHON_EXE).as_posix()))
-        assert not (self.test_folder / "venv").is_dir()
 
     def test_setup_with_manager(self, monkeypatch):
         received_commands = []

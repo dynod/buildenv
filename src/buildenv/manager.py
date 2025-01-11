@@ -5,7 +5,6 @@ import subprocess
 import sys
 from argparse import Namespace
 from pathlib import Path
-from typing import Dict, List
 
 from buildenv import __version__
 from buildenv._internal.parser import RCHolder
@@ -171,7 +170,7 @@ class BuildEnvManager:
 
     # List activation files
     @property
-    def _existing_activation_files(self) -> List[Path]:
+    def _existing_activation_files(self) -> list[Path]:
         out = list(filter(lambda f: f.is_file(), self.venv_context.activation_scripts_folder.glob("*")))
         assert len(out) > 0, "venv wasn't created by buildenv; can't work on activation scripts"
         return out
@@ -211,7 +210,7 @@ class BuildEnvManager:
         """
         self._ignored_patterns.append(pattern)
 
-    def add_activation_file(self, name: str, extension: str, template: str, keywords: Dict[str, str] = None):
+    def add_activation_file(self, name: str, extension: str, template: str, keywords: dict[str, str] = None):
         """
         Add activation file in venv (in "<venv>/<bin or Script>/activate.d" folder).
         This file will be loaded each time the venv is activated.
@@ -232,7 +231,7 @@ class BuildEnvManager:
         self.renderer.render(template, script_name, keywords=keywords)
 
     # Iterate on entry points to load extensions
-    def _parse_extensions(self) -> Dict[str, object]:
+    def _parse_extensions(self) -> dict[str, object]:
         # Build entry points map (to handle duplicate names)
         unfiltered_entry_points = importlib.metadata.entry_points()
         all_entry_points = {}
@@ -254,13 +253,13 @@ class BuildEnvManager:
                 assert issubclass(extension_class, BuildEnvExtension), f"{name} extension class is not extending buildenv.BuildEnvExtension"
                 extension = extension_class(self)
             except Exception as e:
-                raise AssertionError(f"Failed to load {name} extension: {e}")
+                raise AssertionError(f"Failed to load {name} extension: {e}") from e
             out[name] = extension
 
         return out
 
     # Check for persisted versions
-    def _check_versions(self, all_extensions: Dict[str, object]) -> bool:
+    def _check_versions(self, all_extensions: dict[str, object]) -> bool:
         # Build map of version files
         version_files = {self.buildenv_ok: __version__, self.project_buildenv_ok: __version__}
         version_files.update({self.project_script_path / f"{n}OK": p.get_version() for n, p in all_extensions.items()})
@@ -281,7 +280,7 @@ class BuildEnvManager:
         return True
 
     # Iterate on extensions to delegate init
-    def _run_extensions(self, all_extensions: Dict[str, object], force: bool):
+    def _run_extensions(self, all_extensions: dict[str, object], force: bool):
         # Iterate on entry points
         for name, extension in all_extensions.items():
             # Get initializer, and verify type
@@ -291,7 +290,7 @@ class BuildEnvManager:
             try:
                 extension.init(force)
             except Exception as e:
-                raise AssertionError(f"Failed to execute {name} extension init: {e}")
+                raise AssertionError(f"Failed to execute {name} extension init: {e}") from e
 
             # Init ok: touch init file
             init_file = self.project_script_path / f"{name}OK"

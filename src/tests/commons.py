@@ -27,10 +27,7 @@ class BuildEnvTestHelper(TestHelper):
 
     def set_env(self, name: str, value: str) -> Union[str, None]:
         # Remove environment var and remember previous value
-        if name in os.environ:
-            old_value = os.environ[name]
-        else:
-            old_value = None
+        old_value = os.environ.get(name, None)
         os.environ[name] = value
         return old_value
 

@@ -54,9 +54,9 @@ class TestBuildEnvManager(BuildEnvTestHelper):
             received_commands.append(" ".join(args))
             if args[0] == "git":
                 if args[1] == "update-index":
-                    return subprocess.CompletedProcess(args, git_update_index_rc, "".encode())
-                return subprocess.CompletedProcess(args, 1, "".encode())
-            return subprocess.CompletedProcess(args, 0, "".encode())
+                    return subprocess.CompletedProcess(args, git_update_index_rc, b"")
+                return subprocess.CompletedProcess(args, 1, b"")
+            return subprocess.CompletedProcess(args, 0, b"")
 
         # Patch subprocess:
         # - to fake git answer --> returns rc 1
@@ -367,7 +367,7 @@ class TestBuildEnvManager(BuildEnvTestHelper):
 
         def fake_subprocess(args, cwd=None, **kwargs):
             received_commands.append(" ".join(args))
-            return subprocess.CompletedProcess(args, 0, "".encode())
+            return subprocess.CompletedProcess(args, 0, b"")
 
         # Patch subprocess to record executed commands
         monkeypatch.setattr(subprocess, "run", fake_subprocess)
