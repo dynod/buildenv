@@ -3,10 +3,10 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from buildenv.loader import VENV_OK, BuildEnvLoader
 from nmk.utils import is_windows
 
-from buildenv.loader import VENV_OK, BuildEnvLoader
-from tests.commons import BuildEnvTestHelper
+from tests._commons import BuildEnvTestHelper
 
 # Expected bin folder in venv
 BIN_FOLDER = "Scripts" if is_windows() else "bin"

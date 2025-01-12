@@ -1,0 +1,9 @@
+# Check if {{command}} is installed
+{{command}} --version 2>/dev/null 1>&2
+if test $? -ne 0; then
+    echo "[ERROR] {{command}} is not installed; see {{url}} for installation instructions"
+    exit 1
+fi
+
+# Export buildenv version
+export BUILDENV_VERSION=2

@@ -14,6 +14,9 @@ nmk-doc
 nmk-github
 nmk-python
 nmk-vscode
+pipx
+psutil
 sphinx-autoapi
+uv
 
 

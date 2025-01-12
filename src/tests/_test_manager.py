@@ -6,13 +6,13 @@ import tempfile
 from argparse import Namespace
 from pathlib import Path
 
+from buildenv._internal.parser import RCHolder
+from buildenv.manager import BUILDENV_OK
 from nmk.utils import is_windows
 from nmk_vscode.buildenv import BuildEnvInit as VsCodeInit
 
-from buildenv import BuildEnvExtension, BuildEnvLoader, BuildEnvManager
-from buildenv._internal.parser import RCHolder
-from buildenv.manager import BUILDENV_OK
-from tests.commons import VENV_BIN, BuildEnvTestHelper
+from buildenv2 import BuildEnvExtension, BuildEnvLoader, BuildEnvManager
+from tests._commons import VENV_BIN, BuildEnvTestHelper
 
 # Default (empty) namespace
 DEFAULT_OPTIONS = Namespace()

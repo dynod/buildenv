@@ -1,0 +1,14 @@
+{% include "headers/warning.jinja" %}
+
+# Load user profile (if any)
+if test -e ~/.bashrc; then
+    source ~/.bashrc
+fi
+
+# Update prompt
+export PS1="${VIRTUAL_ENV_PROMPT}${PS1-}"
+
+# Load extra activation files
+for i in ${VIRTUAL_ENV_SCRIPTS}/activate/*.sh; do
+    source $i
+done

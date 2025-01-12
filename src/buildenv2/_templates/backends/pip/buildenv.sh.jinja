@@ -1,0 +1,52 @@
+{% include "headers/warning.jinja" %}
+
+# Check for python command
+if test -f /git-bash.exe; then
+    _python=python
+    _bin=Scripts
+else
+    _python=python3
+    _bin=bin
+fi
+
+{% include "backends/fragments/check.sh.jinja" %}
+
+# Needs to create venv?
+if test ! -d .venv; then
+    # Create venv
+    echo "Creating venv..."
+    ${_python} -m venv .venv
+    _rc=$?
+    if test ${_rc} -ne 0; then
+        echo "[ERROR] Failed to create venv"
+        exit ${_rc}
+    fi
+
+    # Activate venv
+    . .venv/${_bin}/activate
+
+    # Check for requirements
+    if test -f requirements.lock; then
+        # Locked requirements
+        _reqs="-r $PWD/requirements.lock"
+    elif test -f requirements.txt; then
+        # Base input requirements
+        _reqs="-r $PWD/requirements.txt"
+    fi
+
+    # Install dependencies in venv
+    echo "Installing project dependencies..."
+    python -m pip install buildenv2 ${_reqs} ${BUILDENV_PIP_ARGS}
+    _rc=$?
+    if test ${_rc} -ne 0; then
+        echo "[ERROR] Failed to install project dependencies"
+        exit ${_rc}
+    fi
+
+    # Deactivate after install
+    deactivate
+fi
+
+# Delegate execution to buildenv command
+.venv/${_bin}/buildenv2 "$@"
+

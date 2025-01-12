@@ -15,12 +15,23 @@ config:
         project:
             description: Build environment setup system, based on Python venv
             scripts:
-                buildenv: buildenv.__main__:main
+                buildenv2: buildenv2.__main__:main
+        tool:
+            coverage:
+                run:
+                    omit:
+                        - src/_buildenv/*
 
     # Dependencies
     pythonPackageRequirements:
         - Jinja2
         - argcomplete
+        - psutil
+
+    # For tests
+    venvPkgDeps:
+        - pipx
+        - uv
 
     # Customize CSS for wider page
     docExtraConfig:
@@ -29,22 +40,14 @@ config:
         html_css_files:
           - css/custom.css
 
-    # Don't refresh buildenv scripts through nmk (see nmk-base)
-    # This will be done after build by buildenv.refresh task (see below)
-    buildenvRefresh: False
+    # At the moment, change wheel name until buildenv 2.0.0 is fully ready
+    pythonPackage: buildenv2
 
 tasks:
-    # Force buildenv-loader update after install (otherwise older buildenv version will be reinstalled...)
-    buildenv.refresh:
-        description: Refresh "buildenv" scripts
-        emoji: rocket
-        appendToDeps: build
+    # Force python wheel to be built (as part of build task); functional tests need a built wheel file
+    extra_build:
         deps:
-          - py.build
-        output:
-          - ${PROJECTDIR}/buildenv.sh
-          - ${PROJECTDIR}/buildenv.cmd
-          - ${PROJECTDIR}/buildenv-loader.py
-        builder: nmk_base.common.ProcessBuilder
-        params:
-            cmd: ${venvBin}/buildenv init --skip
+            - py.editable
+            - py.build
+        appendToDeps: build
+        silent: True

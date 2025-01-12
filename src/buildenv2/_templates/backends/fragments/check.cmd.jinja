@@ -1,0 +1,11 @@
+:: Check if {{command}} is installed
+setlocal
+{{command}} --version > NUL 2> NUL
+set _BUILDENV_RC=%ERRORLEVEL%
+if %_BUILDENV_RC% NEQ 0 (
+    echo|set /p="[ERROR] {{command}} is not installed; see {{url}} for installation instructions" & echo.
+    goto end
+)
+
+:: Export buildenv version
+set BUILDENV_VERSION=2
