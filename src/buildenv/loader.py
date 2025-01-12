@@ -222,7 +222,7 @@ class BuildEnvLoader:
         """
         Additional arguments for "pip install" commands, read from **buildenv.cfg** project config file.
         """
-        config_args = self.read_config("pipInstallArgs", "", resolve=True)
+        config_args = " ".join(self.read_config("pipInstallArgs", "", resolve=True).splitlines(keepends=False))
 
         # Systematically force the "--require-virtualenv" option
         return "--require-virtualenv" + (" " if len(config_args) else "") + config_args

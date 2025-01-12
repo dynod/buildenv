@@ -41,7 +41,6 @@ tasks:
         appendToDeps: build
         deps:
           - py.build
-        input: ${venvState}
         output:
           - ${PROJECTDIR}/buildenv.sh
           - ${PROJECTDIR}/buildenv.cmd
