@@ -1,0 +1,23 @@
+{% include "headers/warning.jinja" %}
+
+{% include "backends/fragments/check.cmd.jinja" %}
+
+:: Check for requirements
+if exist requirements.lock (
+    :: Locked requirements
+    set _reqs=-r %CD%\requirements.lock
+) else (
+    if exist requirements.txt (
+        :: Base input requirements
+        set _reqs=-r %CD%\requirements.txt
+    )
+)
+
+:: Delegate execution to buildenv command (through pipx)
+pipx run --pip-args "%_reqs%" %BUILDENV_PIPX_ARGS% buildenv2 %*
+set _BUILDENV_RC=%ERRORLEVEL%
+goto end
+
+:end
+exit /b %_BUILDENV_RC%
+

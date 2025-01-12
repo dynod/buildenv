@@ -5,11 +5,11 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "buildenv"
+name = "buildenv2"
 dynamic = ["version"]
 requires-python = ">=3.9"
 classifiers = ["Programming Language :: Python :: 3.9", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13"]
-dependencies = ["Jinja2", "argcomplete"]
+dependencies = ["Jinja2", "argcomplete", "psutil"]
 description = "Build environment setup system, based on Python venv"
 
 [[project.authors]]
@@ -26,16 +26,16 @@ content-type = "text/markdown"
 text = "MIT License"
 
 [project.urls]
-Homepage = "https://github.com/dynod/buildenv"
-Repository = "https://github.com/dynod/buildenv"
+Homepage = "https://github.com/dynod/buildenv2"
+Repository = "https://github.com/dynod/buildenv2"
 Issues = "https://github.com/dynod/buildenv/issues?q=is%3Aopen+is%3Aissue"
 
 [project.scripts]
-buildenv = "buildenv.__main__:main"
+buildenv2 = "buildenv2.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-exclude = ["tests"]
+exclude = ["tests*"]
 namespaces = false
 
 [tool.setuptools.package-data]
@@ -46,6 +46,11 @@ file = "out/.pythonversion"
 
 [tool.distutils.bdist_wheel]
 plat-name = "any"
+
+[tool.pyright]
+include = ["src"]
+typeCheckingMode = "strict"
+reportMissingTypeStubs = false
 
 [tool.ruff]
 line-length = 160
@@ -65,4 +70,4 @@ data_file = "out/.coverage"
 concurrency = ["thread"]
 disable_warnings = ["no-data-collected"]
 branch = true
-omit = ["src/tests/*"]
+omit = ["src/tests/*", "src/_buildenv/*"]

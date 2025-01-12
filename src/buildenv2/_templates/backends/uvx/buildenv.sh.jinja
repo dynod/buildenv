@@ -1,0 +1,16 @@
+{% include "headers/warning.jinja" %}
+
+{% include "backends/fragments/check.sh.jinja" %}
+
+# Check for requirements
+if test -f requirements.lock; then
+    # Locked requirements
+    _reqs="--with-requirements requirements.lock"
+elif test -f requirements.txt; then
+    # Base input requirements
+    _reqs="--with-requirements requirements.txt"
+fi
+
+# Delegate execution to buildenv command (through uvx)
+uvx ${_reqs} ${BUILDENV_UVX_ARGS} buildenv2 "$@"
+

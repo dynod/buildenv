@@ -6,11 +6,12 @@ import sys
 from argparse import Namespace
 from pathlib import Path
 
-from buildenv import __version__
 from buildenv._internal.parser import RCHolder
 from buildenv._internal.render import RC_START_SHELL, TemplatesRenderer
-from buildenv.extension import BuildEnvExtension
 from buildenv.loader import BuildEnvLoader, logger
+
+from buildenv2 import __version__
+from buildenv2.extension import BuildEnvExtension
 
 BUILDENV_OK = "buildenvOK"
 """Valid buildenv tag file"""

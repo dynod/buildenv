@@ -1,0 +1,12 @@
+{% include "headers/warning.jinja" %}
+
+{% include "backends/fragments/check.cmd.jinja" %}
+
+:: Delegate execution to buildenv command (through uv)
+uv run %BUILDENV_UV_ARGS% buildenv2 %*
+set _BUILDENV_RC=%ERRORLEVEL%
+goto end
+
+:end
+exit /b %_BUILDENV_RC%
+

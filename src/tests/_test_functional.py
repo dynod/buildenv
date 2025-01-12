@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from nmk.utils import is_windows
 
-from tests.commons import BuildEnvTestHelper
+from tests._commons import BuildEnvTestHelper
 
 
 class TestFunctional(BuildEnvTestHelper):

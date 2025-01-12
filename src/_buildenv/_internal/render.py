@@ -2,9 +2,8 @@ import stat
 import subprocess
 from pathlib import Path
 
-from jinja2 import Template
-
 from buildenv.loader import NEWLINE_PER_TYPE, BuildEnvLoader, logger, to_linux_path, to_windows_path
+from jinja2 import Template
 
 # Path to bundled template files
 _TEMPLATES_FOLDER = Path(__file__).parent.parent / "templates"

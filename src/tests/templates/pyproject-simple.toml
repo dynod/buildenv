@@ -1,0 +1,15 @@
+[project]
+name = "sample"
+dynamic = ["version"]
+dependencies = ["requests"]
+description = "Some sample python project"
+requires-python = ">=3.9"
+
+[[project.authors]]
+name = "The dynod project"
+
+[[project.maintainers]]
+name = "The dynod project"
+
+[dependency-groups]
+dev = ["pytest"]

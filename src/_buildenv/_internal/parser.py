@@ -4,7 +4,7 @@ from typing import Callable
 
 import argcomplete
 
-from buildenv import __version__
+from buildenv2 import __version__
 
 
 class RCHolder(Exception):  # NOQA: N818

@@ -1,0 +1,5 @@
+{% include "headers/warning.jinja" %}
+
+{% for p in installed_packages|sort%}{{p}}=={{installed_packages[p]}}
+{% endfor %}
+

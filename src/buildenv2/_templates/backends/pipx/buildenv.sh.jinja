@@ -1,0 +1,16 @@
+{% include "headers/warning.jinja" %}
+
+{% include "backends/fragments/check.sh.jinja" %}
+
+# Check for requirements
+if test -f requirements.lock; then
+    # Locked requirements
+    _reqs="-r $PWD/requirements.lock"
+elif test -f requirements.txt; then
+    # Base input requirements
+    _reqs="-r $PWD/requirements.txt"
+fi
+
+# Delegate execution to buildenv command (through pipx)
+pipx run --pip-args "${_reqs}" ${BUILDENV_PIPX_ARGS} buildenv2 "$@"
+
