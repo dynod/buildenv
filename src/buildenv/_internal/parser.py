@@ -5,7 +5,6 @@ from typing import Callable
 import argcomplete
 
 from buildenv import __version__
-from buildenv._backends.factory import EnvBackendFactory
 
 
 class RCHolder(Exception):  # NOQA: N818
@@ -35,7 +34,7 @@ class BuildEnvParser:
 
     def __init__(self, init_cb: Callable, shell_cb: Callable, run_cb: Callable, upgrade_cb: Callable):
         # Setup arguments parser
-        self._parser = ArgumentParser(prog="buildenv", description=f"Build environment manager [{EnvBackendFactory().create().name}]")
+        self._parser = ArgumentParser(prog="buildenv", description="Build environment manager")
 
         # Version handling
         self._parser.add_argument("-V", "--version", action="version", version=f"buildenv version {__version__}")

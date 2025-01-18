@@ -23,7 +23,7 @@ class EnvBackendFactory:
 
         # Check env root from current executable
         env_root = Path(sys.executable).parent.parent
-        _LOGGER.warning(f"Detected environment: {env_root}")
+        _LOGGER.debug(f"Detected environment: {env_root}")
 
         # Look for venv config file
         venv_cfg = env_root / "pyvenv.cfg"
@@ -34,14 +34,21 @@ class EnvBackendFactory:
         with venv_cfg.open() as f:
             venv_props.read_string("[DEFAULT]\n" + f.read())
 
+        # Prepare to create backend instance
+        backend_class = None
+
         # UV property?
         if venv_props.has_option(None, "uv"):
             # UV backend detected
-            return UvToolsBackend()
+            backend_class = UvToolsBackend
 
         # Pipx json file?
-        if (env_root / "pipx_metadata.json").is_file():
-            return PipXBackend()
+        elif (env_root / "pipx_metadata.json").is_file():
+            backend_class = PipXBackend
 
         # Default: legacy pip backend
-        return LegacyPipBackend()
+        else:
+            backend_class = LegacyPipBackend
+
+        # Return backend instance
+        return backend_class(env_root)

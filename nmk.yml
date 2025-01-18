@@ -16,6 +16,7 @@ config:
             description: Build environment setup system, based on Python venv
             scripts:
                 buildenv: buildenv.__main__:main
+                buildenv2: buildenv.__main__:main2
 
     # Dependencies
     pythonPackageRequirements:
