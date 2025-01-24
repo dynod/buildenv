@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 from .._internal.utils import is_windows
 from .bash import BashShell
@@ -12,10 +13,11 @@ _LOGGER = logging.getLogger(__name__)
 # Shell detection factory
 class ShellFactory:
     @staticmethod
-    def create() -> EnvShell:
+    def create(venv_root: Path) -> EnvShell:
         """
         Detect shell implementation from environment and OS
 
+        :venv_root: path to virtual env root
         :return: detected shell implementation instance
         """
 
@@ -36,4 +38,4 @@ class ShellFactory:
             raise RuntimeError("Unable to detect the running shell")
 
         # Return shell instance
-        return shell_class()
+        return shell_class(venv_root)

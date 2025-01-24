@@ -1,13 +1,17 @@
-import os
-import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
+
+from .._shells.factory import ShellFactory
 
 
 # Backend base implementation
 class EnvBackend(ABC):
     def __init__(self, venv_root: Path):
+        # Remember root
         self._venv_root = venv_root
+
+        # Prepare shell
+        self._shell = ShellFactory.create(self._venv_root)
 
     @property
     @abstractmethod
@@ -26,20 +30,10 @@ class EnvBackend(ABC):
         """
         pass
 
-    def shell(self):
+    def shell(self) -> int:
         """
         Launch an interractive shell from the backend
         """
 
-        # Get current shell
-        shell = os.environ.get("SHELL", None)
-        assert shell is not None, "SHELL env var is not defined"
-
-        # Prepare updated environment
-        shell_env = dict(os.environ)
-        shell_env["VIRTUAL_ENV_PROMPT"] = "buildenv"  # Buildenv prompt
-        shell_env["VIRTUAL_ENV"] = str(self._venv_root)  # Venv root folder
-        shell_env["PS1"] = f"(buildenv) {shell_env['PS1']}"  # Updated prompt
-
-        # Launch shell process
-        subprocess.run([shell], env=shell_env, check=False)
+        # Run interractive shell
+        return self._shell.run(None)

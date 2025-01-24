@@ -1,0 +1,16 @@
+# Load user profile (if any)
+if test -e ~/.bashrc; then
+    source ~/.bashrc
+fi
+
+# Load venv activation
+if test -f /git-bash.exe; then
+    source ${VIRTUAL_ENV}/Scripts/activate
+else
+    source ${VIRTUAL_ENV}/bin/activate
+fi
+
+# Load extra activation files
+for i in ${VIRTUAL_ENV_SCRIPTS}/all_scripts/*.sh; do
+    source $i
+done
