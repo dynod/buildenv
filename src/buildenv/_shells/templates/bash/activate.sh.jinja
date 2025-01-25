@@ -3,14 +3,10 @@ if test -e ~/.bashrc; then
     source ~/.bashrc
 fi
 
-# Load venv activation
-if test -f /git-bash.exe; then
-    source ${VIRTUAL_ENV}/Scripts/activate
-else
-    source ${VIRTUAL_ENV}/bin/activate
-fi
+# Update prompt
+export PS1="${VIRTUAL_ENV_PROMPT}${PS1-}"
 
 # Load extra activation files
-for i in ${VIRTUAL_ENV_SCRIPTS}/all_scripts/*.sh; do
+for i in ${VIRTUAL_ENV_SCRIPTS}/activate/*.sh; do
     source $i
 done

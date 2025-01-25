@@ -46,7 +46,7 @@ def main() -> int:  # pragma: no cover
 
 def main2() -> int:  # pragma: no cover
     logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
-    backend = EnvBackendFactory.create()
+    backend = EnvBackendFactory.create(Path.cwd())
     logging.debug(f"Detected buildenv backend: {backend.name}")
     backend.shell()
 

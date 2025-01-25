@@ -1,6 +1,5 @@
 import os
 import stat
-import subprocess
 from pathlib import Path
 
 from .shell import EnvShell
@@ -8,8 +7,8 @@ from .shell import EnvShell
 
 # Bash shell implementation
 class BashShell(EnvShell):
-    def __init__(self, venv_root: Path):
-        super().__init__(venv_root)
+    def __init__(self, venv_bin: Path, fake_pip: bool, backend_name: str):
+        super().__init__(venv_bin, fake_pip, backend_name)
         self._shell_path = os.getenv("SHELL")
 
     @property
@@ -25,6 +24,15 @@ class BashShell(EnvShell):
     def generate_activation_scripts(self, tmp_dir: Path):
         # Main activation file
         self.render("bash/activate.sh.jinja", tmp_dir / "activate.sh")
+
+        # Completion handling
+        self.render(
+            "bash/completion.sh.jinja", tmp_dir / "activate" / "completion.sh", keywords={"commands": ["buildenv"]}
+        )  # TODO: Handle completion for commands registered from plugins
+
+        # Generate fake pip if required
+        if self._fake_pip:
+            self.render("bash/pip.sh.jinja", tmp_dir / "bin" / "pip", executable=True)
 
     @property
     def header(self) -> str:
@@ -47,12 +55,12 @@ class BashShell(EnvShell):
             # System chmod
             target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
-            # Git chmod: only if not a .buildenv relative script (not persisted on git)
-            try:
-                rel_path = target.relative_to(self.project_path)
-            except ValueError:  # pragma: no cover
-                rel_path = None
-            if (target.parent != self.project_script_path) and (rel_path is not None):
-                cp = subprocess.run(["git", "update-index", "--chmod=+x", str(rel_path)], capture_output=True, check=False, cwd=self.project_path)
-                if cp.returncode != 0:
-                    self._logger.warning(f"Failed to chmod {target.name} file with git (file not in index yet, or maybe git not installed?)")
+            # TODO Git chmod: only if not a .buildenv relative script (not persisted on git)
+            # try:
+            #     rel_path = target.relative_to(self.project_path)
+            # except ValueError:  # pragma: no cover
+            #     rel_path = None
+            # if (target.parent != self.project_script_path) and (rel_path is not None):
+            #     cp = subprocess.run(["git", "update-index", "--chmod=+x", str(rel_path)], capture_output=True, check=False, cwd=self.project_path)
+            #     if cp.returncode != 0:
+            #         self._logger.warning(f"Failed to chmod {target.name} file with git (file not in index yet, or maybe git not installed?)")

@@ -10,3 +10,7 @@ class LegacyPipBackend(EnvBackend):
     def is_mutable(self):
         # Pip installed venv is mutable
         return True
+
+    def has_pip(self):
+        # Pip has pip, obviously
+        return True

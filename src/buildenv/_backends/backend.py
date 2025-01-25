@@ -6,12 +6,12 @@ from .._shells.factory import ShellFactory
 
 # Backend base implementation
 class EnvBackend(ABC):
-    def __init__(self, venv_root: Path):
-        # Remember root
-        self._venv_root = venv_root
+    def __init__(self, venv_bin: Path):
+        # Remember venv bin path
+        self._venv_bin = venv_bin
 
         # Prepare shell
-        self._shell = ShellFactory.create(self._venv_root)
+        self._shell = ShellFactory.create(self._venv_bin, not self.is_mutable() or not self.has_pip(), self.name)
 
     @property
     @abstractmethod
@@ -27,6 +27,15 @@ class EnvBackend(ABC):
         State if this backend supports installed packages update once created
 
         :return: True if environment is mutable
+        """
+        pass
+
+    @abstractmethod
+    def has_pip(self) -> bool:  # pragma: no cover
+        """
+        State if this backend includes pip tool
+
+        :return: True if environment includes pip
         """
         pass
 

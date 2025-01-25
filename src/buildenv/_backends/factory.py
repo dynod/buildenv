@@ -6,7 +6,7 @@ from pathlib import Path
 from .backend import EnvBackend
 from .pip import LegacyPipBackend
 from .pipx import PipXBackend
-from .uv import UvToolsBackend
+from .uv import UvProjectBackend, UvxBackend
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 # Backend detection factory
 class EnvBackendFactory:
     @staticmethod
-    def create() -> EnvBackend:
+    def create(project_path: Path) -> EnvBackend:
         """
         Detect backend from running python instance, and return corresponding implementation
 
@@ -22,7 +22,8 @@ class EnvBackendFactory:
         """
 
         # Check env root from current executable
-        env_root = Path(sys.executable).parent.parent
+        env_bin = Path(sys.executable).parent
+        env_root = env_bin.parent
         _LOGGER.debug(f"Detected environment: {env_root}")
 
         # Look for venv config file
@@ -39,8 +40,8 @@ class EnvBackendFactory:
 
         # UV property?
         if venv_props.has_option(None, "uv"):
-            # UV backend detected
-            backend_class = UvToolsBackend
+            # UV venv detected; check if relative to current project or not
+            backend_class = UvProjectBackend if env_root.is_relative_to(project_path) else UvxBackend
 
         # Pipx json file?
         elif (env_root / "pipx_metadata.json").is_file():
@@ -51,4 +52,4 @@ class EnvBackendFactory:
             backend_class = LegacyPipBackend
 
         # Return backend instance
-        return backend_class(env_root)
+        return backend_class(env_bin)

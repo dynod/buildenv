@@ -5,8 +5,8 @@ from .shell import EnvShell
 
 # Windows cmd shell implementation
 class CmdShell(EnvShell):
-    def __init__(self, venv_root: Path):
-        super().__init__(venv_root)
+    def __init__(self, venv_bin: Path, fake_pip: bool, backend_name: str):
+        super().__init__(venv_bin, fake_pip, backend_name)
         self._shell_path = "cmd"
 
     @property

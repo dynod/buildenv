@@ -13,8 +13,10 @@ _TEMPLATES_ROOT_FOLDER = Path(__file__).parent / "templates"
 
 # Build environment shell abstraction class
 class EnvShell(ABC):
-    def __init__(self, venv_root: Path):
-        self._venv_root = venv_root
+    def __init__(self, venv_bin: Path, fake_pip: bool, backend_name: str):
+        self._venv_bin = venv_bin
+        self._fake_pip = fake_pip
+        self._backend_name = backend_name
         self._logger = logging.getLogger(type(self).__name__)
 
     @property
@@ -24,6 +26,22 @@ class EnvShell(ABC):
         Shell implementation name
         """
         pass
+
+    def contribute_path(self, env: dict[str, str], to_contribute: Path):
+        """
+        Contribute provided folder to PATH if not done yet
+
+        :param env: environment map
+        :param to_contribute: path to be added to PATH
+        """
+
+        # Turn PATH to a resolved Path objects list
+        resolved_paths = set([Path(p).resolve() for p in env["PATH"].split(os.pathsep)])
+        resolved_contribution = to_contribute.resolve()
+
+        # If not already in PATH, add it
+        if resolved_contribution not in resolved_paths:
+            env["PATH"] = f"{resolved_contribution}{os.pathsep}{env['PATH']}"
 
     def get_env(self, tmp_dir: Path) -> dict[str, str]:
         """
@@ -37,9 +55,15 @@ class EnvShell(ABC):
         env = dict(os.environ)
 
         # Update environment
-        env["VIRTUAL_ENV_SCRIPTS"] = str(tmp_dir)  # Path to activation scripts
-        env["VIRTUAL_ENV"] = str(self._venv_root)  # Path to virtual env root
-        env["VIRTUAL_ENV_PROMPT"] = "buildenv"  # Buildenv prompt
+        env["VIRTUAL_ENV_SCRIPTS"] = str(tmp_dir)  # Path to temporary activation scripts
+        env["VIRTUAL_ENV"] = str(self._venv_bin.parent)  # Path to virtual env root
+        env["VIRTUAL_ENV_PROMPT"] = "(buildenv) "  # Buildenv prompt
+        if "PYTHONHOME" in env:
+            del env["PYTHONHOME"]  # Remove PYTHONHOME to avoid conflicts
+
+        # PATH contributions
+        self.contribute_path(env, self._venv_bin)  # venv bin folder
+        self.contribute_path(env, tmp_dir / "bin")  # temporary bin folder
 
         return env
 
@@ -122,7 +146,7 @@ class EnvShell(ABC):
 
     def render(self, template: Path | str, target: Path, executable: bool = False, keywords: dict[str, str] = None):
         """
-        Render template template to target file
+        Render template to target file
 
         :param template: Path to template file
         :param target: Target file to be generated
@@ -131,7 +155,9 @@ class EnvShell(ABC):
         """
 
         # Build keywords map
-        all_keywords = {}
+        all_keywords = {
+            "backend": self._backend_name,
+        }
         if keywords is not None:
             all_keywords.update(keywords)
 
