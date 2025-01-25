@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 
-from .._internal.utils import is_windows
+from .._utils import is_windows
 from .bash import BashShell
 from .cmd import CmdShell
 from .shell import EnvShell

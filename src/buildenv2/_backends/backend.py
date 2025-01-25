@@ -42,7 +42,20 @@ class EnvBackend(ABC):
     def shell(self) -> int:
         """
         Launch an interractive shell from the backend
+
+        :return: shell exit code
         """
 
         # Run interractive shell
         return self._shell.run(None)
+
+    def run(self, command: str) -> int:
+        """
+        Run command in the backend shell
+
+        :param command: command to be executed
+        :return: command exit code
+        """
+
+        # Run command in shell
+        return self._shell.run(command)

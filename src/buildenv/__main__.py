@@ -2,7 +2,6 @@ import logging
 import sys
 from pathlib import Path
 
-from buildenv._backends.factory import EnvBackendFactory
 from buildenv._internal.parser import BuildEnvParser, RCHolder
 from buildenv.loader import logger
 from buildenv.manager import BuildEnvManager
@@ -42,13 +41,6 @@ def buildenv(args: list[str], project_path: Path = _CWD, venv_bin_path: Path = N
 def main() -> int:  # pragma: no cover
     logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
     return buildenv(sys.argv[1:])
-
-
-def main2() -> int:  # pragma: no cover
-    logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
-    backend = EnvBackendFactory.create(Path.cwd())
-    logging.debug(f"Detected buildenv backend: {backend.name}")
-    backend.shell()
 
 
 if __name__ == "__main__":  # pragma: no cover

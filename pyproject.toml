@@ -32,7 +32,7 @@ Issues = "https://github.com/dynod/buildenv/issues?q=is%3Aopen+is%3Aissue"
 
 [project.scripts]
 buildenv = "buildenv.__main__:main"
-buildenv2 = "buildenv.__main__:main2"
+buildenv2 = "buildenv2.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

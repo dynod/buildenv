@@ -78,22 +78,22 @@ class EnvShell(ABC):
         pass
 
     @abstractmethod
-    def get_args_command(self, tmp_dir: Path, command: str) -> list[str]:  # pragma: no cover
+    def get_args_command(self, tmp_dir: Path) -> list[str]:  # pragma: no cover
         """
         Shell environment map, for interractive mode
 
         :param tmp_dir: temporary directory where activation scripts will be stored
-        :param command: command to be executed in this shell
         :return: arguments to run the shell in command mode
         """
         pass
 
     @abstractmethod
-    def generate_activation_scripts(self, tmp_dir: Path):  # pragma: no cover
+    def generate_activation_scripts(self, tmp_dir: Path, command: str):  # pragma: no cover
         """
         Generate activation scripts in the specified temporary directory
 
         :param tmp_dir: temporary directory where activation scripts will be stored
+        :param command: command to be executed in this shell
         """
         pass
 
@@ -109,10 +109,10 @@ class EnvShell(ABC):
         with TemporaryDirectory() as td:
             # Generate activation files in this directory
             temp_path = Path(td)
-            self.generate_activation_scripts(temp_path)
+            self.generate_activation_scripts(temp_path, command)
 
             # Prepare arguments, depending if a command is specified or not
-            args = self.get_args_command(temp_path, command) if command else self.get_args_interractive(temp_path)
+            args = self.get_args_command(temp_path) if command else self.get_args_interractive(temp_path)
 
             # Prepare environment
             env = self.get_env(temp_path)

@@ -16,14 +16,18 @@ class BashShell(EnvShell):
         return "bash"
 
     def get_args_interractive(self, tmp_dir: Path) -> list[str]:
-        return [self._shell_path, "--rcfile", str(tmp_dir / "activate.sh")]
+        return [self._shell_path, "--rcfile", str(tmp_dir / "shell.sh")]
 
-    def get_args_command(self, tmp_dir: Path, command: str) -> list[str]:
-        return [self._shell_path, "-c", command]
+    def get_args_command(self, tmp_dir: Path) -> list[str]:
+        return [self._shell_path, "-c", str(tmp_dir / "command.sh")]
 
-    def generate_activation_scripts(self, tmp_dir: Path):
-        # Main activation file
-        self.render("bash/activate.sh.jinja", tmp_dir / "activate.sh")
+    def generate_activation_scripts(self, tmp_dir: Path, command: str):
+        # Root files
+        self.render("bash/activate.sh.jinja", tmp_dir / "activate.sh")  # Main activation file
+        if command:
+            self.render("bash/command.sh.jinja", tmp_dir / "command.sh", keywords={"command": command}, executable=True)  # Command execution file
+        else:
+            self.render("bash/shell.sh.jinja", tmp_dir / "shell.sh")  # Shell activation file
 
         # Completion handling
         self.render(
