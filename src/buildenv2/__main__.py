@@ -9,7 +9,7 @@ from ._parser import BuildEnvParser
 _CWD = Path.cwd()
 
 
-def buildenv(args: list[str], project_path: Path = _CWD, venv_bin_path: Path = None) -> int:
+def buildenv(args: list[str], project_path: Path = _CWD) -> int:
     # This is the "buildenv" command logic
 
     try:
