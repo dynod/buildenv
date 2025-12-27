@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from buildenv2._backends.factory import EnvBackend, EnvBackendFactory
+from buildenv._backends.factory import EnvBackend, EnvBackendFactory
 
 from .commons2 import WithVenv
 

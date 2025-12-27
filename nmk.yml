@@ -15,12 +15,7 @@ config:
     project:
       description: Build environment setup system, based on Python venv
       scripts:
-        buildenv2: buildenv2.__main__:main
-    tool:
-      coverage:
-        run:
-          omit:
-            - src/_buildenv/*
+        buildenv: buildenv.__main__:main
 
   # Dependencies
   pythonPackageRequirements:
@@ -39,9 +34,6 @@ config:
       - _static
     html_css_files:
       - css/custom.css
-
-  # At the moment, change wheel name until buildenv 2.0.0 is fully ready
-  pythonPackage: buildenv2
 
 tasks:
   # Force python wheel to be built (as part of build task); functional tests need a built wheel file

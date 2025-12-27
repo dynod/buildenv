@@ -5,12 +5,12 @@
 # Check for requirements
 if test -f requirements.lock; then
     # Locked requirements
-    _reqs="--with-requirements requirements.lock"
+    _reqs="-r $PWD/requirements.lock"
 elif test -f requirements.txt; then
     # Base input requirements
-    _reqs="--with-requirements requirements.txt"
+    _reqs="-r $PWD/requirements.txt"
 fi
 
-# Delegate execution to buildenv command (through uvx)
-uvx ${_reqs} ${BUILDENV_UVX_ARGS} buildenv2 "$@"
+# Delegate execution to buildenv command (through pipx)
+pipx run --pip-args "${_reqs}" ${BUILDENV_PIPX_ARGS} buildenv "$@"
 

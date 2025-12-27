@@ -5,10 +5,10 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from jinja2 import Environment, FileSystemLoader
 
-from buildenv2.__main__ import buildenv
-from buildenv2._backends.factory import EnvBackendFactory
-from buildenv2._backends.uv import EnvBackend
-from buildenv2.extension import BuildEnvExtension, BuildEnvRenderer
+from buildenv.__main__ import buildenv
+from buildenv._backends.factory import EnvBackendFactory
+from buildenv._backends.uv import EnvBackend
+from buildenv.extension import BuildEnvExtension, BuildEnvRenderer
 from tests.commons2 import FakeBash, WithToolsProject, WithUvVenv
 
 

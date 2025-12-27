@@ -12,12 +12,12 @@ from typing import Any
 import pytest
 from pytest_multilog import TestHelper
 
-import buildenv2._shells.factory as shell_factory
-import buildenv2._shells.shell as buildenv_shell
-from buildenv2.__main__ import buildenv
-from buildenv2._backends.backend import EnvBackend, EnvBackendWithRequirements
-from buildenv2._backends.factory import EnvBackendFactory
-from buildenv2._utils import is_windows, to_linux_path
+import buildenv._shells.factory as shell_factory
+import buildenv._shells.shell as buildenv_shell
+from buildenv.__main__ import buildenv
+from buildenv._backends.backend import EnvBackend, EnvBackendWithRequirements
+from buildenv._backends.factory import EnvBackendFactory
+from buildenv._utils import is_windows, to_linux_path
 
 
 class WithTmpDir(TestHelper):
@@ -502,7 +502,7 @@ class WithFunctionalShell(TestHelper):
 
                 # Step 4: run a command through buildenv
                 cp = subprocess.run(
-                    shell + [str(project_path / script), "run", "buildenv2 --version"],
+                    shell + [str(project_path / script), "run", "buildenv --version"],
                     capture_output=True,
                     cwd=project_path,
                     env=updated_env,

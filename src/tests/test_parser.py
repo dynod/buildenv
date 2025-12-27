@@ -1,8 +1,8 @@
 import pytest
 from pytest_multilog import TestHelper
 
-from buildenv2.__main__ import buildenv
-from buildenv2._backends.factory import EnvBackendFactory
+from buildenv.__main__ import buildenv
+from buildenv._backends.factory import EnvBackendFactory
 
 
 class TestParser(TestHelper):

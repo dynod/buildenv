@@ -36,7 +36,7 @@ if test ! -d .venv; then
 
     # Install dependencies in venv
     echo "Installing project dependencies..."
-    python -m pip install buildenv2 ${_reqs} ${BUILDENV_PIP_ARGS}
+    python -m pip install buildenv ${_reqs} ${BUILDENV_PIP_ARGS}
     _rc=$?
     if test ${_rc} -ne 0; then
         echo "[ERROR] Failed to install project dependencies"
@@ -48,5 +48,5 @@ if test ! -d .venv; then
 fi
 
 # Delegate execution to buildenv command
-.venv/${_bin}/buildenv2 "$@"
+.venv/${_bin}/buildenv "$@"
 

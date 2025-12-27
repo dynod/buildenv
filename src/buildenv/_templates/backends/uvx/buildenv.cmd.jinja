@@ -5,16 +5,16 @@
 :: Check for requirements
 if exist requirements.lock (
     :: Locked requirements
-    set _reqs=-r %CD%\requirements.lock
+    set _reqs=--with-requirements requirements.lock
 ) else (
     if exist requirements.txt (
         :: Base input requirements
-        set _reqs=-r %CD%\requirements.txt
+        set _reqs=--with-requirements requirements.txt
     )
 )
 
-:: Delegate execution to buildenv command (through pipx)
-pipx run --pip-args "%_reqs%" %BUILDENV_PIPX_ARGS% buildenv2 %*
+:: Delegate execution to buildenv command (through uvx)
+uvx %_reqs% %BUILDENV_UVX_ARGS% buildenv %*
 set _BUILDENV_RC=%ERRORLEVEL%
 goto end
 

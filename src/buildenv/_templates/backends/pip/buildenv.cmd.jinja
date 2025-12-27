@@ -32,7 +32,7 @@ if exist requirements.lock (
 
 :: Install dependencies in venv
 echo Installing project dependencies...
-python -m pip install buildenv2 %_reqs% %BUILDENV_PIP_ARGS%
+python -m pip install buildenv %_reqs% %BUILDENV_PIP_ARGS%
 set _BUILDENV_RC=%ERRORLEVEL%
 call .venv\Scripts\deactivate.bat
 if %_BUILDENV_RC% NEQ 0 (
@@ -42,7 +42,7 @@ if %_BUILDENV_RC% NEQ 0 (
 
 :delegate
 :: Delegate execution to buildenv command
-.venv\Scripts\buildenv2 %*
+.venv\Scripts\buildenv %*
 set _BUILDENV_RC=%ERRORLEVEL%
 goto end
 

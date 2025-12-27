@@ -20,6 +20,9 @@ class BuildEnvParser:
 
         # Version handling
         self._parser.add_argument("-V", "--version", action="version", version=f"buildenv version {__version__}")
+        self._parser.add_argument(
+            "--from-loader", help=SUPPRESS, default=None, action="store"
+        )  # Deprecated, kept for backward compatibility with legacy scripts
         self._parser.set_defaults(func=None, shell_func="shell", kwargs={}, project_folder=Path.cwd())
 
         # Common arguments to all commands

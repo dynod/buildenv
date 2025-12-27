@@ -11,7 +11,7 @@ from buildenv.manager import BUILDENV_OK
 from nmk.utils import is_windows
 from nmk_vscode.buildenv import BuildEnvInit as VsCodeInit
 
-from buildenv2 import BuildEnvExtension, BuildEnvLoader, BuildEnvManager
+from buildenv import BuildEnvExtension, BuildEnvLoader, BuildEnvManager
 from tests._commons import VENV_BIN, BuildEnvTestHelper
 
 # Default (empty) namespace
