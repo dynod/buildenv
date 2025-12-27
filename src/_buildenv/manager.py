@@ -190,7 +190,7 @@ class BuildEnvManager:
             ("completion", [".sh"], ["completion.sh.jinja"], {"commands": list(self._completion_commands)}),
         ]:
             # Iterate on extensions and templates
-            for extension, template in zip(extensions, templates):
+            for extension, template in zip(extensions, templates, strict=True):
                 # Add script to activation folder
                 self.add_activation_file(name, extension, template, keywords)
 

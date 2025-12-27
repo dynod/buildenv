@@ -2,7 +2,6 @@ import logging
 import sys
 from configparser import ConfigParser
 from pathlib import Path
-from typing import Union
 
 from .._utils import LOGGER_NAME
 from .backend import EnvBackend
@@ -46,7 +45,7 @@ class EnvBackendFactory:
         return _KNOW_BACKENDS[name](venv_bin=EnvBackendFactory._ENV_BIN, project_path=project_path, verbose_subprocess=verbose_subprocess)
 
     @staticmethod
-    def detect(project_path: Union[Path, None] = None, verbose_subprocess: bool = True) -> EnvBackend:
+    def detect(project_path: Path | None = None, verbose_subprocess: bool = True) -> EnvBackend:
         """
         Detect backend from running python instance, and return corresponding implementation
 

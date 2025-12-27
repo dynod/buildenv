@@ -17,7 +17,6 @@ import sys
 from configparser import ConfigParser
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Union
 from venv import EnvBuilder
 
 VENV_OK = "venvOK"
@@ -180,7 +179,7 @@ class BuildEnvLoader:
         else:
             return default
 
-    def find_venv(self) -> Union[Path, None]:
+    def find_venv(self) -> Path | None:
         """
         Find venv folder, in current project folder, or in parent ones
 

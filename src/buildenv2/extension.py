@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
 
 from jinja2 import Environment
 
@@ -17,7 +16,7 @@ class BuildEnvInfo:
     venv_bin: Path
     """Path to the virtual environment binary directory (i.e. the one with all installed scripts and executables)"""
 
-    project_root: Union[Path, None]
+    project_root: Path | None
     """Path to the project root directory, if any (None otherwise)"""
 
 
@@ -27,7 +26,7 @@ class BuildEnvRenderer(ABC):
     """
 
     @abstractmethod
-    def render(self, environment: Environment, template: str, executable: bool = False, keywords: Union[dict[str, str], None] = None):  # pragma: no cover
+    def render(self, environment: Environment, template: str, executable: bool = False, keywords: dict[str, str] | None = None):  # pragma: no cover
         """
         Render extension activation script from template
 

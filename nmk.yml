@@ -1,53 +1,53 @@
 refs:
-    - pip://nmk-github!plugin.yml
-    - pip://nmk-badges!plugin.yml
-    - pip://nmk-python!plugin.yml
-    - pip://nmk-vscode!plugin.yml
-    - pip://nmk-doc!plugin.yml
-    - <workspace>/shared.yml
-    - workspace:
-        local: ../../shared
-        remote: github://dynod/workspace/main/shared
+  - pip://nmk-github!plugin.yml
+  - pip://nmk-badges!plugin.yml
+  - pip://nmk-python!plugin.yml
+  - pip://nmk-vscode!plugin.yml
+  - pip://nmk-doc!plugin.yml
+  - <workspace>/shared.yml
+  - workspace:
+      local: ../../shared
+      remote: github://dynod/workspace/main/shared
 
 config:
-    # Extra project data
-    pythonProjectFileItems:
-        project:
-            description: Build environment setup system, based on Python venv
-            scripts:
-                buildenv2: buildenv2.__main__:main
-        tool:
-            coverage:
-                run:
-                    omit:
-                        - src/_buildenv/*
+  # Extra project data
+  pythonProjectFileItems:
+    project:
+      description: Build environment setup system, based on Python venv
+      scripts:
+        buildenv2: buildenv2.__main__:main
+    tool:
+      coverage:
+        run:
+          omit:
+            - src/_buildenv/*
 
-    # Dependencies
-    pythonPackageRequirements:
-        - Jinja2
-        - argcomplete
-        - psutil
+  # Dependencies
+  pythonPackageRequirements:
+    - Jinja2
+    - argcomplete
+    - psutil
 
-    # For tests
-    venvPkgDeps:
-        - pipx
-        - uv
+  # For tests
+  venvPkgDeps:
+    - pipx
+    - uv
 
-    # Customize CSS for wider page
-    docExtraConfig:
-        html_static_path:
-          - _static
-        html_css_files:
-          - css/custom.css
+  # Customize CSS for wider page
+  docExtraConfig:
+    html_static_path:
+      - _static
+    html_css_files:
+      - css/custom.css
 
-    # At the moment, change wheel name until buildenv 2.0.0 is fully ready
-    pythonPackage: buildenv2
+  # At the moment, change wheel name until buildenv 2.0.0 is fully ready
+  pythonPackage: buildenv2
 
 tasks:
-    # Force python wheel to be built (as part of build task); functional tests need a built wheel file
-    extra_build:
-        deps:
-            - py.editable
-            - py.build
-        appendToDeps: build
-        silent: True
+  # Force python wheel to be built (as part of build task); functional tests need a built wheel file
+  extra_build:
+    deps:
+      - py.editable
+      - py.build
+    appendToDeps: build
+    silent: True

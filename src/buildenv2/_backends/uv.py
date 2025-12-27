@@ -1,7 +1,6 @@
 import logging
 import os
 from pathlib import Path
-from typing import Union
 
 from ..completion import CompletionCommand, EvalCompletionCommand
 from .backend import EnvBackend, EnvBackendWithRequirements, MutableEnvBackend
@@ -37,7 +36,7 @@ class UvProjectBackend(_CommonUvImpl, MutableEnvBackend):
     def venv_name(self) -> str:
         return ".venv"
 
-    def install(self, packages: Union[list[str], None] = None) -> int:
+    def install(self, packages: list[str] | None = None) -> int:
         # Special warning if some packages are specified, since we don't handle them at the moment
         if packages:
             logging.warning("As pyproject.toml file is not handled by buildenv, '--with' option is ignored.")
@@ -48,9 +47,7 @@ class UvProjectBackend(_CommonUvImpl, MutableEnvBackend):
         # Get extra args from environment variable
         return [arg for arg in os.getenv("BUILDENV_UV_ARGS", "").split(" ") if arg]
 
-    def subprocess(
-        self, args: list[str], check: bool = True, cwd: Union[Path, None] = None, env: Union[dict[str, str], None] = None, verbose: Union[bool, None] = None
-    ):
+    def subprocess(self, args: list[str], check: bool = True, cwd: Path | None = None, env: dict[str, str] | None = None, verbose: bool | None = None):
         # Systematically add uv args to uv subprocess
         return super().subprocess([self.name] + args + self._extra_args, check, cwd, env, verbose)
 
@@ -79,6 +76,6 @@ class UvxBackend(_CommonUvImpl, EnvBackendWithRequirements):
     def name(self):
         return UvxBackend.NAME
 
-    def _backend_upgrade_env(self) -> Union[tuple[str, str], None]:
+    def _backend_upgrade_env(self) -> tuple[str, str] | None:
         # Force "refresh" uvx option on upgrade
         return ("BUILDENV_UVX_ARGS", "--refresh")

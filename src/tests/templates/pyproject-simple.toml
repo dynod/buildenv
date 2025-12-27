@@ -3,7 +3,7 @@ name = "sample"
 dynamic = ["version"]
 dependencies = ["requests"]
 description = "Some sample python project"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 [[project.authors]]
 name = "The dynod project"

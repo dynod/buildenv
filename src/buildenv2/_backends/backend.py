@@ -6,7 +6,7 @@ import subprocess
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union, cast
+from typing import cast
 
 import psutil
 
@@ -24,7 +24,7 @@ class _InstalledFileDescriptor:
     lazy: bool = False  # Lazy generation flag (don't generate if already present)
     executable: bool = False  # Generated file shall be executable
     leading_dot: bool = False  # Generated file shall be prefixed with a dot (hidden file on Unix-like systems)
-    target: Union[Path, None] = None  # Target file path (None to use default path)
+    target: Path | None = None  # Target file path (None to use default path)
 
 
 # Buildenv extension entry point name
@@ -36,7 +36,7 @@ _EDITABLE_SUFFIX = " (editable)"
 
 # Backend base implementation
 class EnvBackend(ABC):
-    def __init__(self, venv_bin: Path, project_path: Union[Path, None] = None, verbose_subprocess: bool = True):
+    def __init__(self, venv_bin: Path, project_path: Path | None = None, verbose_subprocess: bool = True):
         # Logs handling
         self._logger = logging.getLogger(LOGGER_NAME)
         self._verbose_subprocess = verbose_subprocess
@@ -70,7 +70,7 @@ class EnvBackend(ABC):
         return self._version
 
     def subprocess(
-        self, args: list[str], check: bool = True, cwd: Union[Path, None] = None, env: Union[dict[str, str], None] = None, verbose: Union[bool, None] = None
+        self, args: list[str], check: bool = True, cwd: Path | None = None, env: dict[str, str] | None = None, verbose: bool | None = None
     ) -> subprocess.CompletedProcess[str]:
         """
         Execute subprocess, and logs output/error streams + error code
@@ -224,7 +224,7 @@ class EnvBackend(ABC):
         """
         pass
 
-    def init(self, force: bool = False, skip_ext: Union[list[str], None] = None, no_ext: bool = False, show_updates_from: Union[Path, None] = None) -> int:
+    def init(self, force: bool = False, skip_ext: list[str] | None = None, no_ext: bool = False, show_updates_from: Path | None = None) -> int:
         """
         Initialize the backend extensions
 
@@ -252,7 +252,7 @@ class EnvBackend(ABC):
                 raise AssertionError(f"Error occurred while calling {ext_name} extension init: {e}") from e
         return 0
 
-    def shell(self, show_updates_from: Union[Path, None] = None, command: Union[str, None] = None) -> int:
+    def shell(self, show_updates_from: Path | None = None, command: str | None = None) -> int:
         """
         Launch an interractive shell from the backend
 
@@ -309,8 +309,8 @@ class EnvBackend(ABC):
     def _generate_files(
         self,
         descriptors: list[_InstalledFileDescriptor],
-        packages: Union[list[str], None] = None,
-        extra_keywords: Union[Keywords, None] = None,
+        packages: list[str] | None = None,
+        extra_keywords: Keywords | None = None,
         log_level: int = logging.INFO,
     ):
         # Handle project-less backend
@@ -344,7 +344,7 @@ class EnvBackend(ABC):
             else:
                 self._logger.log(log_level, f"Skip {logged_name} generation (already exist in this project)")
 
-    def install(self, packages: Union[list[str], None] = None) -> int:
+    def install(self, packages: list[str] | None = None) -> int:
         """
         Install loading scripts for the backend
 
@@ -549,7 +549,7 @@ class EnvBackendWithRequirements(EnvBackend):
         # For CLI
         return 0
 
-    def _backend_upgrade_env(self) -> Union[tuple[str, str], None]:
+    def _backend_upgrade_env(self) -> tuple[str, str] | None:
         """
         Get backend upgrade environment var name + arg, if any
         """

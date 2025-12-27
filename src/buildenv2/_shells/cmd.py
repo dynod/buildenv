@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Union
 
 from ..completion import CompletionCommand
 from ..extension import BuildEnvExtension
@@ -26,7 +25,7 @@ class CmdShell(EnvShell):
     def get_args_command(self, tmp_dir: Path) -> list[str]:
         return [self._shell_path, "/c", str(tmp_dir / "command.cmd")]
 
-    def generate_activation_scripts(self, tmp_dir: Path, command: Union[str, None]):
+    def generate_activation_scripts(self, tmp_dir: Path, command: str | None):
         # Root files
         self.render("cmd/activate.cmd.jinja", tmp_dir / "activate.cmd")  # Main activation file
         if command:

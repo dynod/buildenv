@@ -1,7 +1,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Union
 
 import pytest
 from nmk.utils import is_windows
@@ -16,7 +15,7 @@ class BuildEnvTestHelper(TestHelper):
         # Create buildenv folder, and copy template config file
         shutil.copyfile(Path(__file__).parent / "templates" / name, (self.test_folder if dest is None else dest) / "buildenv.cfg")
 
-    def remove_env(self, name: str) -> Union[str, None]:
+    def remove_env(self, name: str) -> str | None:
         # Remove environment var and remember previous value
         if name in os.environ:
             old_value = os.environ[name]
@@ -25,13 +24,13 @@ class BuildEnvTestHelper(TestHelper):
             old_value = None
         return old_value
 
-    def set_env(self, name: str, value: str) -> Union[str, None]:
+    def set_env(self, name: str, value: str) -> str | None:
         # Remove environment var and remember previous value
         old_value = os.environ.get(name, None)
         os.environ[name] = value
         return old_value
 
-    def restore_env(self, name: str, previous_value: Union[str, None]):
+    def restore_env(self, name: str, previous_value: str | None):
         # Restore previous env value
         if previous_value is not None:
             os.environ[name] = previous_value

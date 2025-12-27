@@ -1,6 +1,5 @@
 import stat
 from pathlib import Path
-from typing import Union
 
 from jinja2 import Environment
 
@@ -51,7 +50,7 @@ class _ShRenderer(Renderer):
     def comment_prefix(self) -> str:
         return "# "
 
-    def render(self, target: Path, executable: bool = False, keywords: Union[Keywords, None] = None):
+    def render(self, target: Path, executable: bool = False, keywords: Keywords | None = None):
         # Super call
         super().render(target, executable, keywords)
 
@@ -74,7 +73,7 @@ class _ShRenderer(Renderer):
 # Renderer factory
 class RendererFactory:
     @staticmethod
-    def create(template: Path, backend_name: str, environment: Union[Environment, None] = None) -> Renderer:
+    def create(template: Path, backend_name: str, environment: Environment | None = None) -> Renderer:
         """
         Create a renderer for the given template
 

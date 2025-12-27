@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Union
 
 from .backend import EnvBackendWithRequirements, MutableEnvBackend
 
@@ -33,9 +32,7 @@ class LegacyPipBackend(EnvBackendWithRequirements, MutableEnvBackend):
     def _pip_args(self) -> list[str]:
         return [arg for arg in os.getenv("BUILDENV_PIP_ARGS", "").split(" ") if arg]
 
-    def subprocess(
-        self, args: list[str], check: bool = True, cwd: Union[Path, None] = None, env: Union[dict[str, str], None] = None, verbose: Union[bool, None] = None
-    ):
+    def subprocess(self, args: list[str], check: bool = True, cwd: Path | None = None, env: dict[str, str] | None = None, verbose: bool | None = None):
         # Systematically add pip args to pip subprocess
         return super().subprocess([str(self._venv_bin / self.command), "-m", "pip"] + args + self._pip_args, check, cwd, env, verbose)
 
