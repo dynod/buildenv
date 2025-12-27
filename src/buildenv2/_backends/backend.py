@@ -151,16 +151,10 @@ class EnvBackend(ABC):
     # Iterate on entry points to load extensions
     def _parse_extensions(self, info: BuildEnvInfo) -> dict[str, BuildEnvExtension]:
         # Build entry points map (to handle duplicate names)
-        unfiltered_entry_points: importlib.metadata.SelectableGroups = importlib.metadata.entry_points()
+        unfiltered_entry_points: importlib.metadata.EntryPoints = importlib.metadata.entry_points(group=_BUILDENV_EXT)
         all_entry_points: dict[str, importlib.metadata.EntryPoint] = {}
-        if isinstance(unfiltered_entry_points, dict):  # type: ignore
-            # Python <3.10
-            for p in unfiltered_entry_points.get(_BUILDENV_EXT, []):
-                all_entry_points[p.name] = p
-        else:
-            # Python >=3.10
-            for p in unfiltered_entry_points.select(group=_BUILDENV_EXT):
-                all_entry_points[p.name] = p
+        for p in unfiltered_entry_points:
+            all_entry_points[p.name] = p
 
         out: dict[str, BuildEnvExtension] = {}
         for name, point in all_entry_points.items():
@@ -389,7 +383,7 @@ class EnvBackend(ABC):
         """
         raise NotImplementedError
 
-    def upgrade(self, full: bool = True, only_deps: bool = False) -> int:  # pragma: no cover
+    def upgrade(self, full: bool = True, only_deps: bool = False) -> int:
         """
         Upgrade all packages in this environment to their latest version.
         Also dumps upgraded versions to the console.
@@ -473,7 +467,7 @@ class EnvBackend(ABC):
 
             # Add in output only if not already present in editable mode
             name = pkg.name
-            if (name not in out) or (not out[name].endswith(_EDITABLE_SUFFIX)):
+            if (name not in out) or (not out[name].endswith(_EDITABLE_SUFFIX)):  # pragma: no branch
                 out[pkg.metadata["Name"]] = f"{pkg.version}{_EDITABLE_SUFFIX if is_editable else ''}"
         return out
 
