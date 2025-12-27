@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
 from collections.abc import Generator
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -469,6 +470,15 @@ class WithFunctionalShell(TestHelper):
             project_path = Path(tmp_dir)
 
             try:
+                # Prepare environment (Force using current python executable path (for pipx/uv/uvx detection))
+                updated_env = dict(os.environ)
+                current_test_venv_bin = Path(sys.executable).parent
+                backend_executable = current_test_venv_bin / f"{backend_name}{'.exe' if is_windows() else ''}"
+                assert backend_executable.is_file(), f"Backend executable not found: {backend_executable}"
+                if extra_env:
+                    updated_env.update(extra_env)
+                updated_env["PATH"] = str(current_test_venv_bin) + os.pathsep + updated_env["PATH"]
+
                 # Step 1: install buildenv loading scripts, and check if they are installed
                 EnvBackendFactory.create(backend_name, project_path).install([str(wheel_path)])
                 for expected_script in [script] + (["requirements.txt"] if expect_requirements else []):
@@ -491,9 +501,6 @@ class WithFunctionalShell(TestHelper):
                             f.write(content)
 
                 # Step 4: run a command through buildenv
-                updated_env = dict(os.environ)
-                if extra_env:
-                    updated_env.update(extra_env)
                 cp = subprocess.run(
                     shell + [str(project_path / script), "run", "buildenv2 --version"],
                     capture_output=True,
