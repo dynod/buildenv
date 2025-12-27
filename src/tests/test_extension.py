@@ -6,7 +6,6 @@ from _pytest.monkeypatch import MonkeyPatch
 from jinja2 import Environment, FileSystemLoader
 
 from buildenv2.__main__ import buildenv
-from buildenv2._backends.backend import _BUILDENV_EXT  # pyright: ignore[reportPrivateUsage]
 from buildenv2._backends.factory import EnvBackendFactory
 from buildenv2._backends.uv import EnvBackend
 from buildenv2.extension import BuildEnvExtension, BuildEnvRenderer
@@ -14,30 +13,7 @@ from tests.commons2 import FakeBash, WithToolsProject, WithUvVenv
 
 
 class TestExtension(FakeBash):
-    def test_extension_bad_class_py10(self, monkeypatch: MonkeyPatch):
-        # Fake extension class
-        class FakeExtension:
-            pass
-
-        # Fake entry point class
-        class FakeEntryPoint:
-            name = "foo"
-
-            def load(self):
-                return FakeExtension
-
-        class FakeEntryPoints:
-            def select(self, group: str) -> list[FakeEntryPoint]:
-                return [FakeEntryPoint()]
-
-        # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: FakeEntryPoints())
-
-        # Prepare backend to trigger extension loading
-        with pytest.raises(AssertionError, match="Failed to load foo extension: foo extension class is not extending buildenv.BuildEnvExtension"):
-            EnvBackendFactory.create("uvx", self.test_folder)
-
-    def test_extension_bad_class_py9(self, monkeypatch: MonkeyPatch):
+    def test_extension_bad_class(self, monkeypatch: MonkeyPatch):
         # Fake extension class
         class FakeExtension:
             pass
@@ -50,7 +26,7 @@ class TestExtension(FakeBash):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: {_BUILDENV_EXT: [FakeEntryPoint()]})
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
 
         # Prepare backend to trigger extension loading
         with pytest.raises(AssertionError, match="Failed to load foo extension: foo extension class is not extending buildenv.BuildEnvExtension"):
@@ -65,7 +41,7 @@ class TestExtension(FakeBash):
                 raise ValueError("some error")
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: {_BUILDENV_EXT: [FakeEntryPoint()]})
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
 
         # Prepare backend to trigger extension loading
         with pytest.raises(AssertionError, match="Failed to load foo extension: some error"):
@@ -86,7 +62,7 @@ class TestExtension(FakeBash):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: {_BUILDENV_EXT: [FakeEntryPoint()]})
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
 
         # Prepare backend to trigger extension loading
         b = EnvBackendFactory.create("uvx", self.test_folder)
@@ -112,7 +88,7 @@ class TestExtension(FakeBash):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: {_BUILDENV_EXT: [FakeEntryPoint()]})
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
 
         # Prepare backend to trigger extension loading
         with pytest.raises(AssertionError, match="Error occurred while getting foo extension completion commands: some completion error"):
@@ -138,7 +114,7 @@ class TestExtension(FakeBash):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: {_BUILDENV_EXT: [FakeEntryPoint()]})
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
 
         # Prepare backend to trigger extension loading
         with pytest.raises(AssertionError, match="Error occurred while generating foo extension activation scripts: some generation error"):
@@ -169,7 +145,7 @@ class TestExtensionDefault(WithUvVenv, FakeBash):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: {_BUILDENV_EXT: [FakeEntryPoint()]})
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
 
         # Yield to test
         yield EnvBackendFactory.create("uvx", self.test_folder)
@@ -208,7 +184,7 @@ class TestExtensionGeneration(WithUvVenv, WithToolsProject, FakeBash):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda: {_BUILDENV_EXT: [FakeEntryPoint()]})
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
 
         return EnvBackendFactory.detect(project)
 
