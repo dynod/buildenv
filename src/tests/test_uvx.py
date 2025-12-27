@@ -5,10 +5,10 @@ from typing import Any
 
 import pytest
 
-from buildenv2._backends.factory import EnvBackendFactory
-from buildenv2._backends.uv import EnvBackend, UvxBackend
-from buildenv2._shells.bash import BashShell
-from buildenv2._shells.cmd import CmdShell
+from buildenv._backends.factory import EnvBackendFactory
+from buildenv._backends.uv import EnvBackend, UvxBackend
+from buildenv._shells.bash import BashShell
+from buildenv._shells.cmd import CmdShell
 from tests.commons2 import WithBash, WithCmd, WithFunctionalBash, WithFunctionalCmd, WithToolsProject, WithUvVenv
 
 

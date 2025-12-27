@@ -3,5 +3,5 @@
 {% include "backends/fragments/check.sh.jinja" %}
 
 # Delegate execution to buildenv command (through uv)
-uv run ${BUILDENV_UV_ARGS} buildenv2 "$@"
+uv run ${BUILDENV_UV_ARGS} buildenv "$@"
 

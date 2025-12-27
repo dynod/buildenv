@@ -2,7 +2,7 @@ import platform
 
 from pytest_multilog import TestHelper
 
-from buildenv2._utils import is_windows
+from buildenv._utils import is_windows
 
 
 class TestUtils(TestHelper):

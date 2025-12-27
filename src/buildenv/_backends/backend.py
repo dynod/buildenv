@@ -146,7 +146,7 @@ class EnvBackend(ABC):
     @property
     def _completions(self) -> list[CompletionCommand]:
         # Default completions list is only buildenv itself
-        return [ArgCompleteCompletionCommand("buildenv2")]
+        return [ArgCompleteCompletionCommand("buildenv")]
 
     # Iterate on entry points to load extensions
     def _parse_extensions(self, info: BuildEnvInfo) -> dict[str, BuildEnvExtension]:

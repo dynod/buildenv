@@ -3,7 +3,7 @@ from pathlib import Path
 
 from buildenv.manager import BUILDENV_OK
 
-from buildenv2.__main__ import buildenv
+from buildenv.__main__ import buildenv
 from tests._commons import VENV_BIN, BuildEnvTestHelper
 
 

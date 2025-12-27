@@ -21,7 +21,7 @@ class Renderer(ABC):
     def __init__(self, template: Path, backend_name: str, environment: Environment | None = None):
         self._template = template
         self._backend_name = backend_name
-        self._environment = environment if environment is not None else Environment(loader=PackageLoader("buildenv2", "_templates"))
+        self._environment = environment if environment is not None else Environment(loader=PackageLoader("buildenv", "_templates"))
 
     @property
     @abstractmethod

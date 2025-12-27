@@ -5,11 +5,11 @@ from typing import Any
 
 import pytest
 
-from buildenv2._backends.backend import EnvBackend
-from buildenv2._backends.factory import EnvBackendFactory
-from buildenv2._backends.pipx import PipXBackend
-from buildenv2._shells.bash import BashShell
-from buildenv2._shells.cmd import CmdShell
+from buildenv._backends.backend import EnvBackend
+from buildenv._backends.factory import EnvBackendFactory
+from buildenv._backends.pipx import PipXBackend
+from buildenv._shells.bash import BashShell
+from buildenv._shells.cmd import CmdShell
 from tests.commons2 import WithBash, WithCmd, WithFunctionalBash, WithFunctionalCmd, WithPipxVenv, WithToolsProject
 
 

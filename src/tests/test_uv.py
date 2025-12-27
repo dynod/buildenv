@@ -6,10 +6,10 @@ from typing import Any
 
 import pytest
 
-from buildenv2._backends.factory import EnvBackendFactory
-from buildenv2._backends.uv import EnvBackend, UvProjectBackend
-from buildenv2._shells.bash import BashShell
-from buildenv2._shells.cmd import CmdShell
+from buildenv._backends.factory import EnvBackendFactory
+from buildenv._backends.uv import EnvBackend, UvProjectBackend
+from buildenv._shells.bash import BashShell
+from buildenv._shells.cmd import CmdShell
 from tests.commons2 import WithBash, WithCmd, WithFunctionalBash, WithFunctionalCmd, WithPythonProject, WithUnknownShell, WithUvVenv
 
 
@@ -95,7 +95,7 @@ class TestFunctionalUvBash(WithFunctionalBash):
             expect_requirements=False,
             expect_venv=True,
             extra_files=UV_EXTRA_FILES,
-            patches={"pyproject.toml": {"buildenv2": f"buildenv2@{escaped_wheel_path}"}},
+            patches={"pyproject.toml": {"buildenv": f"buildenv@{escaped_wheel_path}"}},
         )
 
 
@@ -114,5 +114,5 @@ class TestFunctionalUvCmd(WithFunctionalCmd):
             expect_requirements=False,
             expect_venv=True,
             extra_files=UV_EXTRA_FILES,
-            patches={"pyproject.toml": {"buildenv2": f"buildenv2@{escaped_wheel_path}"}},
+            patches={"pyproject.toml": {"buildenv": f"buildenv@{escaped_wheel_path}"}},
         )

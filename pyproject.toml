@@ -5,7 +5,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "buildenv2"
+name = "buildenv"
 dynamic = ["version"]
 requires-python = ">=3.10"
 classifiers = ["Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13", "Programming Language :: Python :: 3.14"]
@@ -26,12 +26,12 @@ content-type = "text/markdown"
 text = "MIT License"
 
 [project.urls]
-Homepage = "https://github.com/dynod/buildenv2"
-Repository = "https://github.com/dynod/buildenv2"
+Homepage = "https://github.com/dynod/buildenv"
+Repository = "https://github.com/dynod/buildenv"
 Issues = "https://github.com/dynod/buildenv/issues?q=is%3Aopen+is%3Aissue"
 
 [project.scripts]
-buildenv2 = "buildenv2.__main__:main"
+buildenv = "buildenv.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -70,4 +70,4 @@ data_file = "out/.coverage"
 concurrency = ["thread"]
 disable_warnings = ["no-data-collected"]
 branch = true
-omit = ["src/tests/*", "src/_buildenv/*"]
+omit = ["src/tests/*"]
