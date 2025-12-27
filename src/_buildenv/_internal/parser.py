@@ -1,6 +1,6 @@
 from argparse import REMAINDER, SUPPRESS, ArgumentParser
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import argcomplete
 

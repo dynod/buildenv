@@ -6,7 +6,7 @@ from collections.abc import Generator
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import TracebackType
-from typing import Any, Union
+from typing import Any
 
 import pytest
 from pytest_multilog import TestHelper
@@ -30,7 +30,7 @@ class WithTmpDir(TestHelper):
             def __enter__(self):
                 return tmp_dir
 
-            def __exit__(self, exc_type: Union[type[BaseException], None], exc_val: Union[BaseException, None], exc_tb: Union[TracebackType, None]):
+            def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None):
                 pass
 
         # Patch temporary folder creation
@@ -458,11 +458,11 @@ class WithFunctionalShell(TestHelper):
         shell: list[str],
         script: str,
         wheel_path: Path,
-        extra_env: Union[dict[str, str], None] = None,
-        patches: Union[dict[str, dict[str, str]], None] = None,
+        extra_env: dict[str, str] | None = None,
+        patches: dict[str, dict[str, str]] | None = None,
         expect_venv: bool = False,
         expect_requirements: bool = True,
-        extra_files: Union[list[Path], None] = None,
+        extra_files: list[Path] | None = None,
     ):
         with TemporaryDirectory() as tmp_dir:
             # Run in temporary directory

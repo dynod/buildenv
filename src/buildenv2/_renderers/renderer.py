@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Union
 
 from jinja2 import Environment, PackageLoader
 
-Keywords = dict[str, Union[str, list[str], bool, dict[str, str]]]
+Keywords = dict[str, str | list[str] | bool | dict[str, str]]
 """
 Type for keywords used in templates
 """
@@ -19,7 +18,7 @@ class Renderer(ABC):
     :param environment: Jinja2 environment to use for rendering
     """
 
-    def __init__(self, template: Path, backend_name: str, environment: Union[Environment, None] = None):
+    def __init__(self, template: Path, backend_name: str, environment: Environment | None = None):
         self._template = template
         self._backend_name = backend_name
         self._environment = environment if environment is not None else Environment(loader=PackageLoader("buildenv2", "_templates"))
@@ -48,7 +47,7 @@ class Renderer(ABC):
         """
         pass
 
-    def render(self, target: Path, executable: bool = False, keywords: Union[Keywords, None] = None):
+    def render(self, target: Path, executable: bool = False, keywords: Keywords | None = None):
         """
         Render template to target file
 

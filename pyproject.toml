@@ -7,8 +7,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "buildenv2"
 dynamic = ["version"]
-requires-python = ">=3.9"
-classifiers = ["Programming Language :: Python :: 3.9", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13"]
+requires-python = ">=3.10"
+classifiers = ["Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13", "Programming Language :: Python :: 3.14"]
 dependencies = ["Jinja2", "argcomplete", "psutil"]
 description = "Build environment setup system, based on Python venv"
 

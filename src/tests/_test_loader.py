@@ -116,6 +116,7 @@ class TestBuildEnvLoader(BuildEnvTestHelper):
         for received, expected in zip(
             received_list if isinstance(received_list, list) else [received_list],
             expected_list if isinstance(expected_list, list) else [expected_list],
+            strict=True,
         ):
             assert re.compile("^" + expected + "$").match(received) is not None, f"{expected!r} doesn't match {received!r}"
 

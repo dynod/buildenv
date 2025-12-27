@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Union
 
 from .._utils import to_linux_path
 from ..completion import CompletionCommand
@@ -28,7 +27,7 @@ class BashShell(EnvShell):
     def get_args_command(self, tmp_dir: Path) -> list[str]:
         return [self._shell_path, "-c", to_linux_path(tmp_dir / "command.sh")]
 
-    def generate_activation_scripts(self, tmp_dir: Path, command: Union[str, None]):
+    def generate_activation_scripts(self, tmp_dir: Path, command: str | None):
         # Root files
         self.render("bash/activate.sh.jinja", tmp_dir / "activate.sh")  # Main activation file
         if command:

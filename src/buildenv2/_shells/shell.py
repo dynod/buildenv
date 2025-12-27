@@ -4,7 +4,6 @@ import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Union
 
 from jinja2 import Environment
 
@@ -103,7 +102,7 @@ class EnvShell(ABC):
         pass
 
     @abstractmethod
-    def generate_activation_scripts(self, tmp_dir: Path, command: Union[str, None]):  # pragma: no cover
+    def generate_activation_scripts(self, tmp_dir: Path, command: str | None):  # pragma: no cover
         """
         Generate activation scripts in the specified temporary directory
 
@@ -112,7 +111,7 @@ class EnvShell(ABC):
         """
         pass
 
-    def run(self, command: Union[str, None]) -> int:
+    def run(self, command: str | None) -> int:
         """
         Run this shell
 
@@ -138,7 +137,7 @@ class EnvShell(ABC):
             # Run shell as subprocess, and grab return code
             return subprocess.run(args, env=env, check=False).returncode
 
-    def render(self, template: str, target: Path, executable: bool = False, keywords: Union[Keywords, None] = None):
+    def render(self, template: str, target: Path, executable: bool = False, keywords: Keywords | None = None):
         """
         Render template to target file
 
@@ -167,7 +166,7 @@ class EnvShell(ABC):
     def _generate_extensions_scripts(self, tmp_dir: Path):
         # Renderer adapter
         class RenderingAdapter(BuildEnvRenderer):
-            def render(slf, environment: Environment, template: str, executable: bool = False, keywords: Union[Keywords, None] = None):  # type: ignore
+            def render(slf, environment: Environment, template: str, executable: bool = False, keywords: Keywords | None = None):  # type: ignore
                 # Delegate rendering to the renderer factory
                 template_path = Path(template)
                 RendererFactory.create(template_path, self._backend_name, environment).render(
