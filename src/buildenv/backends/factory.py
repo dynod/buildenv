@@ -4,10 +4,10 @@ from configparser import ConfigParser
 from pathlib import Path
 
 from .._utils import LOGGER_NAME
+from ._pip import LegacyPipBackend
+from ._pipx import PipXBackend
+from ._uv import UvProjectBackend, UvxBackend
 from .backend import EnvBackend
-from .pip import LegacyPipBackend
-from .pipx import PipXBackend
-from .uv import UvProjectBackend, UvxBackend
 
 _LOGGER = logging.getLogger(LOGGER_NAME)
 
