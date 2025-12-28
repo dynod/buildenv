@@ -15,9 +15,9 @@ from pytest_multilog import TestHelper
 import buildenv._shells.factory as shell_factory
 import buildenv._shells.shell as buildenv_shell
 from buildenv.__main__ import buildenv
-from buildenv._backends.backend import EnvBackend, EnvBackendWithRequirements
-from buildenv._backends.factory import EnvBackendFactory
 from buildenv._utils import is_windows, to_linux_path
+from buildenv.backends import EnvBackend, EnvBackendFactory
+from buildenv.backends.backend import EnvBackendWithRequirements
 
 
 class WithTmpDir(TestHelper):

@@ -4,7 +4,7 @@ from pathlib import Path
 import argcomplete
 
 from . import __version__
-from ._backends.factory import EnvBackendFactory
+from .backends.factory import EnvBackendFactory
 
 
 class BuildEnvParser:

@@ -6,11 +6,10 @@ from typing import Any
 
 import pytest
 
-from buildenv._backends.backend import EnvBackend
-from buildenv._backends.factory import EnvBackendFactory
-from buildenv._backends.pip import LegacyPipBackend
 from buildenv._shells.bash import BashShell
 from buildenv._shells.cmd import CmdShell
+from buildenv.backends import EnvBackend, EnvBackendFactory
+from buildenv.backends._pip import LegacyPipBackend
 from tests.commons2 import WithBash, WithCmd, WithFunctionalBash, WithFunctionalCmd, WithPythonProject, WithVenv
 
 
