@@ -37,7 +37,7 @@ _ [X] test uv build backend
 
 [X] replace buildenv2 entrypoint everywhere
 [X] final nmk-\_ update after rename: nmk / nmk-vscode / nmk-base / nmk-python
-[ ] handle git init + chmod
+[X] handle git init + chmod
 [ ] check prompt in cmd (no prefix?)
 [ ] handle templating system for install (to setup template projects for nmk-python, etc...)
 [ ] fix update message on install (from xxx editable version to a dummy one???)

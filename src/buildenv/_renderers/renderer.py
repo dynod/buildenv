@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -16,12 +17,18 @@ class Renderer(ABC):
     :param template: Path to template file
     :param backend_name: Name of the backend
     :param environment: Jinja2 environment to use for rendering
+    :param project_path: Path to the project root for this rendering operation
+    :param logger: Logger to use for this rendering operation
     """
 
-    def __init__(self, template: Path, backend_name: str, environment: Environment | None = None):
+    def __init__(
+        self, template: Path, backend_name: str, environment: Environment | None = None, project_path: Path | None = None, logger: logging.Logger | None = None
+    ):
         self._template = template
         self._backend_name = backend_name
         self._environment = environment if environment is not None else Environment(loader=PackageLoader("buildenv", "_templates"))
+        self._project_path = project_path
+        self._logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
 
     @property
     @abstractmethod

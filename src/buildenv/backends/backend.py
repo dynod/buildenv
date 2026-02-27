@@ -12,7 +12,7 @@ import psutil
 
 from .._renderers.factory import Keywords, RendererFactory
 from .._shells.factory import EnvShell, ShellFactory
-from .._utils import LOGGER_NAME, contribute_path, is_ci
+from .._utils import LOGGER_NAME, contribute_path, is_ci, run_subprocess
 from ..completion import ArgCompleteCompletionCommand, CompletionCommand
 from ..extension import BuildEnvExtension, BuildEnvInfo
 
@@ -70,7 +70,13 @@ class EnvBackend(ABC):
         return self._version
 
     def subprocess(
-        self, args: list[str], check: bool = True, cwd: Path | None = None, env: dict[str, str] | None = None, verbose: bool | None = None
+        self,
+        args: list[str],
+        check: bool = True,
+        cwd: Path | None = None,
+        env: dict[str, str] | None = None,
+        verbose: bool | None = None,
+        error_msg: str | None = None,
     ) -> subprocess.CompletedProcess[str]:
         """
         Execute subprocess, and logs output/error streams + error code
@@ -80,32 +86,11 @@ class EnvBackend(ABC):
         :param cwd: current working directory for subprocess
         :param env: environment variables map for subprocess
         :param verbose: override verbose subprocess logging for this call (default: use backend setting)
+        :param error_msg: error message to be logged in case of subprocess failure
         :return: completed process instance
         """
 
-        # Build args according to verbose option
-        verbose_option = verbose if verbose is not None else self._verbose_subprocess
-        all_run_args = (
-            {"args": args, "check": check, "cwd": cwd, "env": env}
-            if verbose_option
-            else {"args": args, "check": False, "capture_output": True, "text": True, "encoding": "utf-8", "errors": "ignore", "cwd": cwd, "env": env}
-        )
-
-        # Run process
-        self._logger.debug(f"Running command: {args}")
-        cp = cast(subprocess.CompletedProcess[str], subprocess.run(**all_run_args))  # type: ignore
-
-        # Log output of not verbose
-        if not verbose_option:
-            self._logger.debug(f">> rc: {cp.returncode}")
-            self._logger.debug(">> stdout:")
-            list(map(self._logger.debug, cp.stdout.splitlines(keepends=False)))
-            self._logger.debug(">> stderr:")
-            list(map(self._logger.debug, cp.stderr.splitlines(keepends=False)))
-        assert not check or cp.returncode == 0, (
-            f"command returned {cp.returncode}" + (f"\n{cp.stdout}" if len(cp.stdout) else "") + (f"\n{cp.stderr}" if len(cp.stderr) else "")
-        )
-        return cp
+        return run_subprocess(args, check, cwd, env, verbose if verbose is not None else self._verbose_subprocess, self._logger, error_msg)
 
     @property
     def venv_name(self) -> str:
@@ -307,9 +292,6 @@ class EnvBackend(ABC):
         extra_keywords: Keywords | None = None,
         log_level: int = logging.INFO,
     ):
-        # Handle project-less backend
-        assert self._project_path is not None, "Can't generate files without a project path"
-
         # Prepare keywords
         all_keywords = {
             "packages": packages if packages else [],
@@ -319,6 +301,7 @@ class EnvBackend(ABC):
         } | (extra_keywords if extra_keywords else {})
 
         # Iterate on these files
+        assert self._project_path is not None
         for installed_file in descriptors:
             # Use specified target, or deduce it from template name if not specified
             if installed_file.target is not None:
@@ -332,7 +315,7 @@ class EnvBackend(ABC):
             # Generate target file only if not already present or not lazy
             if (not installed_file.lazy) or (not project_target_file.is_file()):
                 self._logger.log(log_level, f"Generate {logged_name}")
-                RendererFactory.create(installed_file.template, self.name).render(
+                RendererFactory.create(installed_file.template, self.name, project_path=self._project_path, logger=self._logger).render(
                     project_target_file, keywords=all_keywords, executable=installed_file.executable
                 )
             else:
@@ -346,11 +329,30 @@ class EnvBackend(ABC):
         :return: command exit code
         """
 
+        # Handle project-less backend
+        assert self._project_path is not None, "Can't generate files without a project path"
+
+        # Init git repository if not already done (to handle generated files commit)
+        self._git_init()
+
         # Delegate to generation logic
         self._generate_files(self._get_files_descriptors(), packages)
 
         # Everything went well
         return 0
+
+    def _git_init(self):
+        # Check current git folder (if any)
+        git_path = None
+        cp = run_subprocess(["git", "rev-parse", "--show-toplevel"], cwd=self._project_path, check=False, logger=self._logger)
+        if cp.returncode == 0:
+            git_path = Path(cp.stdout.splitlines()[0].strip())
+
+        # Git path is not the same as project path, we need to init a new git repository
+        assert self._project_path is not None
+        if (git_path is None) or (not git_path.samefile(self._project_path)):
+            self._logger.info("Initialize a new git repository for this project...")
+            run_subprocess(["git", "init"], cwd=self._project_path, logger=self._logger, error_msg="Failed to initialize git repository for this project")
 
     def add_packages(self, packages: list[str]):
         """
