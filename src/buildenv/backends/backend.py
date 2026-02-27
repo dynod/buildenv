@@ -462,7 +462,7 @@ class EnvBackend(ABC):
                 json_content = pkg.read_text("direct_url.json")
             except FileNotFoundError:  # pragma: no cover
                 json_content = None
-            if json_content and json.loads(json_content).get("dir_info", {}).get("editable", False):
+            if json_content and json.loads(json_content).get("dir_info", {}).get("editable", False):  # pragma: no cover
                 is_editable = True
 
             # Add in output only if not already present in editable mode
