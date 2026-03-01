@@ -1,7 +1,7 @@
-import os
+import shutil
 from pathlib import Path
 
-from .._utils import to_linux_path
+from .._utils import is_windows, to_linux_path
 from ..completion import CompletionCommand
 from ..extension import BuildEnvExtension
 from .shell import EnvShell
@@ -11,7 +11,22 @@ from .shell import EnvShell
 class BashShell(EnvShell):
     def __init__(self, venv_bin: Path, fake_pip: bool, backend_name: str, extensions: dict[str, BuildEnvExtension], completions: list[CompletionCommand]):
         super().__init__(venv_bin, fake_pip, backend_name, extensions, completions)
-        self._shell_path: str = os.getenv("SHELL", "")
+
+        # Detect shell path
+        if is_windows():  # pragma: no cover -- for local tests on Linux
+            git_path = shutil.which("git")
+            assert git_path is not None, "Git executable not found when trying to detect bash path"
+            parent_path = Path(git_path).parent.parent
+            if parent_path.name == "mingw64":
+                # One more level up
+                parent_path = parent_path.parent
+            bash_path = parent_path / "usr" / "bin" / "bash.exe"
+        else:  # pragma: no cover -- for local tests on Windows
+            bash_path = shutil.which("bash")
+            assert bash_path is not None, "Bash shell not found on path"
+            bash_path = Path(bash_path)
+        assert bash_path.is_file(), f"Invalid bash path: {bash_path}"
+        self._shell_path: str = str(bash_path)
 
     @property
     def name(self) -> str:

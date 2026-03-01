@@ -27,8 +27,8 @@ class ShellFactory:
         # Prepare to create shell instance
         shell_class = None
 
-        # SHELL env var?
-        if os.getenv("SHELL"):
+        # SHELL/SHLVL env var?
+        if any(os.getenv(var) is not None for var in ("SHELL", "SHLVL")):
             # Linux-style (assuming bash) shell detected
             shell_class = BashShell
 
