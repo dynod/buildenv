@@ -71,7 +71,7 @@ class EnvShell(ABC):
         # Update environment
         env["BUILDENV_LEVEL"] = str(previous_level + 1)  # Increase buildenv level
         env["VIRTUAL_ENV_SCRIPTS"] = str(tmp_dir)  # Path to temporary activation scripts
-        env["VIRTUAL_ENV_PROMPT"] = f"(buildenv{'*' * previous_level}) "  # Buildenv prompt (with * for nested levels)
+        env["VIRTUAL_ENV_PROMPT"] = f"(buildenv:{self._backend_name}{'*' * previous_level}) "  # Buildenv prompt (with * for nested levels)
         if "PYTHONHOME" in env:
             del env["PYTHONHOME"]  # Remove PYTHONHOME to avoid conflicts
 

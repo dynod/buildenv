@@ -1,7 +1,7 @@
 {% include "headers/warning.jinja" %}
 
 :: Update prompt
-::export PS1="${VIRTUAL_ENV_PROMPT}${PS1-}"
+set "PROMPT=%VIRTUAL_ENV_PROMPT%$P$G"
 
 :: Load extra activation files
 for /f %%i in ('dir /b /o:n %VIRTUAL_ENV_SCRIPTS%\activate\*.cmd') do (

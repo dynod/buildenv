@@ -37,7 +37,7 @@
 - [x] replace buildenv2 entrypoint everywhere
 - [x] final nmk update after rename: nmk / nmk-vscode / nmk-base / nmk-python
 - [x] handle git init + chmod
-- [ ] check prompt in cmd (no prefix?)
+- [x] check prompt in cmd (no prefix?)
 - [ ] handle templating system for install (to setup template projects for nmk-python, etc...)
 - [ ] fix update message on install (from xxx editable version to a dummy one???)
 - [ ] consider delivering an alpha version on pypi
