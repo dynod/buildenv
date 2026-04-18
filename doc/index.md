@@ -16,4 +16,3 @@ config
 
 - {ref}`genindex`
 - {ref}`modindex`
-- {ref}`search`
