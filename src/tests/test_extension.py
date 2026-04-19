@@ -26,10 +26,12 @@ class TestExtension(FakeBash):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda group, **kwargs: [FakeEntryPoint()] if group == "buildenv_extension" else [])  # type: ignore
 
         # Prepare backend to trigger extension loading
-        with pytest.raises(AssertionError, match="Failed to load foo extension: foo extension class is not extending buildenv.BuildEnvExtension"):
+        with pytest.raises(
+            AssertionError, match="Failed to load foo extension: buildenv_extension.foo entrypoint class is not extending buildenv.BuildEnvExtension"
+        ):
             EnvBackendFactory.create("uvx", self.test_folder)
 
     def test_extension_unknown_ref(self, monkeypatch: MonkeyPatch):
@@ -41,7 +43,7 @@ class TestExtension(FakeBash):
                 raise ValueError("some error")
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda group, **kwargs: [FakeEntryPoint()] if group == "buildenv_extension" else [])  # type: ignore
 
         # Prepare backend to trigger extension loading
         with pytest.raises(AssertionError, match="Failed to load foo extension: some error"):
@@ -62,7 +64,7 @@ class TestExtension(FakeBash):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda group, **kwargs: [FakeEntryPoint()] if group == "buildenv_extension" else [])  # type: ignore
 
         # Prepare backend to trigger extension loading
         b = EnvBackendFactory.create("uvx", self.test_folder)
@@ -88,7 +90,7 @@ class TestExtension(FakeBash):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda group, **kwargs: [FakeEntryPoint()] if group == "buildenv_extension" else [])  # type: ignore
 
         # Prepare backend to trigger extension loading
         with pytest.raises(AssertionError, match="Error occurred while getting foo extension completion commands: some completion error"):
@@ -114,7 +116,7 @@ class TestExtension(FakeBash):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda group, **kwargs: [FakeEntryPoint()] if group == "buildenv_extension" else [])  # type: ignore
 
         # Prepare backend to trigger extension loading
         with pytest.raises(AssertionError, match="Error occurred while generating foo extension activation scripts: some generation error"):
@@ -145,7 +147,7 @@ class TestExtensionDefault(WithUvVenv, FakeBash):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda group, **kwargs: [FakeEntryPoint()] if group == "buildenv_extension" else [])  # type: ignore
 
         # Yield to test
         yield EnvBackendFactory.create("uvx", self.test_folder)
@@ -184,7 +186,7 @@ class TestExtensionGeneration(WithUvVenv, WithToolsProject, FakeBash):
                 return FakeExtension
 
         # Patch entry points iteration
-        monkeypatch.setattr(importlib.metadata, "entry_points", lambda **kwargs: [FakeEntryPoint()])  # type: ignore
+        monkeypatch.setattr(importlib.metadata, "entry_points", lambda group, **kwargs: [FakeEntryPoint()] if group == "buildenv_extension" else [])  # type: ignore
 
         return EnvBackendFactory.detect(project)
 

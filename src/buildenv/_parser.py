@@ -4,7 +4,9 @@ from pathlib import Path
 import argcomplete
 
 from . import __version__
+from ._entry_points import parse_project_templates
 from .backends.factory import EnvBackendFactory
+from .extension import BuildEnvInfo, BuildEnvProjectTemplate
 
 
 class BuildEnvParser:
@@ -53,6 +55,7 @@ class BuildEnvParser:
             default=[],
             help="additional package to install in this environment (can be specified multiple times)",
         )
+        install_parser.add_argument("--template", "-t", metavar="TEMPLATE", help="template used to create a new project")
         install_parser.set_defaults(func="install", kwargs_map={"packages": lambda o: o.packages})  # type: ignore
 
         # init sub-command
@@ -126,19 +129,36 @@ class BuildEnvParser:
         # Parse arguments
         options = self._parser.parse_args(args)
 
+        # Backend name
+        backend_name: str | None = None
+        if hasattr(options, "backend") and options.backend is not None:
+            backend_name = options.backend
+
+        # Specific handling for install command:
+        template: BuildEnvProjectTemplate | None = None
+        if options.func == "install" and options.template:
+            # Handle project template
+            templates = parse_project_templates(BuildEnvInfo())
+            assert options.template in templates, f"Unknown project template '{options.template}'\nAvailable templates:\n" + "\n".join(
+                map(lambda t: f" - {t}", templates.keys())
+            )
+            template = templates[options.template]
+
+            # Check template preferred backend if no backend specified
+            if backend_name is None and EnvBackendFactory.is_supported(template.preferred_backend):
+                backend_name = template.preferred_backend
+
         # Prepare project folder + backend
         project_folder: Path = options.project_folder
         project_folder.mkdir(parents=True, exist_ok=True)
-        backend = (
-            EnvBackendFactory.create(options.backend, project_folder)
-            if (hasattr(options, "backend") and options.backend is not None)
-            else EnvBackendFactory.detect(project_folder)
-        )
+        backend = EnvBackendFactory.create(backend_name, project_folder) if backend_name is not None else EnvBackendFactory.detect(project_folder)
 
         # Prepare keyword args
         kwargs = dict(options.kwargs)
         if hasattr(options, "kwargs_map"):
             kwargs.update({name: mapper(options) for name, mapper in options.kwargs_map.items()})
+        if template is not None:
+            kwargs["template"] = template
 
         # Check for sub-command
         if options.func is None:

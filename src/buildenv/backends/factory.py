@@ -1,4 +1,5 @@
 import logging
+import shutil
 import sys
 from configparser import ConfigParser
 from pathlib import Path
@@ -26,6 +27,21 @@ class EnvBackendFactory:
     """
     Current environment bin folder
     """
+
+    @staticmethod
+    def is_supported(name: str) -> bool:
+        """
+        Check if backend name is supported
+
+        :param name: backend name
+        :return: True if supported, False otherwise
+        """
+
+        # Check if backend is known
+        assert name in _KNOW_BACKENDS, f"Unknown backend: {name}"
+
+        # Check if matching command is available in current environment
+        return shutil.which(name) is not None
 
     @staticmethod
     def create(name: str, project_path: Path, verbose_subprocess: bool = True) -> EnvBackend:
