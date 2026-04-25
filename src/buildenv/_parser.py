@@ -1,10 +1,16 @@
-from argparse import REMAINDER, SUPPRESS, ArgumentParser
+import logging
+from argparse import REMAINDER, SUPPRESS, ArgumentParser, Namespace
 from pathlib import Path
 
 import argcomplete
 
 from . import __version__
+from ._entry_points import parse_project_templates
+from ._utils import LOGGER_NAME, StopHereException
 from .backends.factory import EnvBackendFactory
+from .extension import BuildEnvInfo, BuildEnvProjectTemplate
+
+_LOGGER = logging.getLogger(LOGGER_NAME)
 
 
 class BuildEnvParser:
@@ -53,6 +59,8 @@ class BuildEnvParser:
             default=[],
             help="additional package to install in this environment (can be specified multiple times)",
         )
+        install_parser.add_argument("--template", "-t", metavar="TEMPLATE", help="template used to create a new project")
+        install_parser.add_argument("--list-templates", action="store_true", default=False, help="prints all available project templates and exit")
         install_parser.set_defaults(func="install", kwargs_map={"packages": lambda o: o.packages})  # type: ignore
 
         # init sub-command
@@ -115,6 +123,30 @@ class BuildEnvParser:
         # Handle completion
         argcomplete.autocomplete(self._parser)
 
+    def handle_install(self, options: Namespace) -> BuildEnvProjectTemplate | None:
+        """
+        Handle install command, and return project template if specified
+
+        :param options: parsed arguments namespace
+        :return: project template if specified, None otherwise
+        """
+
+        # Parse project templates
+        templates = parse_project_templates(BuildEnvInfo(project_root=options.project_folder))
+        templates_list = "\n".join(map(lambda t: f" - {t}", templates.keys()))
+
+        # List command
+        if options.list_templates:
+            _LOGGER.info(f"Available project templates:\n{templates_list}")
+            raise StopHereException()
+
+        # Is template specified?
+        if options.template:
+            assert options.template in templates, f"Unknown project template '{options.template}'\nAvailable templates:\n{templates_list}"
+            return templates[options.template]
+
+        return None
+
     def execute(self, args: list[str]) -> int:
         """
         Parse incoming arguments list, and execute command callback
@@ -126,19 +158,31 @@ class BuildEnvParser:
         # Parse arguments
         options = self._parser.parse_args(args)
 
+        # Backend name
+        backend_name: str | None = None
+        if hasattr(options, "backend") and options.backend is not None:
+            backend_name = options.backend
+
+        # Specific handling for install command:
+        template: BuildEnvProjectTemplate | None = None
+        if options.func == "install":
+            template = self.handle_install(options)
+
+            # Check template preferred backend if no backend specified
+            if (template is not None) and (backend_name is None) and EnvBackendFactory.is_supported(template.preferred_backend):
+                backend_name = template.preferred_backend
+
         # Prepare project folder + backend
         project_folder: Path = options.project_folder
         project_folder.mkdir(parents=True, exist_ok=True)
-        backend = (
-            EnvBackendFactory.create(options.backend, project_folder)
-            if (hasattr(options, "backend") and options.backend is not None)
-            else EnvBackendFactory.detect(project_folder)
-        )
+        backend = EnvBackendFactory.create(backend_name, project_folder) if backend_name is not None else EnvBackendFactory.detect(project_folder)
 
         # Prepare keyword args
         kwargs = dict(options.kwargs)
         if hasattr(options, "kwargs_map"):
             kwargs.update({name: mapper(options) for name, mapper in options.kwargs_map.items()})
+        if template is not None:
+            kwargs["template"] = template
 
         # Check for sub-command
         if options.func is None:

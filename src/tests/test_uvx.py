@@ -1,24 +1,12 @@
 import os
-from collections.abc import Generator
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from buildenv._shells.bash import BashShell
 from buildenv._shells.cmd import CmdShell
 from buildenv.backends._uv import EnvBackend, UvxBackend
-from buildenv.backends.factory import EnvBackendFactory
-from tests.commons2 import WithBash, WithCmd, WithFunctionalBash, WithFunctionalCmd, WithToolsProject, WithUvVenv
-
-
-class WithUvx(WithUvVenv, WithToolsProject):
-    @pytest.fixture
-    def backend(self, project: Path) -> Generator[EnvBackend, Any, Any]:
-        backend = EnvBackendFactory.detect(project)
-        assert backend.venv_name == ""
-        assert backend.use_requirements
-        yield backend
+from tests.commons2 import WithBash, WithCmd, WithFunctionalBash, WithFunctionalCmd, WithUvx
 
 
 class TestUvxBash(WithUvx, WithBash):

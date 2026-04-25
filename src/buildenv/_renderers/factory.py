@@ -5,6 +5,7 @@ from pathlib import Path
 from jinja2 import Environment
 
 from .._utils import run_subprocess
+from ..extension import BuildEnvRenderer
 from .renderer import Keywords, Renderer
 
 
@@ -97,3 +98,17 @@ class RendererFactory:
             return _ShRenderer(template, backend_name, environment, project_path, logger)
         else:
             return _DefaultRenderer(template, backend_name, environment, project_path, logger)
+
+
+# Renderer adapter for contributed classes
+class RenderingAdapter(BuildEnvRenderer):
+    def __init__(self, target_path: Path, backend_name: str):
+        self._target_path = target_path
+        self._backend_name = backend_name
+
+    def render(self, environment: Environment, template: str, executable: bool = False, keywords: Keywords | None = None):  # type: ignore
+        # Delegate rendering to the renderer factory
+        template_path = Path(template)
+        RendererFactory.create(template_path, self._backend_name, environment).render(
+            self._target_path / template_path.name.replace(".jinja", ""), executable, keywords
+        )

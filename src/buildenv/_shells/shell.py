@@ -5,12 +5,10 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from jinja2 import Environment
-
-from .._renderers.factory import Keywords, RendererFactory
+from .._renderers.factory import Keywords, RendererFactory, RenderingAdapter
 from .._utils import LOGGER_NAME, contribute_path
 from ..completion import CompletionCommand
-from ..extension import BuildEnvExtension, BuildEnvRenderer
+from ..extension import BuildEnvExtension
 
 # Templates folder
 _TEMPLATES_ROOT_FOLDER = Path(__file__).parent / "templates"
@@ -164,17 +162,8 @@ class EnvShell(ABC):
 
     # Generate extensions activation scripts
     def _generate_extensions_scripts(self, tmp_dir: Path):
-        # Renderer adapter
-        class RenderingAdapter(BuildEnvRenderer):
-            def render(slf, environment: Environment, template: str, executable: bool = False, keywords: Keywords | None = None):  # type: ignore
-                # Delegate rendering to the renderer factory
-                template_path = Path(template)
-                RendererFactory.create(template_path, self._backend_name, environment).render(
-                    tmp_dir / template_path.name.replace(".jinja", ""), executable, keywords
-                )
-
         # Iterate on extensions
-        renderer = RenderingAdapter()
+        renderer = RenderingAdapter(tmp_dir, self._backend_name)
         for ext_name, extension in self._extensions.items():
             # Generate extension activation scripts (through renderer adapter)
             try:
