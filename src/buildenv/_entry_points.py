@@ -49,4 +49,4 @@ def parse_extensions(info: BuildEnvInfo) -> dict[str, BuildEnvExtension]:
 
 # Iterate on entry points to load project templates
 def parse_project_templates(info: BuildEnvInfo) -> dict[str, BuildEnvProjectTemplate]:
-    return parse_entrypoints(_BUILDENV_TEMPLATE, info, BuildEnvProjectTemplate(info, name=""))
+    return parse_entrypoints(_BUILDENV_TEMPLATE, info, BuildEnvProjectTemplate(info, name=""), with_name=True)

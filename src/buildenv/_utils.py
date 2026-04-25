@@ -117,3 +117,11 @@ def run_subprocess(
             )
 
     return cp
+
+
+class StopHereException(Exception):
+    """
+    Exception used to stop execution of a command callback, without it being considered as an error
+    """
+
+    pass

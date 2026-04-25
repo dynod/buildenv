@@ -204,6 +204,19 @@ class WithUvVenv(WithVenv):
             f.write("uv = xxx\n")
 
 
+class WithUvxVenv(WithUvVenv):
+    @pytest.fixture
+    def backend(self, project: Path) -> Generator[EnvBackend, Any, Any]:
+        backend = EnvBackendFactory.detect(project)
+        assert backend.venv_name == ""
+        assert backend.use_requirements
+        yield backend
+
+
+class WithUvx(WithUvxVenv, WithToolsProject):
+    pass
+
+
 class WithPipxVenv(WithVenv):
     @pytest.fixture(autouse=True)
     def with_pipx(self, fake_venv: Path):
@@ -418,7 +431,7 @@ class WithCmd(WithNoShell):
         # Verify generated files
         expected_files = ["activate.cmd", "command.cmd", "activate/readme.cmd"] + (["bin/pip.cmd"] if not backend.has_pip() else [])
         assert len(list(filter(lambda f: f.is_file(), tmp_dir.rglob("*")))) == len(expected_files)
-        for f in expected_files:
+        for f in expected_files:  # type: ignore
             assert (tmp_dir / f).is_file()
 
         # Check command is in generated file
