@@ -116,6 +116,13 @@ class BuildEnvProjectTemplate(BuildEnvEntryPoint):
         return self._name
 
     @property
+    def description(self) -> str:
+        """
+        Template description, used to describe the template to users when creating a new project
+        """
+        return ""
+
+    @property
     def preferred_backend(self) -> str:
         """
         Preferred buildenv backend for this template; will be used by default (instead of detected one) on buildenv install if this template is selected,

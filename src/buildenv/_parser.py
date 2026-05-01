@@ -133,7 +133,7 @@ class BuildEnvParser:
 
         # Parse project templates
         templates = parse_project_templates(BuildEnvInfo(project_root=options.project_folder))
-        templates_list = "\n".join(map(lambda t: f" - {t}", templates.keys()))
+        templates_list = "\n".join(map(lambda t: f" - {t.name}: {t.description}", templates.values()))
 
         # List command
         if options.list_templates:
