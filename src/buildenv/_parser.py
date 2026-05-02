@@ -52,14 +52,22 @@ class BuildEnvParser:
         choices = EnvBackendFactory.KNOWN_BACKENDS
         install_parser.add_argument("--backend", choices=choices, help="force using specified backend")
         install_parser.add_argument(
-            "--with",
+            "--add",
             action="append",
             dest="packages",
             metavar="PACKAGE",
             default=[],
             help="additional package to install in this environment (can be specified multiple times)",
         )
-        install_parser.add_argument("--template", "-t", metavar="TEMPLATE", help="template used to create a new project")
+        install_parser.add_argument(
+            "--template",
+            "-t",
+            metavar="TEMPLATE",
+            dest="templates",
+            default=[],
+            action="append",
+            help="template used to create a new project (can be specified multiple times)",
+        )
         install_parser.add_argument("--list-templates", action="store_true", default=False, help="prints all available project templates and exit")
         install_parser.set_defaults(func="install", kwargs_map={"packages": lambda o: o.packages})  # type: ignore
 
@@ -123,29 +131,35 @@ class BuildEnvParser:
         # Handle completion
         argcomplete.autocomplete(self._parser)
 
-    def handle_install(self, options: Namespace) -> BuildEnvProjectTemplate | None:
+    def handle_install(self, options: Namespace) -> tuple[BuildEnvProjectTemplate | None, list[BuildEnvProjectTemplate]]:
         """
         Handle install command, and return project template if specified
 
         :param options: parsed arguments namespace
-        :return: project template if specified, None otherwise
+        :return: a tuple containing:
+            - project template if specified, None otherwise
+            - list of additional project templates, if any
         """
 
         # Parse project templates
-        templates = parse_project_templates(BuildEnvInfo(project_root=options.project_folder))
-        templates_list = "\n".join(map(lambda t: f" - {t.name}: {t.description}", templates.values()))
+        all_templates = parse_project_templates(BuildEnvInfo(project_root=options.project_folder))
+        max_name_length = max((len(t.name) for t in all_templates.values()), default=0)
+        templates_list = "\n".join(map(lambda t: f" - {t}:{' ' * (max_name_length - len(t))} {all_templates[t].description}", sorted(all_templates.keys())))
 
         # List command
         if options.list_templates:
             _LOGGER.info(f"Available project templates:\n{templates_list}")
             raise StopHereException()
 
-        # Is template specified?
-        if options.template:
-            assert options.template in templates, f"Unknown project template '{options.template}'\nAvailable templates:\n{templates_list}"
-            return templates[options.template]
+        # Handle templates
+        used_templates: list[str] = []
+        for template in options.templates:
+            assert template in all_templates, f"Unknown project template '{template}'\nAvailable templates:\n{templates_list}"
+            if template not in used_templates:  # pragma: no branch
+                used_templates.append(template)
+        templates: list[BuildEnvProjectTemplate] = [all_templates[name] for name in used_templates]
 
-        return None
+        return (templates[0], templates[1:]) if templates else (None, [])
 
     def execute(self, args: list[str]) -> int:
         """
@@ -165,8 +179,9 @@ class BuildEnvParser:
 
         # Specific handling for install command:
         template: BuildEnvProjectTemplate | None = None
+        extra_templates: list[BuildEnvProjectTemplate] = []
         if options.func == "install":
-            template = self.handle_install(options)
+            template, extra_templates = self.handle_install(options)
 
             # Check template preferred backend if no backend specified
             if (template is not None) and (backend_name is None) and EnvBackendFactory.is_supported(template.preferred_backend):
@@ -182,7 +197,7 @@ class BuildEnvParser:
         if hasattr(options, "kwargs_map"):
             kwargs.update({name: mapper(options) for name, mapper in options.kwargs_map.items()})
         if template is not None:
-            kwargs["template"] = template
+            kwargs.update({"template": template, "extra_templates": extra_templates})
 
         # Check for sub-command
         if options.func is None:

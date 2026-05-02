@@ -22,6 +22,7 @@ config:
     - Jinja2
     - argcomplete
     - psutil
+    - typing_extensions
 
   # For tests
   venvPkgDeps:
