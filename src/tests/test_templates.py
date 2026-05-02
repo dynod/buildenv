@@ -10,7 +10,7 @@ from tests.commons2 import WithUvxVenv
 
 # Fake template class
 class FakeTemplate(BuildEnvProjectTemplate):
-    def generate_project_files(self, renderer: BuildEnvRenderer, packages: list[str]):
+    def generate_project_files(self, renderer: BuildEnvRenderer, packages: list[str], extra_templates: list[BuildEnvProjectTemplate]) -> None:
         # Just touch some files directly in the project folder
         assert self.info.project_root is not None
         (self.info.project_root / f"{self.name}.txt").touch()

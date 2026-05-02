@@ -17,6 +17,7 @@ nmk-vscode
 pipx
 psutil
 sphinx-autoapi
+typing_extensions
 uv
 
 

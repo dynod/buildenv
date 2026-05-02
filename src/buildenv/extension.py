@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from jinja2 import Environment
+from typing_extensions import Self
 
 from .completion import CompletionCommand
 
@@ -137,7 +138,7 @@ class BuildEnvProjectTemplate(BuildEnvEntryPoint):
         """
         return set()
 
-    def generate_project_files(self, renderer: BuildEnvRenderer, packages: list[str]) -> None:  # pragma: no cover
+    def generate_project_files(self, renderer: BuildEnvRenderer, packages: list[str], extra_templates: list[Self]) -> None:  # pragma: no cover
         """
         Method called by buildenv backend when generating project files for a new project.
 
@@ -145,6 +146,7 @@ class BuildEnvProjectTemplate(BuildEnvEntryPoint):
 
         :param renderer: Rendering interface to use for generating project files
         :param packages: additional packages to be added to the project
+        :param extra_templates: additional templates to generate files from
         """
 
         raise NotImplementedError("Project template must implement generate_project_files method")

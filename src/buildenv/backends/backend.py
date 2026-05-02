@@ -304,12 +304,15 @@ class EnvBackend(ABC):
             else:
                 self._logger.log(log_level, f"Skip {logged_name} generation (already exist in this project)")
 
-    def install(self, packages: list[str] | None = None, template: BuildEnvProjectTemplate | None = None) -> int:
+    def install(
+        self, packages: list[str] | None = None, template: BuildEnvProjectTemplate | None = None, extra_templates: list[BuildEnvProjectTemplate] | None = None
+    ) -> int:
         """
         Install loading scripts for the backend
 
         :param packages: additional packages to install
         :param template: template used to create a new project
+        :param extra_templates: additional templates to generate files from
         :return: command exit code
         """
 
@@ -324,7 +327,11 @@ class EnvBackend(ABC):
 
         # Finally, ask template to generate its own files if any
         if template is not None:
-            template.generate_project_files(RenderingAdapter(self._project_path, self.name), packages if packages else [])
+            template.generate_project_files(
+                RenderingAdapter(self._project_path, self.name),
+                packages if packages else [],
+                extra_templates if extra_templates else [],
+            )
 
         # Everything went well
         return 0

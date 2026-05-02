@@ -36,12 +36,6 @@ class UvProjectBackend(_CommonUvImpl, MutableEnvBackend):
     def venv_name(self) -> str:
         return ".venv"
 
-    def install(self, packages: list[str] | None = None) -> int:
-        # Special warning if some packages are specified, since we don't handle them at the moment
-        if packages:
-            logging.warning("As pyproject.toml file is not handled by buildenv, '--with' option is ignored.")
-        return super().install(packages)
-
     @property
     def _extra_args(self) -> list[str]:
         # Get extra args from environment variable
