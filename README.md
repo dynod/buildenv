@@ -1,4 +1,5 @@
 # buildenv
+
 Build environment setup system, based on Python venv
 
 <!-- NMK-BADGES-BEGIN -->
@@ -15,15 +16,23 @@ Build environment setup system, based on Python venv
 ## Features
 
 The **`buildenv`** tool provides following features:
-* simple build environment setup through loading scripts generated in your project
-* configuration through a simple **`buildenv.cfg`** file
-* extendable activation scripts, loaded with the build environment
+
+- simple build environment setup through loading scripts generated in your project
+- extendable activation scripts, loaded with the build environment
+- support different environment backends:
+  - [uv/uvx](https://docs.astral.sh/uv/) based environments (recommended)
+  - legacy [pip](https://pip.pypa.io/en/stable/) or [pipx](https://pipx.pypa.io/stable/) based environments
+- runs either in:
+  - interractive mode (for local development)
+  - command mode (ideal for CI builds)
+- project templates for easy bootstrap from an empty folder
 
 The full **`buildenv`** documentation is available at [https://buildenv.readthedocs.io](https://buildenv.readthedocs.io)
 
 ## Local build
 
 If you want to build locally the **`buildenv`** wheel, just:
+
 1. clone the **`buildenv`** project
-1. launch the loading script (see above)
+1. launch the loading script (`buildenv.sh` or `buildenv.cmd`, depending on your OS/preferred shell)
 1. build the project: `nmk build`
