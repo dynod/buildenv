@@ -101,10 +101,10 @@ INSTALL_PATCH = {"pip install buildenv": "pip install"}
 class TestFunctionalPipBash(WithFunctionalBash):
     def test_real_life(self, bash: str, wheel_path: Path):
         # Delegate test
-        self.run_real_life_version("pip", [bash], "buildenv.sh", wheel_path, patches={"buildenv.sh": INSTALL_PATCH}, expect_venv=True)
+        self.run_real_life_version("pip", [bash], "buildenv.sh", wheel_path, patches={"buildenv.sh": INSTALL_PATCH}, expect_venv="venv")
 
 
 class TestFunctionalPipCmd(WithFunctionalCmd):
     def test_real_life(self, cmd: str, wheel_path: Path):
         # Delegate test
-        self.run_real_life_version("pip", [cmd, "/c"], "buildenv.cmd", wheel_path, patches={"buildenv.cmd": INSTALL_PATCH}, expect_venv=True)
+        self.run_real_life_version("pip", [cmd, "/c"], "buildenv.cmd", wheel_path, patches={"buildenv.cmd": INSTALL_PATCH}, expect_venv="venv")

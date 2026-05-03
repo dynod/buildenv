@@ -93,7 +93,7 @@ class TestFunctionalUvBash(WithFunctionalBash):
             wheel_path,
             UV_UPDATED_ENV,
             expect_requirements=False,
-            expect_venv=True,
+            expect_venv=".venv",
             extra_files=UV_EXTRA_FILES,
             patches={"pyproject.toml": {"buildenv": f"buildenv@{escaped_wheel_path}"}},
         )
@@ -112,7 +112,7 @@ class TestFunctionalUvCmd(WithFunctionalCmd):
             wheel_path,
             UV_UPDATED_ENV,
             expect_requirements=False,
-            expect_venv=True,
+            expect_venv=".venv",
             extra_files=UV_EXTRA_FILES,
             patches={"pyproject.toml": {"buildenv": f"buildenv@{escaped_wheel_path}"}},
         )

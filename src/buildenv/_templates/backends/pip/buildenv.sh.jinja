@@ -12,10 +12,11 @@ fi
 {% include "backends/fragments/check.sh.jinja" %}
 
 # Needs to create venv?
-if test ! -d .venv; then
+if test ! -f venv/.ok; then
     # Create venv
     echo "Creating venv..."
-    ${_python} -m venv .venv
+    rm -Rf venv
+    ${_python} -m venv venv
     _rc=$?
     if test ${_rc} -ne 0; then
         echo "[ERROR] Failed to create venv"
@@ -23,7 +24,7 @@ if test ! -d .venv; then
     fi
 
     # Activate venv
-    . .venv/${_bin}/activate
+    . venv/${_bin}/activate
 
     # Check for requirements
     if test -f requirements.lock; then
@@ -43,10 +44,13 @@ if test ! -d .venv; then
         exit ${_rc}
     fi
 
+    # Create .ok file to indicate successful installation
+    touch venv/.ok
+
     # Deactivate after install
     deactivate
 fi
 
 # Delegate execution to buildenv command
-.venv/${_bin}/buildenv "$@"
+venv/${_bin}/buildenv "$@"
 
