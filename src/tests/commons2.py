@@ -488,7 +488,7 @@ class WithFunctionalShell(TestHelper):
         wheel_path: Path,
         extra_env: dict[str, str] | None = None,
         patches: dict[str, dict[str, str]] | None = None,
-        expect_venv: bool = False,
+        expect_venv: str = "",
         expect_requirements: bool = True,
         extra_files: list[Path] | None = None,
     ):
@@ -507,7 +507,8 @@ class WithFunctionalShell(TestHelper):
                 updated_env["PATH"] = str(current_test_venv_bin) + os.pathsep + updated_env["PATH"]
 
                 # Step 1: install buildenv loading scripts, and check if they are installed
-                EnvBackendFactory.create(backend_name, project_path).install([str(wheel_path)])
+                shutil.copy(wheel_path, project_path / wheel_path.name)
+                EnvBackendFactory.create(backend_name, project_path).install([str(project_path / wheel_path.name)])
                 for expected_script in [script] + (["requirements.txt"] if expect_requirements else []):
                     assert (project_path / expected_script).is_file(), f"{expected_script} file not found"
 
@@ -540,7 +541,11 @@ class WithFunctionalShell(TestHelper):
                 assert cp.stdout.decode().splitlines()[-1].strip().startswith("buildenv version "), "Unexpected command output"
 
                 # Step 5: check if venv was created
-                assert (project_path / ".venv").is_dir() == expect_venv
+                if expect_venv:
+                    assert (project_path / expect_venv).is_dir()
+                else:
+                    assert not (project_path / "venv").is_dir()
+                    assert not (project_path / ".venv").is_dir()
 
             finally:
                 # In all cases, copy tree from temp dir to project dir

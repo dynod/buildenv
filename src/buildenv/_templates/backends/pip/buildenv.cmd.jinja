@@ -3,13 +3,14 @@
 {% include "backends/fragments/check.cmd.jinja" %}
 
 :: Needs to create venv?
-if exist .venv (
+if exist venv\.ok (
     goto delegate
 )
 
 :: Create venv
 echo Creating venv...
-python -m venv .venv
+rmdir /s /q venv >nul 2>&1
+python -m venv venv
 set _BUILDENV_RC=%ERRORLEVEL%
 if %_BUILDENV_RC% NEQ 0 (
     echo|set /p="[ERROR] Failed to create venv" & echo.
@@ -17,7 +18,7 @@ if %_BUILDENV_RC% NEQ 0 (
 )
 
 :: Activate venv
-call .venv\Scripts\activate.bat
+call venv\Scripts\activate.bat
 
 :: Check for requirements
 if exist requirements.lock (
@@ -34,15 +35,18 @@ if exist requirements.lock (
 echo Installing project dependencies...
 python -m pip install buildenv %_reqs% %BUILDENV_PIP_ARGS%
 set _BUILDENV_RC=%ERRORLEVEL%
-call .venv\Scripts\deactivate.bat
+call venv\Scripts\deactivate.bat
 if %_BUILDENV_RC% NEQ 0 (
     echo|set /p="[ERROR] Failed to install project dependencies" & echo.
     goto end
 )
 
+:: Create .ok file to indicate successful installation
+type nul > venv\.ok
+
 :delegate
 :: Delegate execution to buildenv command
-.venv\Scripts\buildenv %*
+venv\Scripts\buildenv %*
 set _BUILDENV_RC=%ERRORLEVEL%
 goto end
 
