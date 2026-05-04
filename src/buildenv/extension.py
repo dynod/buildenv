@@ -27,7 +27,9 @@ class BuildEnvRenderer(ABC):
     """
 
     @abstractmethod
-    def render(self, environment: Environment, template: str, executable: bool = False, keywords: dict[str, str] | None = None):  # pragma: no cover
+    def render(
+        self, environment: Environment, template: str, executable: bool = False, keywords: dict[str, str] | None = None, sub_path: Path | str | None = None
+    ):  # pragma: no cover
         """
         Render extension activation script from template
 
@@ -35,6 +37,7 @@ class BuildEnvRenderer(ABC):
         :param template: Template file to render (relative to provided environment)
         :param executable: States if target file as to be set as executable
         :param keyword: Map of keywords provided to template
+        :param sub_path: Sub-path for the target file within the project
         """
         pass
 
