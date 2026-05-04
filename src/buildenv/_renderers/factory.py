@@ -106,9 +106,9 @@ class RenderingAdapter(BuildEnvRenderer):
         self._target_path = target_path
         self._backend_name = backend_name
 
-    def render(self, environment: Environment, template: str, executable: bool = False, keywords: Keywords | None = None):  # type: ignore
+    def render(self, environment: Environment, template: str, executable: bool = False, keywords: Keywords | None = None, sub_path: Path | str | None = None):  # type: ignore
         # Delegate rendering to the renderer factory
         template_path = Path(template)
         RendererFactory.create(template_path, self._backend_name, environment).render(
-            self._target_path / template_path.name.replace(".jinja", ""), executable, keywords
+            self._target_path / (sub_path or Path()) / template_path.name.replace(".jinja", ""), executable, keywords
         )
