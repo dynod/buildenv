@@ -24,7 +24,7 @@ def buildenv(args: list[str]) -> int:
 
 
 def main() -> int:  # pragma: no cover
-    logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+    logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s", stream=sys.stdout)
     return buildenv(sys.argv[1:])
 
 
