@@ -417,7 +417,7 @@ class EnvBackend(ABC):
 
     def handle_updates(self, old_packages: dict[str, str]):
         """
-        Handle packages updates from previous verions
+        Handle packages updates from previous versions
 
         :param old_packages: map of old installed packages versions (indexed by package name)
         """
@@ -425,17 +425,19 @@ class EnvBackend(ABC):
         # By default, just print update
         self.print_updates(old_packages)
 
-    def print_updates(self, old_packages: dict[str, str]):
+    def print_updates(self, old_packages: dict[str, str], ignored_packages: set[str] | None = None):
         """
         Pretty print packages updates to stdout
 
         :param old_packages: map of old installed packages versions (indexed by package name)
+        :param ignored_packages: set of package names to ignore in updates printing
         """
 
         # Locate changes and print them (if any)
-        old_packages_names = set(old_packages.keys())
+        all_ignored_packages: set[str] = ignored_packages if ignored_packages else set()
+        old_packages_names = set(old_packages.keys()) - all_ignored_packages
         new_packages = self.installed_packages
-        new_packages_names = set(new_packages.keys())
+        new_packages_names = set(new_packages.keys()) - all_ignored_packages
         changes: dict[str, str] = {}
         for removed_package in old_packages_names - new_packages_names:
             changes[removed_package] = f"removed (was {old_packages[removed_package]})"
@@ -447,7 +449,7 @@ class EnvBackend(ABC):
             self._logger.info("Some packages were updated:")
             self._print_packages(changes)
         else:
-            self._logger.info("All packages are already up to date.")
+            self._logger.debug("All packages are already up to date.")
 
     @property
     def installed_packages(self) -> dict[str, str]:
