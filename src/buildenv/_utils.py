@@ -9,6 +9,14 @@ LOGGER_NAME = "buildenv"
 Logger name used throughout the buildenv package
 """
 
+LEVEL_CMD = logging.INFO + 1
+"""
+Logging level used to log executed commands (higher than INFO, to be able to filter them out if needed)
+"""
+
+# Just register level name
+logging.addLevelName(LEVEL_CMD, "CMD")
+
 
 def is_windows() -> bool:
     """
@@ -65,6 +73,7 @@ def run_subprocess(
     verbose: bool | None = None,
     logger: logging.Logger | None = None,
     error_msg: str | None = None,
+    log_as_cmd: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     """
     Execute subprocess, and logs output/error streams + error code
@@ -76,6 +85,7 @@ def run_subprocess(
     :param verbose: override verbose subprocess logging for this call (default: False)
     :param logger: logger to use for this call (default: use root logger)
     :param error_msg: error message to be logged in case of subprocess failure
+    :param log_as_cmd: if True, log the command as a CMD level message
     :return: completed process instance
     """
 
@@ -94,7 +104,10 @@ def run_subprocess(
     )
 
     # Run process
-    _logger.debug(f"Running command: {args} -- in folder {cwd}")
+    if log_as_cmd:
+        _logger.log(LEVEL_CMD, " ".join(args))
+    else:
+        _logger.debug(f"Running command: {args} -- in folder {cwd}")
     cp = cast(subprocess.CompletedProcess[str], subprocess.run(**all_run_args))  # type: ignore
 
     # Log output of not verbose

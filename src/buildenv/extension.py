@@ -20,6 +20,9 @@ class BuildEnvInfo:
     project_root: Path | None = None
     """Path to the project root directory, if any (None otherwise)"""
 
+    backend_name: str | None = None
+    """Name of the buildenv backend in use, if any (None otherwise)"""
+
 
 class BuildEnvRenderer(ABC):
     """

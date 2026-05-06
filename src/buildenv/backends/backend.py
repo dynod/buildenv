@@ -44,7 +44,7 @@ class EnvBackend(ABC):
         self._project_path = project_path
 
         # Load extensions from entry points
-        self._info = BuildEnvInfo(venv_bin, project_path)
+        self._info = BuildEnvInfo(venv_bin, project_path, self.name)
         self._extensions: dict[str, BuildEnvExtension] = parse_extensions(self._info)
 
         # Detect main version from loading scripts
@@ -75,6 +75,7 @@ class EnvBackend(ABC):
         env: dict[str, str] | None = None,
         verbose: bool | None = None,
         error_msg: str | None = None,
+        log_as_cmd: bool = False,
     ) -> subprocess.CompletedProcess[str]:
         """
         Execute subprocess, and logs output/error streams + error code
@@ -85,10 +86,20 @@ class EnvBackend(ABC):
         :param env: environment variables map for subprocess
         :param verbose: override verbose subprocess logging for this call (default: use backend setting)
         :param error_msg: error message to be logged in case of subprocess failure
+        :param log_as_cmd: if True, log the command as a CMD level message (only if backend setting is verbose)
         :return: completed process instance
         """
 
-        return run_subprocess(args, check, cwd, env, verbose if verbose is not None else self._verbose_subprocess, self._logger, error_msg)
+        return run_subprocess(
+            args,
+            check,
+            cwd,
+            env,
+            verbose if verbose is not None else self._verbose_subprocess,
+            self._logger,
+            error_msg,
+            log_as_cmd if self._verbose_subprocess else False,
+        )
 
     @property
     def venv_name(self) -> str:

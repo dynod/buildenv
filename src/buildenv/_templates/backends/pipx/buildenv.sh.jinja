@@ -12,5 +12,5 @@ elif test -f requirements.txt; then
 fi
 
 # Delegate execution to buildenv command (through pipx)
-pipx run --pip-args "${_reqs}" ${BUILDENV_PIPX_ARGS} buildenv "$@"
+_run_cmd pipx run --pip-args "${_reqs}" ${BUILDENV_PIPX_ARGS} buildenv "$@"
 

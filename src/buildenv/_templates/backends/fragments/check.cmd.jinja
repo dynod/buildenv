@@ -1,4 +1,13 @@
+goto :start
+
+:: Helper: print a command to stdout, then execute it
+:run_cmd
+echo [CMD] %*
+%*
+goto :eof
+
 :: Check if {{command}} is installed
+:start
 setlocal
 {{command}} --version > NUL 2> NUL
 set _BUILDENV_RC=%ERRORLEVEL%

@@ -12,5 +12,5 @@ elif test -f requirements.txt; then
 fi
 
 # Delegate execution to buildenv command (through uvx)
-uvx ${_reqs} ${BUILDENV_UVX_ARGS} buildenv "$@"
+_run_cmd uvx ${_reqs} ${BUILDENV_UVX_ARGS} buildenv "$@"
 

@@ -14,9 +14,9 @@ fi
 # Needs to create venv?
 if test ! -f venv/.ok; then
     # Create venv
-    echo "Creating venv..."
+    echo "[INFO] Creating venv..."
     rm -Rf venv
-    ${_python} -m venv venv
+    _run_cmd ${_python} -m venv venv
     _rc=$?
     if test ${_rc} -ne 0; then
         echo "[ERROR] Failed to create venv"
@@ -24,7 +24,7 @@ if test ! -f venv/.ok; then
     fi
 
     # Activate venv
-    . venv/${_bin}/activate
+    _run_cmd source venv/${_bin}/activate
 
     # Check for requirements
     if test -f requirements.lock; then
@@ -32,12 +32,12 @@ if test ! -f venv/.ok; then
         _reqs="-r $PWD/requirements.lock"
     elif test -f requirements.txt; then
         # Base input requirements
-        _reqs="-r $PWD/requirements.txt"
+        _reqs="-U pip setuptools wheel buildenv -r $PWD/requirements.txt"
     fi
 
     # Install dependencies in venv
-    echo "Installing project dependencies..."
-    python -m pip install buildenv ${_reqs} ${BUILDENV_PIP_ARGS}
+    echo "[INFO] Installing project dependencies..."
+    _run_cmd python -m pip install ${_reqs} ${BUILDENV_PIP_ARGS}
     _rc=$?
     if test ${_rc} -ne 0; then
         echo "[ERROR] Failed to install project dependencies"
@@ -48,9 +48,9 @@ if test ! -f venv/.ok; then
     touch venv/.ok
 
     # Deactivate after install
-    deactivate
+    _run_cmd deactivate
 fi
 
 # Delegate execution to buildenv command
-venv/${_bin}/buildenv "$@"
+_run_cmd venv/${_bin}/buildenv "$@"
 
