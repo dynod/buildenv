@@ -3,6 +3,9 @@
 :: Update prompt
 set "PROMPT=%VIRTUAL_ENV_PROMPT%$P$G"
 
+:: buildenv alias (to avoid buildenv commands to trigger buildenv.cmd loading script again)
+doskey buildenv=buildenv.exe $*
+
 :: Load extra activation files
 for /f %%i in ('dir /b /o:n %VIRTUAL_ENV_SCRIPTS%\activate\*.cmd') do (
     call %VIRTUAL_ENV_SCRIPTS%\activate\%%i
