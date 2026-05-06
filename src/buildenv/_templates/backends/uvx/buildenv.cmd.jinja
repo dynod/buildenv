@@ -14,7 +14,7 @@ if exist requirements.lock (
 )
 
 :: Delegate execution to buildenv command (through uvx)
-uvx %_reqs% %BUILDENV_UVX_ARGS% buildenv %*
+call :run_cmd uvx %_reqs% %BUILDENV_UVX_ARGS% buildenv %*
 set _BUILDENV_RC=%ERRORLEVEL%
 goto end
 

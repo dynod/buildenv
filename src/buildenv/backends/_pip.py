@@ -40,9 +40,10 @@ class LegacyPipBackend(EnvBackendWithRequirements, MutableEnvBackend):
         env: dict[str, str] | None = None,
         verbose: bool | None = None,
         error_msg: str | None = None,
+        log_as_cmd: bool = True,
     ):
         # Systematically add pip args to pip subprocess
-        return super().subprocess([str(self._venv_bin / self.command), "-m", "pip"] + args + self._pip_args, check, cwd, env, verbose, error_msg)
+        return super().subprocess([str(self._venv_bin / self.command), "-m", "pip"] + args + self._pip_args, check, cwd, env, verbose, error_msg, log_as_cmd)
 
     def _delegate_add_packages(self, packages: list[str]):
         # Delegate to pip

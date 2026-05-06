@@ -8,9 +8,9 @@ if exist venv\.ok (
 )
 
 :: Create venv
-echo Creating venv...
+echo [INFO] Creating venv...
 rmdir /s /q venv >nul 2>&1
-python -m venv venv
+call :run_cmd python -m venv venv
 set _BUILDENV_RC=%ERRORLEVEL%
 if %_BUILDENV_RC% NEQ 0 (
     echo|set /p="[ERROR] Failed to create venv" & echo.
@@ -18,6 +18,7 @@ if %_BUILDENV_RC% NEQ 0 (
 )
 
 :: Activate venv
+echo [CMD] venv\Scripts\activate.bat
 call venv\Scripts\activate.bat
 
 :: Check for requirements
@@ -27,14 +28,15 @@ if exist requirements.lock (
 ) else (
     if exist requirements.txt (
         :: Base input requirements
-        set _reqs=-r requirements.txt
+        set _reqs=-U pip setuptools wheel buildenv -r requirements.txt
     )
 )
 
 :: Install dependencies in venv
-echo Installing project dependencies...
-python -m pip install buildenv %_reqs% %BUILDENV_PIP_ARGS%
+echo [INFO] Installing project dependencies...
+call :run_cmd python -m pip install %_reqs% %BUILDENV_PIP_ARGS%
 set _BUILDENV_RC=%ERRORLEVEL%
+echo [CMD] venv\Scripts\deactivate.bat
 call venv\Scripts\deactivate.bat
 if %_BUILDENV_RC% NEQ 0 (
     echo|set /p="[ERROR] Failed to install project dependencies" & echo.
@@ -46,7 +48,7 @@ type nul > venv\.ok
 
 :delegate
 :: Delegate execution to buildenv command
-venv\Scripts\buildenv %*
+call :run_cmd venv\Scripts\buildenv %*
 set _BUILDENV_RC=%ERRORLEVEL%
 goto end
 

@@ -49,9 +49,10 @@ class UvProjectBackend(_CommonUvImpl, MutableEnvBackend):
         env: dict[str, str] | None = None,
         verbose: bool | None = None,
         error_msg: str | None = None,
+        log_as_cmd: bool = True,
     ):
         # Systematically add uv args to uv subprocess
-        return super().subprocess([self.name] + args + self._extra_args, check, cwd, env, verbose, error_msg)
+        return super().subprocess([self.name] + args + self._extra_args, check, cwd, env, verbose, error_msg, log_as_cmd)
 
     def _delegate_add_packages(self, packages: list[str]):
         # Delegate to uv; assuming uv project is already created, and all packages added through this interface are dev ones

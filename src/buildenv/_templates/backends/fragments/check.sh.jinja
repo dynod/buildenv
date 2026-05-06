@@ -1,5 +1,11 @@
+# Helper: print a command to stdout, then execute it
+_run_cmd() {
+    printf '[CMD] %s\n' "$*"
+    "$@"
+}
+
 # Check if {{command}} is installed
-{{command}} --version 2>/dev/null 1>&2
+_run_cmd {{command}} --version 2>/dev/null 1>&2
 if test $? -ne 0; then
     echo "[ERROR] {{command}} is not installed; see {{url}} for installation instructions"
     exit 1
