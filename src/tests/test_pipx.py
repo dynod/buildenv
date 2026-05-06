@@ -14,8 +14,8 @@ from tests.commons2 import WithBash, WithCmd, WithFunctionalBash, WithFunctional
 
 class WithPipx(WithPipxVenv, WithToolsProject):
     @pytest.fixture
-    def backend(self, project: Path) -> Generator[EnvBackend, Any, Any]:
-        backend = EnvBackendFactory.detect(project)
+    def backend(self, project: Path, shell_name: str) -> Generator[EnvBackend, Any, Any]:
+        backend = EnvBackendFactory.detect(project, shell_name=shell_name)
         assert backend.venv_name == ""
         assert backend.use_requirements
         yield backend

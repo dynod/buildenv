@@ -34,7 +34,7 @@ _EDITABLE_SUFFIX = " (editable)"
 
 # Backend base implementation
 class EnvBackend(ABC):
-    def __init__(self, venv_bin: Path, project_path: Path | None = None, verbose_subprocess: bool = True):
+    def __init__(self, venv_bin: Path, project_path: Path | None = None, verbose_subprocess: bool = True, shell_name: str = "bash"):
         # Logs handling
         self._logger = logging.getLogger(LOGGER_NAME)
         self._verbose_subprocess = verbose_subprocess
@@ -57,7 +57,7 @@ class EnvBackend(ABC):
         contribute_path(cast(dict[str, str], os.environ), self._venv_bin)
 
         # Prepare shell
-        self._shell = ShellFactory.create(self._venv_bin, not self.has_pip(), self.name, self._extensions, self._completions)
+        self._shell = ShellFactory.create(shell_name, self._venv_bin, not self.has_pip(), self.name, self._extensions, self._completions)
 
     @property
     def version(self) -> int:

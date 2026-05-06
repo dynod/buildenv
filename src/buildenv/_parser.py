@@ -6,11 +6,14 @@ import argcomplete
 
 from . import __version__
 from ._entry_points import parse_project_templates
+from ._shells.factory import KNOWN_SHELLS
 from ._utils import LOGGER_NAME, StopHereException
 from .backends.factory import EnvBackendFactory
 from .extension import BuildEnvInfo, BuildEnvProjectTemplate
 
 _LOGGER = logging.getLogger(LOGGER_NAME)
+
+_DEFAULT_SHELL = "bash"
 
 
 class BuildEnvParser:
@@ -36,6 +39,7 @@ class BuildEnvParser:
             sub_parser.add_argument(
                 "--project", "-p", metavar="PROJECT", dest="project_folder", type=Path, default=Path.cwd(), help="project folder (default: .)"
             )
+            sub_parser.add_argument("--shell", choices=KNOWN_SHELLS, default=_DEFAULT_SHELL, help=f"force using specified shell (default: {_DEFAULT_SHELL})")
 
         # Common arguments to commands able to dump package upgrades
         def _upgrade_args(sub_parser: ArgumentParser):
@@ -190,7 +194,12 @@ class BuildEnvParser:
         # Prepare project folder + backend
         project_folder: Path = options.project_folder
         project_folder.mkdir(parents=True, exist_ok=True)
-        backend = EnvBackendFactory.create(backend_name, project_folder) if backend_name is not None else EnvBackendFactory.detect(project_folder)
+        shell_name: str = options.shell if hasattr(options, "shell") else _DEFAULT_SHELL
+        backend = (
+            EnvBackendFactory.create(backend_name, project_folder, shell_name=shell_name)
+            if backend_name is not None
+            else EnvBackendFactory.detect(project_folder, shell_name=shell_name)
+        )
 
         # Prepare keyword args
         kwargs = dict(options.kwargs)

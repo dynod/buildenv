@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from .._utils import is_windows
 from ..completion import CompletionCommand
 from ..extension import BuildEnvExtension
 from .shell import EnvShell
@@ -7,13 +8,19 @@ from .shell import EnvShell
 
 # Windows cmd shell implementation
 class CmdShell(EnvShell):
+    NAME = "cmd"
+
     def __init__(self, venv_bin: Path, fake_pip: bool, backend_name: str, extensions: dict[str, BuildEnvExtension], completions: list[CompletionCommand]):
         super().__init__(venv_bin, fake_pip, backend_name, extensions, completions)
         self._shell_path = "cmd"
 
+    @classmethod
+    def check_supported(cls):
+        assert is_windows(), "cmd shell is only supported on Windows"
+
     @property
     def name(self) -> str:
-        return "cmd"
+        return CmdShell.NAME
 
     @property
     def script(self) -> str:

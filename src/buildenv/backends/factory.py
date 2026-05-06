@@ -44,13 +44,14 @@ class EnvBackendFactory:
         return shutil.which(name) is not None
 
     @staticmethod
-    def create(name: str, project_path: Path, verbose_subprocess: bool = True) -> EnvBackend:
+    def create(name: str, project_path: Path, verbose_subprocess: bool = True, shell_name: str = "bash") -> EnvBackend:
         """
         Create backend instance from name
 
         :param name: backend name
         :param project_path: project path
         :param verbose_subprocess: if True (default), subprocess calls output is streamed to console
+        :param shell_name: name of the shell to use
         :return: created backend implementation instance
         """
 
@@ -58,15 +59,18 @@ class EnvBackendFactory:
         assert name in _KNOW_BACKENDS, f"Unknown backend: {name}"
 
         # Create backend instance
-        return _KNOW_BACKENDS[name](venv_bin=EnvBackendFactory._ENV_BIN, project_path=project_path, verbose_subprocess=verbose_subprocess)
+        return _KNOW_BACKENDS[name](
+            venv_bin=EnvBackendFactory._ENV_BIN, project_path=project_path, verbose_subprocess=verbose_subprocess, shell_name=shell_name
+        )
 
     @staticmethod
-    def detect(project_path: Path | None = None, verbose_subprocess: bool = True) -> EnvBackend:
+    def detect(project_path: Path | None = None, verbose_subprocess: bool = True, shell_name: str = "bash") -> EnvBackend:
         """
         Detect backend from running python instance, and return corresponding implementation
 
         :param project_path: project path
         :param verbose_subprocess: if True (default), subprocess calls output is streamed to console
+        :param shell_name: name of the shell to use
         :return: detected backend implementation instance
         """
 
@@ -100,4 +104,4 @@ class EnvBackendFactory:
             backend_class = LegacyPipBackend
 
         # Return backend instance
-        return backend_class(venv_bin=EnvBackendFactory._ENV_BIN, project_path=project_path, verbose_subprocess=verbose_subprocess)
+        return backend_class(venv_bin=EnvBackendFactory._ENV_BIN, project_path=project_path, verbose_subprocess=verbose_subprocess, shell_name=shell_name)
