@@ -29,8 +29,8 @@ class PipExpectedCommands(WithPythonProject):
 
 class WithPip(WithVenv, PipExpectedCommands):
     @pytest.fixture
-    def backend(self, project: Path) -> Generator[EnvBackend, Any, Any]:
-        backend = EnvBackendFactory.detect(project)
+    def backend(self, project: Path, shell_name: str) -> Generator[EnvBackend, Any, Any]:
+        backend = EnvBackendFactory.detect(project, shell_name=shell_name)
         assert backend.venv_name == "venv"
         assert backend.use_requirements
         yield backend

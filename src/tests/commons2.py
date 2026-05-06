@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 from pytest_multilog import TestHelper
 
-import buildenv._shells.factory as shell_factory
+import buildenv._shells.cmd as cmd_module
 import buildenv._shells.shell as buildenv_shell
 from buildenv.__main__ import buildenv
 from buildenv._shells.factory import BashShell, ShellFactory
@@ -206,8 +206,8 @@ class WithUvVenv(WithVenv):
 
 class WithUvxVenv(WithUvVenv):
     @pytest.fixture
-    def backend(self, project: Path) -> Generator[EnvBackend, Any, Any]:
-        backend = EnvBackendFactory.detect(project)
+    def backend(self, project: Path, shell_name: str) -> Generator[EnvBackend, Any, Any]:
+        backend = EnvBackendFactory.detect(project, shell_name=shell_name)
         assert backend.venv_name == ""
         assert backend.use_requirements
         yield backend
@@ -225,13 +225,6 @@ class WithPipxVenv(WithVenv):
 
 
 class FakeBash(WithTmpDir):
-    @pytest.fixture(autouse=True)
-    def with_bash(self, monkeypatch: pytest.MonkeyPatch):
-        with monkeypatch.context() as m:
-            m.setenv("SHELL", "/bin/bash")
-            m.setenv("SHLVL", "1")
-            yield
-
     def get_extra_expected_files(self) -> list[str]:
         # To be overridden by subclasses
         return []
@@ -309,6 +302,10 @@ class FakeBash(WithTmpDir):
 
 class WithBash(FakeBash):
     @pytest.fixture
+    def shell_name(self) -> str:
+        return "bash"
+
+    @pytest.fixture
     def fake_multi_level(self):
         # Prepare multi-level buildenv
         old_level = os.getenv("BUILDENV_LEVEL", None)
@@ -351,25 +348,13 @@ class WithBash(FakeBash):
         assert rc == 0
 
 
-class WithNoShell(TestHelper):
-    @pytest.fixture(autouse=True)
-    def with_no_shell(self, monkeypatch: pytest.MonkeyPatch):
-        with monkeypatch.context() as m:
-            m.delenv("SHELL", raising=False)
-            m.delenv("SHLVL", raising=False)
-            yield
+class WithCmd(TestHelper):
+    @pytest.fixture
+    def shell_name(self, monkeypatch: pytest.MonkeyPatch) -> str:
+        # Force windows support
+        monkeypatch.setattr(cmd_module, "is_windows", lambda: True)
 
-
-class WithUnknownShell(WithNoShell):
-    @pytest.fixture(autouse=True)
-    def not_on_windows(self, monkeypatch: pytest.MonkeyPatch):
-        monkeypatch.setattr(shell_factory, "is_windows", lambda: False)
-
-
-class WithCmd(WithNoShell):
-    @pytest.fixture(autouse=True)
-    def on_windows(self, monkeypatch: pytest.MonkeyPatch):
-        monkeypatch.setattr(shell_factory, "is_windows", lambda: True)
+        return "cmd"
 
     @pytest.fixture
     def patch_shell_process(self, tmp_dir: Path, backend: EnvBackend, monkeypatch: pytest.MonkeyPatch):
@@ -404,9 +389,9 @@ class WithCmd(WithNoShell):
         rc = backend.shell()
         assert rc == 0
 
-    def test_cli_shell(self, patch_shell_process: None):
+    def test_cli_shell(self, shell_name: str, patch_shell_process: None):
         # Test interractive shell (CLI)
-        rc = buildenv(["shell"])
+        rc = buildenv(["shell", "--shell", shell_name])
         assert rc == 0
 
     @pytest.fixture
@@ -443,9 +428,9 @@ class WithCmd(WithNoShell):
         rc = backend.run("echo Hello")
         assert rc == 0
 
-    def test_cli_command(self, patch_run_process: None):
+    def test_cli_command(self, shell_name: str, patch_run_process: None):
         # Test command execution through shell (CLI)
-        rc = buildenv(["run", "echo", "Hello"])
+        rc = buildenv(["run", "--shell", shell_name, "echo", "Hello"])
         assert rc == 0
 
 
@@ -554,27 +539,19 @@ class WithFunctionalShell(TestHelper):
 
 class WithFunctionalBash(WithFunctionalShell):
     @pytest.fixture
-    def bash(self, monkeypatch: pytest.MonkeyPatch) -> Generator[str, Any, None]:
-        with monkeypatch.context() as m:
-            m.setenv("SHELL", "/bin/bash")
-            m.setenv("SHLVL", "1")
-
-            # Use shall factory to detect bash path
-            shell = ShellFactory.create(self.test_folder, False, "fake", {}, [])
-            assert isinstance(shell, BashShell), f"Expected bash shell, got {type(shell)}"
-            yield shell._shell_path  # type: ignore
+    def bash(self) -> Generator[str, Any, None]:
+        # Use shall factory to detect bash path
+        shell = ShellFactory.create("bash", self.test_folder, False, "fake", {}, [])
+        assert isinstance(shell, BashShell), f"Expected bash shell, got {type(shell)}"
+        yield shell._shell_path  # type: ignore
 
 
 class WithFunctionalCmd(WithFunctionalShell):
     @pytest.fixture
-    def cmd(self, monkeypatch: pytest.MonkeyPatch) -> Generator[str, Any, None]:
+    def cmd(self) -> Generator[str, Any, None]:
         # Check if we are on Windows
         if not is_windows():
             pytest.skip("This test is only for Windows")
 
-        with monkeypatch.context() as m:
-            m.delenv("SHELL", raising=False)
-            m.delenv("SHLVL", raising=False)
-
-            # Just return the cmd path
-            yield "cmd.exe"
+        # Just return the cmd path
+        yield "cmd.exe"

@@ -24,6 +24,13 @@ class EnvShell(ABC):
         self._completions = completions
         self._logger = logging.getLogger(LOGGER_NAME)
 
+    @classmethod
+    def check_supported(cls) -> None:  # pragma: no cover
+        """
+        Check if this shell is supported in the current environment (raise exception if this is not the case)
+        """
+        raise NotImplementedError("check_supported method must be implemented by shell implementations")
+
     @property
     @abstractmethod
     def name(self) -> str:  # pragma: no cover

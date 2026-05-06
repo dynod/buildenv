@@ -10,13 +10,13 @@ from buildenv._shells.bash import BashShell
 from buildenv._shells.cmd import CmdShell
 from buildenv.backends._uv import EnvBackend, UvProjectBackend
 from buildenv.backends.factory import EnvBackendFactory
-from tests.commons2 import WithBash, WithCmd, WithFunctionalBash, WithFunctionalCmd, WithPythonProject, WithUnknownShell, WithUvVenv
+from tests.commons2 import WithBash, WithCmd, WithFunctionalBash, WithFunctionalCmd, WithPythonProject, WithUvVenv
 
 
 class WithUv(WithUvVenv, WithPythonProject):
     @pytest.fixture
-    def backend(self, project: Path) -> Generator[EnvBackend, Any, Any]:
-        backend = EnvBackendFactory.detect(project)
+    def backend(self, project: Path, shell_name: str) -> Generator[EnvBackend, Any, Any]:
+        backend = EnvBackendFactory.detect(project, shell_name=shell_name)
         assert backend.venv_name == ".venv"
         assert not backend.use_requirements
         yield backend
@@ -68,12 +68,6 @@ class TestUvCmd(WithUv, WithCmd):
         # Create backend
         assert isinstance(backend, UvProjectBackend)
         assert isinstance(backend.shell_instance, CmdShell)
-
-
-class TestUvUnknownShell(WithUvVenv, WithUnknownShell):
-    def test_backend(self):
-        with pytest.raises(RuntimeError, match="Unable to detect the running shell"):
-            EnvBackendFactory.detect(self.test_folder)
 
 
 # Updated env for uv tests
