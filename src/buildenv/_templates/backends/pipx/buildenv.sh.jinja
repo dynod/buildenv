@@ -3,7 +3,7 @@
 {% include "backends/fragments/check.sh.jinja" %}
 
 # Check for requirements
-if test -f requirements.lock; then
+if test -f buildenv.lock -a -f requirements.lock; then
     # Locked requirements
     _reqs="-r $PWD/requirements.lock"
 elif test -f requirements.txt; then

@@ -50,7 +50,7 @@ class BuildEnvParser:
         sub_parsers = self._parser.add_subparsers(help="sub-commands:")
 
         # install sub-command
-        install_help = "install build environment loading scripts"
+        install_help = "install build environment loading scripts and setup project from template"
         install_parser = sub_parsers.add_parser("install", help=install_help, description=install_help)
         _common_args(install_parser)
         choices = EnvBackendFactory.KNOWN_BACKENDS
@@ -100,7 +100,7 @@ class BuildEnvParser:
         _upgrade_args(init_parser)
 
         # shell sub-command
-        shell_help = "start an interactive shell with loaded build environment"
+        shell_help = "start an interactive shell with loaded build environment (default if no sub-command is specified)"
         shell_parser = sub_parsers.add_parser("shell", help=shell_help, description=shell_help)
         _common_args(shell_parser)
         shell_parser.set_defaults(func="shell", kwargs_map={"show_updates_from": lambda o: o.show_updates_from, "command": lambda o: o.command})  # type: ignore
@@ -125,6 +125,12 @@ class BuildEnvParser:
         lock_parser = sub_parsers.add_parser("lock", help=lock_help, description=lock_help)
         _common_args(lock_parser)
         lock_parser.set_defaults(func="lock")
+
+        # unlock sub-command
+        unlock_help = "unlock build environment packages versions"
+        unlock_parser = sub_parsers.add_parser("unlock", help=unlock_help, description=unlock_help)
+        _common_args(unlock_parser)
+        unlock_parser.set_defaults(func="unlock")
 
         # upgrade sub-command
         upgrade_help = "upgrade build environment packages to their latest version"
@@ -206,6 +212,9 @@ class BuildEnvParser:
         if hasattr(options, "kwargs_map"):
             kwargs.update({name: mapper(options) for name, mapper in options.kwargs_map.items()})
         if template is not None:
+            # Refresh selected backend name
+            for tmp in [template] + extra_templates:
+                tmp.info.backend_name = backend.name
             kwargs.update({"template": template, "extra_templates": extra_templates})
 
         # Check for sub-command

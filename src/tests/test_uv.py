@@ -22,10 +22,6 @@ class WithUv(WithUvVenv, WithPythonProject):
         yield backend
 
     @pytest.fixture
-    def expected_lockfile(self) -> str:
-        return "uv.lock"
-
-    @pytest.fixture
     def expected_upgrade_cmd(self, backend: EnvBackend) -> list[str]:
         return ["uv", "sync", "--upgrade"]
 

@@ -37,6 +37,11 @@ class UvProjectBackend(_CommonUvImpl, MutableEnvBackend):
         return ".venv"
 
     @property
+    def lock_file(self) -> Path:
+        assert self._project_path is not None, "Project path is not set"
+        return self._project_path / "uv.lock"
+
+    @property
     def _extra_args(self) -> list[str]:
         # Get extra args from environment variable
         return [arg for arg in os.getenv("BUILDENV_UV_ARGS", "").split(" ") if arg]
@@ -58,9 +63,9 @@ class UvProjectBackend(_CommonUvImpl, MutableEnvBackend):
         # Delegate to uv; assuming uv project is already created, and all packages added through this interface are dev ones
         self.subprocess(["add", "--dev", *packages], check=True, cwd=self._project_path)
 
-    def lock(self, log_level: int = logging.INFO) -> int:
+    def _create_lockfile(self, log_level: int = logging.INFO):
         # Force lockfile refresh
-        return self.subprocess(["lock"], check=False, cwd=self._project_path).returncode
+        self.subprocess(["lock"], check=False, cwd=self._project_path)
 
     def _delegate_upgrade(self, full: bool = True, only_deps: bool = False) -> int:
         # Force env synchronization
