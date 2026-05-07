@@ -31,6 +31,9 @@ class _InstalledFileDescriptor:
 # Editable suffix for version
 _EDITABLE_SUFFIX = " (editable)"
 
+LOCKFLAG_NAME = "buildenv.lock"
+"""File name for the "flag" file, stating if the project is locked or not"""
+
 
 # Backend base implementation
 class EnvBackend(ABC):
@@ -58,6 +61,23 @@ class EnvBackend(ABC):
 
         # Prepare shell
         self._shell = ShellFactory.create(shell_name, self._venv_bin, not self.has_pip(), self.name, self._extensions, self._completions)
+
+    @property
+    def is_locked(self) -> bool:
+        """
+        State if this environment is locked (i.e. if it has a lockfile)
+
+        :return: True if environment is locked
+        """
+
+        # No project path, no lockfile
+        assert self._project_path is not None, "Project path is not set"
+        return (self._project_path / LOCKFLAG_NAME).is_file()
+
+    @property
+    def lock_file(self) -> Path:  # pragma: no cover
+        """Path to the backend specific lockfile"""
+        raise NotImplementedError("lock_file property is not implemented for this backend")
 
     @property
     def version(self) -> int:
@@ -388,14 +408,56 @@ class EnvBackend(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def lock(self, log_level: int = logging.INFO) -> int:  # pragma: no cover
+    def _create_lockfile(self, log_level: int = logging.INFO) -> None:  # pragma: no cover
+        """
+        Delegate lockfile creation
+
+        :param log_level: logging level to use for file generation
+        """
+        raise NotImplementedError
+
+    def lock(self, log_level: int = logging.INFO) -> int:
         """
         Create a lockfile for this environment, so that next time the environment is loaded, it will be restored to this state
 
         :param log_level: logging level to use for file generation
         :return: command exit code
         """
-        raise NotImplementedError
+
+        # Delegate to backend implementation
+        self._create_lockfile(log_level)
+
+        # Create the lock flag file
+        assert self._project_path is not None, "Project path is not set"
+        (self._project_path / LOCKFLAG_NAME).touch()
+
+        return 0
+
+    def _remove_lockfile(self) -> None:  # NOQA: B027
+        """
+        Delegate lockfile removal
+        """
+
+        # Default implementation: nothing to do
+        pass
+
+    def unlock(self) -> int:
+        """
+        Remove the lockfile for this environment, so that next time the environment is loaded, it will not be restored to a previous state
+
+        :return: command exit code
+        """
+
+        # Delegate to backend implementation
+        self._remove_lockfile()
+
+        # Remove the lock flag file
+        assert self._project_path is not None, "Project path is not set"
+        lockflag = self._project_path / LOCKFLAG_NAME
+        if lockflag.is_file():  # pragma: no branch
+            lockflag.unlink()
+
+        return 0
 
     def upgrade(self, full: bool = True, only_deps: bool = False) -> int:
         """
@@ -543,7 +605,7 @@ class EnvBackendWithRequirements(EnvBackend):
         return True
 
     @property
-    def _lock_file(self) -> Path:
+    def lock_file(self) -> Path:
         assert self._project_path is not None, "Project path is not set"
         return self._project_path / "requirements.lock"
 
@@ -552,12 +614,14 @@ class EnvBackendWithRequirements(EnvBackend):
             _InstalledFileDescriptor(Path("backends/common/requirements.txt.jinja"), lazy=True),
         ]
 
-    def lock(self, log_level: int = logging.INFO) -> int:
+    def _create_lockfile(self, log_level: int = logging.INFO):
         # Use the dump method
-        self.dump(self._lock_file, log_level)
+        self.dump(self.lock_file, log_level)
 
-        # For CLI
-        return 0
+    def _remove_lockfile(self):
+        # Just remove the lock file if it exists
+        if self.lock_file.is_file():  # pragma: no branch
+            self.lock_file.unlink()
 
     def _backend_upgrade_env(self) -> tuple[str, str] | None:
         """
@@ -572,8 +636,8 @@ class EnvBackendWithRequirements(EnvBackend):
         super().handle_updates(old_packages)
 
         # Refresh lockfile if it exists
-        if self._lock_file.is_file():
-            self._logger.info(f"Refresh {self._lock_file.name} file...")
+        if self.lock_file.is_file():
+            self._logger.info(f"Refresh {self.lock_file.name} file...")
             self.lock()
 
     def _delegate_upgrade(self, full: bool = True, only_deps: bool = False) -> int:

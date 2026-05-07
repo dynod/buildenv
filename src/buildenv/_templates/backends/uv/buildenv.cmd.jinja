@@ -2,8 +2,17 @@
 
 {% include "backends/fragments/check.cmd.jinja" %}
 
+:: Check for lock
+if exist buildenv.lock (
+    :: Locked requirements
+    set _opts=--frozen
+) else (
+    :: Always upgrade
+    set _opts=--upgrade
+)
+
 :: Delegate execution to buildenv command (through uv)
-call :run_cmd uv run %BUILDENV_UV_ARGS% buildenv %*
+call :run_cmd uv %_opts% run %BUILDENV_UV_ARGS% buildenv %*
 set _BUILDENV_RC=%ERRORLEVEL%
 goto end
 

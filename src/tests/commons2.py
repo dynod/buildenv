@@ -115,22 +115,38 @@ class WithProject(TestHelper):
         for f in existing_files:
             assert (project / f).stat().st_size == 0
 
-    @pytest.fixture
-    def expected_lockfile(self) -> str:
-        return "requirements.lock"
-
-    def test_lock(self, project: Path, backend: EnvBackend, expected_lockfile: str):
+    def test_lock(self, project: Path, backend: EnvBackend):
         # Test locking from API
-        lockfile = project / expected_lockfile
+        lockfile = backend.lock_file
+        lockflag = project / "buildenv.lock"
+
+        # Lock project
+        assert not lockfile.is_file()
+        assert not lockflag.is_file()
+        assert not backend.is_locked
         rc = backend.lock()
         assert rc == 0
         assert lockfile.is_file()
+        assert lockflag.is_file()
+        assert backend.is_locked
 
-    def test_cli_lock(self, project: Path, expected_lockfile: str):
+        # Unlock project
+        rc = backend.unlock()
+        assert rc == 0
+        if lockfile.name.startswith("uv"):
+            # uv backend does not delete lockfile on unlock
+            assert lockfile.is_file()
+        else:
+            # requirements based backends should delete lockfile on unlock
+            assert not lockfile.is_file()
+        assert not lockflag.is_file()
+        assert not backend.is_locked
+
+    def test_cli_lock(self, project: Path, backend: EnvBackend):
         # Test lock through shell (CLI)
         rc = buildenv(["lock", "-p", str(project)])
         assert rc == 0
-        assert (project / expected_lockfile).is_file()
+        assert backend.lock_file.is_file()
 
     @pytest.fixture
     def expected_upgrade_cmd(self, backend: EnvBackend, project: Path) -> list[str]:

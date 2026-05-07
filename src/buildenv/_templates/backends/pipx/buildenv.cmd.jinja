@@ -3,13 +3,14 @@
 {% include "backends/fragments/check.cmd.jinja" %}
 
 :: Check for requirements
-if exist requirements.lock (
-    :: Locked requirements
-    set _reqs=-r %CD%\requirements.lock
-) else (
-    if exist requirements.txt (
-        :: Base input requirements
-        set _reqs=-r %CD%\requirements.txt
+if exist requirements.txt (
+    :: Base input requirements
+    set _reqs=-r %CD%\requirements.txt
+)
+if exist buildenv.lock (
+    if exist requirements.lock (
+        :: Locked requirements
+        set _reqs=-r %CD%\requirements.lock
     )
 )
 

@@ -22,13 +22,14 @@ echo [CMD] venv\Scripts\activate.bat
 call venv\Scripts\activate.bat
 
 :: Check for requirements
-if exist requirements.lock (
-    :: Locked requirements
-    set _reqs=-r requirements.lock
-) else (
-    if exist requirements.txt (
-        :: Base input requirements
-        set _reqs=-U pip setuptools wheel buildenv -r requirements.txt
+if exist requirements.txt (
+    :: Base input requirements
+    set _reqs=-U pip setuptools wheel buildenv -r requirements.txt
+)
+if exist buildenv.lock (
+    if exist requirements.lock (
+        :: Locked requirements
+        set _reqs=-r requirements.lock
     )
 )
 
