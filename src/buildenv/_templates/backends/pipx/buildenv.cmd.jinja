@@ -15,7 +15,7 @@ if exist buildenv.lock (
 )
 
 :: Delegate execution to buildenv command (through pipx)
-call :run_cmd pipx run --pip-args "%_reqs%" %BUILDENV_PIPX_ARGS% buildenv %*
+call :run_cmd pipx run --backend pip --pip-args "%_reqs%" %BUILDENV_PIPX_ARGS% buildenv %*
 set _BUILDENV_RC=%ERRORLEVEL%
 goto end
 

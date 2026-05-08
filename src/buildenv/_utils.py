@@ -90,7 +90,7 @@ def run_subprocess(
     """
 
     # Prepare logger
-    _logger = logger if logger else logging.getLogger()
+    _logger = logger if logger else logging.getLogger(LOGGER_NAME)
 
     # Check option for subprocess
     sub_check = (error_msg is None) and check

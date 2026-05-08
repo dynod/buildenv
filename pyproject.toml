@@ -34,7 +34,7 @@ Issues = "https://github.com/dynod/buildenv/issues?q=is%3Aopen+is%3Aissue"
 buildenv = "buildenv.__main__:main"
 
 [dependency-groups]
-dev = ["nmk-badges", "nmk-base", "nmk-doc", "nmk-github", "nmk-python", "nmk-vscode", "pipx", "sphinx-autoapi", "uv"]
+dev = ["nmk-badges", "nmk-base", "nmk-doc", "nmk-github", "nmk-python", "nmk-vscode", "pipx>=1.12.0", "sphinx-autoapi", "uv>=0.11.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

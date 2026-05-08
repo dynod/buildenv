@@ -12,7 +12,7 @@ if exist buildenv.lock (
 )
 
 :: Delegate execution to buildenv command (through uv)
-call :run_cmd uv %_opts% run %BUILDENV_UV_ARGS% buildenv %*
+call :run_cmd uv run %_opts% %BUILDENV_UV_ARGS% buildenv %*
 set _BUILDENV_RC=%ERRORLEVEL%
 goto end
 

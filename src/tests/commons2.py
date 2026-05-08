@@ -16,7 +16,7 @@ import buildenv._shells.cmd as cmd_module
 import buildenv._shells.shell as buildenv_shell
 from buildenv.__main__ import buildenv
 from buildenv._shells.factory import BashShell, ShellFactory
-from buildenv._utils import is_windows, to_linux_path
+from buildenv._utils import is_windows, run_subprocess, to_linux_path
 from buildenv.backends import EnvBackend, EnvBackendFactory
 from buildenv.backends.backend import EnvBackendWithRequirements
 
@@ -54,7 +54,13 @@ class WithVenv(WithTmpDir):
         venv_cfg = venv_root / "pyvenv.cfg"
         venv_cfg.touch()
 
-        yield venv_root
+        # Restore environment (modified by backend) after test
+        orig_env = os.environ.copy()
+        try:
+            yield venv_root
+        finally:
+            os.environ.clear()
+            os.environ.update(orig_env)
 
 
 class WithProject(TestHelper):
@@ -466,27 +472,12 @@ class WithFunctionalShell(TestHelper):
         for var, value in removed_entries.items():
             os.environ[var] = value
 
-    @pytest.fixture
-    def wheel_path(self) -> Generator[Path, Any, Any]:
-        # Find current built wheel path
-        wheel_path = None
-        for candidate in (Path(__file__).parent.parent.parent / "out" / "artifacts").glob("*.whl"):
-            if candidate.name.startswith("buildenv") and candidate.name.endswith(".whl"):
-                wheel_path = candidate
-                break
-        assert wheel_path is not None, "No built wheel found in the artifacts directory"
-        assert wheel_path.is_absolute(), "Wheel path should be absolute"
-        assert wheel_path.is_file(), f"Invalid wheel path: {wheel_path}"
-
-        yield wheel_path
-
     # "Real life" test with installing stuff in temp directory, and run "buildenv --version" command through the installed script
     def run_real_life_version(
         self,
         backend_name: str,
         shell: list[str],
         script: str,
-        wheel_path: Path,
         extra_env: dict[str, str] | None = None,
         patches: dict[str, dict[str, str]] | None = None,
         expect_venv: str = "",
@@ -502,14 +493,18 @@ class WithFunctionalShell(TestHelper):
                 updated_env = dict(os.environ)
                 current_test_venv_bin = Path(sys.executable).parent
                 backend_executable = current_test_venv_bin / f"{backend_name}{'.exe' if is_windows() else ''}"
+                logging.debug(f"Current test venv bin: {current_test_venv_bin}, looking for backend executable at: {backend_executable}")
                 assert backend_executable.is_file(), f"Backend executable not found: {backend_executable}"
                 if extra_env:
                     updated_env.update(extra_env)
                 updated_env["PATH"] = str(current_test_venv_bin) + os.pathsep + updated_env["PATH"]
+                logging.debug("Updated PATH:\n" + updated_env["PATH"].replace(os.pathsep, "\n"))
+
+                # Just make sure the backend executable is found in PATH before going further (to get better error message if not found)
+                run_subprocess([backend_executable.name, "--version"], env=updated_env, check=True, logger=logging.getLogger())
 
                 # Step 1: install buildenv loading scripts, and check if they are installed
-                shutil.copy(wheel_path, project_path / wheel_path.name)
-                EnvBackendFactory.create(backend_name, project_path).install([str(project_path / wheel_path.name)])
+                EnvBackendFactory.create(backend_name, project_path).install()
                 for expected_script in [script] + (["requirements.txt"] if expect_requirements else []):
                     assert (project_path / expected_script).is_file(), f"{expected_script} file not found"
 
@@ -530,16 +525,18 @@ class WithFunctionalShell(TestHelper):
                             f.write(content)
 
                 # Step 4: run a command through buildenv
-                cp = subprocess.run(
-                    shell + [str(project_path / script), "run", "buildenv --version"],
-                    capture_output=True,
-                    cwd=project_path,
-                    env=updated_env,
-                )
-                logging.debug(f"Command output: {cp.stdout.decode()}")
-                logging.debug(f"Command error: {cp.stderr.decode()}")
+                test_command = shell + [
+                    str(project_path / script),
+                    "run",
+                    "--shell",
+                    "cmd" if shell[0] == "cmd.exe" else "bash",
+                    f"buildenv{'.exe' if is_windows() else ''} --version",
+                ]
+                cp: subprocess.CompletedProcess[str] = run_subprocess(
+                    test_command, cwd=project_path, env=updated_env, check=False, logger=logging.getLogger()
+                )  # Just check it runs without error
                 assert cp.returncode == 0, f"Command failed with return code {cp.returncode}"
-                assert cp.stdout.decode().splitlines()[-1].strip().startswith("buildenv version "), "Unexpected command output"
+                assert cp.stdout.splitlines()[-1].strip().startswith("buildenv version "), "Unexpected command output"
 
                 # Step 5: check if venv was created
                 if expect_venv:

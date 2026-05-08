@@ -26,8 +26,8 @@ config:
 
   # For tests
   venvPkgDeps:
-    - pipx
-    - uv
+    - pipx>=1.12.0
+    - uv>=0.11.0
 
   # Customize CSS for wider page
   docExtraConfig:
@@ -35,12 +35,3 @@ config:
       - _static
     html_css_files:
       - css/custom.css
-
-tasks:
-  # Force python wheel to be built (as part of build task); functional tests need a built wheel file
-  extra_build:
-    deps:
-      - py.editable
-      - py.build
-    appendToDeps: build
-    silent: True
