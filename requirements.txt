@@ -14,10 +14,10 @@ nmk-doc
 nmk-github
 nmk-python
 nmk-vscode
-pipx
+pipx>=1.12.0
 psutil
 sphinx-autoapi
 typing_extensions
-uv
+uv>=0.11.0
 
 

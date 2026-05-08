@@ -29,10 +29,10 @@ if test ! -f venv/.ok; then
     # Check for requirements
     if test -f buildenv.lock -a -f requirements.lock; then
         # Locked requirements
-        _reqs="-r $PWD/requirements.lock"
+        _reqs="-r requirements.lock"
     elif test -f requirements.txt; then
         # Base input requirements
-        _reqs="-U pip setuptools wheel buildenv -r $PWD/requirements.txt"
+        _reqs="-U pip setuptools wheel buildenv -r requirements.txt"
     fi
 
     # Install dependencies in venv

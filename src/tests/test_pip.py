@@ -70,23 +70,14 @@ class TestPipCmd(WithPip, WithCmd):
 
 class TestPipAlreadyLoaded(WithVenv, WithBash, PipExpectedCommands):
     @pytest.fixture
-    def backend(self, project: Path, fake_venv: Path) -> Generator[EnvBackend, Any, Any]:
-        # Fake python home + PATH
-        old_python_home = os.getenv("PYTHONHOME", None)
-        os.environ["PYTHONHOME"] = str(fake_venv)
-        old_path = os.getenv("PATH")
-        assert old_path is not None, "PATH must be set"
-        os.environ["PATH"] = f"{old_path}{os.pathsep}{fake_venv / 'bin'}"
+    def backend(self, project: Path, fake_venv: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[EnvBackend, Any, Any]:
+        with monkeypatch.context() as m:
+            # Fake python home + PATH
+            m.setenv("PYTHONHOME", str(fake_venv))
+            m.setenv("PATH", str(fake_venv / "bin"), prepend=os.pathsep)
 
-        # Create backend
-        yield EnvBackendFactory.detect(project)
-
-        # Restore python home + PATH
-        if old_python_home is None:
-            del os.environ["PYTHONHOME"]
-        else:
-            os.environ["PYTHONHOME"] = old_python_home
-        os.environ["PATH"] = old_path
+            # Create backend
+            yield EnvBackendFactory.detect(project)
 
     def test_pip_backend(self, backend: EnvBackend):
         # Create backend
@@ -99,12 +90,12 @@ INSTALL_PATCH = {"pip install buildenv": "pip install"}
 
 
 class TestFunctionalPipBash(WithFunctionalBash):
-    def test_real_life(self, bash: str, wheel_path: Path):
+    def test_real_life(self, bash: str):
         # Delegate test
-        self.run_real_life_version("pip", [bash], "buildenv.sh", wheel_path, patches={"buildenv.sh": INSTALL_PATCH}, expect_venv="venv")
+        self.run_real_life_version("pip", [bash], "buildenv.sh", patches={"buildenv.sh": INSTALL_PATCH}, expect_venv="venv")
 
 
 class TestFunctionalPipCmd(WithFunctionalCmd):
-    def test_real_life(self, cmd: str, wheel_path: Path):
+    def test_real_life(self, cmd: str):
         # Delegate test
-        self.run_real_life_version("pip", [cmd, "/c"], "buildenv.cmd", wheel_path, patches={"buildenv.cmd": INSTALL_PATCH}, expect_venv="venv")
+        self.run_real_life_version("pip", [cmd, "/c"], "buildenv.cmd", patches={"buildenv.cmd": INSTALL_PATCH}, expect_venv="venv")

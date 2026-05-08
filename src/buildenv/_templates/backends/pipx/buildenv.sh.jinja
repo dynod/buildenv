@@ -2,15 +2,24 @@
 
 {% include "backends/fragments/check.sh.jinja" %}
 
+# Get project path (since pipx needs to work with absolute paths)
+if test -f /git-bash.exe; then
+    # Git bash, use Windows path
+    _project_path="$(cygpath -w "${PWD}")"
+else
+    # Standard path
+    _project_path="${PWD}"
+fi
+
 # Check for requirements
 if test -f buildenv.lock -a -f requirements.lock; then
     # Locked requirements
-    _reqs="-r $PWD/requirements.lock"
+    _reqs="-r ${_project_path}/requirements.lock"
 elif test -f requirements.txt; then
     # Base input requirements
-    _reqs="-r $PWD/requirements.txt"
+    _reqs="-r ${_project_path}/requirements.txt"
 fi
 
 # Delegate execution to buildenv command (through pipx)
-_run_cmd pipx run --pip-args "${_reqs}" ${BUILDENV_PIPX_ARGS} buildenv "$@"
+_run_cmd pipx run --backend pip --pip-args "${_reqs}" ${BUILDENV_PIPX_ARGS} buildenv "$@"
 

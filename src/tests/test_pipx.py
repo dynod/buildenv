@@ -1,4 +1,3 @@
-import os
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
@@ -40,16 +39,10 @@ PIPX_UPDATED_ENV = {"BUILDENV_PIPX_ARGS": "--no-cache"}  # Force re-creating ven
 
 
 class TestFunctionalPipxBash(WithFunctionalBash):
-    def test_real_life(self, bash: str, wheel_path: Path):
-        if "CI" in os.environ:
-            pytest.skip(reason="Works locally but not on CI... need to investigate")
-
-        self.run_real_life_version("pipx", [bash], "buildenv.sh", wheel_path, PIPX_UPDATED_ENV)
+    def test_real_life(self, bash: str):
+        self.run_real_life_version("pipx", [bash], "buildenv.sh", PIPX_UPDATED_ENV | {"PIPX_HOME": str(self.test_folder / ".pipx")})
 
 
 class TestFunctionalPipxCmd(WithFunctionalCmd):
-    def test_real_life(self, cmd: str, wheel_path: Path):
-        if "CI" in os.environ:
-            pytest.skip(reason="Works locally but not on CI... need to investigate")
-
-        self.run_real_life_version("pipx", [cmd, "/c"], "buildenv.cmd", wheel_path, PIPX_UPDATED_ENV)
+    def test_real_life(self, cmd: str):
+        self.run_real_life_version("pipx", [cmd, "/c"], "buildenv.cmd", PIPX_UPDATED_ENV | {"PIPX_HOME": str(self.test_folder / ".pipx")})

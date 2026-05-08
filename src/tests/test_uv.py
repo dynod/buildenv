@@ -1,4 +1,3 @@
-import os
 import subprocess
 from collections.abc import Generator
 from pathlib import Path
@@ -74,35 +73,26 @@ UV_EXTRA_FILES = [Path(__file__).parent / "templates" / "pyproject.toml"]
 
 
 class TestFunctionalUvBash(WithFunctionalBash):
-    def test_real_life(self, bash: str, wheel_path: Path):
-        escaped_wheel_path = str(wheel_path).replace("\\", "\\\\")  # For Windows
+    def test_real_life(self, bash: str):
         self.run_real_life_version(
             "uv",
             [bash],
             "buildenv.sh",
-            wheel_path,
             UV_UPDATED_ENV,
             expect_requirements=False,
             expect_venv=".venv",
             extra_files=UV_EXTRA_FILES,
-            patches={"pyproject.toml": {"buildenv": f"buildenv@{escaped_wheel_path}"}},
         )
 
 
 class TestFunctionalUvCmd(WithFunctionalCmd):
-    def test_real_life(self, cmd: str, wheel_path: Path):
-        if "CI" in os.environ:
-            pytest.skip(reason="Works locally but not on CI... need to investigate")
-
-        escaped_wheel_path = str(wheel_path).replace("\\", "\\\\")  # For Windows
+    def test_real_life(self, cmd: str):
         self.run_real_life_version(
             "uv",
             [cmd, "/c"],
             "buildenv.cmd",
-            wheel_path,
             UV_UPDATED_ENV,
             expect_requirements=False,
             expect_venv=".venv",
             extra_files=UV_EXTRA_FILES,
-            patches={"pyproject.toml": {"buildenv": f"buildenv@{escaped_wheel_path}"}},
         )
