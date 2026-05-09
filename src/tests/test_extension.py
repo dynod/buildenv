@@ -9,7 +9,7 @@ from buildenv.__main__ import buildenv
 from buildenv.backends._uv import EnvBackend
 from buildenv.backends.factory import EnvBackendFactory
 from buildenv.extension import BuildEnvExtension, BuildEnvRenderer
-from tests.commons2 import FakeBash, WithToolsProject, WithUvVenv
+from tests.commons2 import TEMPLATES, FakeBash, WithToolsProject, WithUvVenv
 
 
 class TestExtension(FakeBash):
@@ -176,7 +176,7 @@ class TestExtensionGeneration(WithUvVenv, WithToolsProject, FakeBash):
 
             def generate_activation_scripts(self, renderer: BuildEnvRenderer):
                 # Generate some scripts
-                renderer.render(Environment(loader=FileSystemLoader(Path(__file__).parent / "templates")), "some_script.sh.jinja")
+                renderer.render(Environment(loader=FileSystemLoader(TEMPLATES)), "some_script.sh.jinja")
 
         # Fake entry point class
         class FakeEntryPoint:

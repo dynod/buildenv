@@ -20,6 +20,9 @@ from buildenv._utils import is_windows, run_subprocess, to_linux_path
 from buildenv.backends import EnvBackend, EnvBackendFactory
 from buildenv.backends.backend import EnvBackendWithRequirements
 
+# Templates path
+TEMPLATES = Path(__file__).parent / "templates"
+
 
 class WithTmpDir(TestHelper):
     @pytest.fixture
@@ -206,7 +209,7 @@ class WithPythonProject(WithProject):
     @pytest.fixture(autouse=True)
     def project(self) -> Generator[Path, Any, Any]:
         # Test folder is a python project
-        shutil.copy(Path(__file__).parent / "templates" / "pyproject-simple.toml", self.test_folder / "pyproject.toml")
+        shutil.copy(TEMPLATES / "pyproject-simple.toml", self.test_folder / "pyproject.toml")
         yield self.test_folder
 
     @pytest.fixture
@@ -497,11 +500,9 @@ class WithFunctionalShell(TestHelper):
                 assert backend_executable.is_file(), f"Backend executable not found: {backend_executable}"
                 if extra_env:
                     updated_env.update(extra_env)
-                updated_env["PATH"] = str(current_test_venv_bin) + os.pathsep + updated_env["PATH"]
-                logging.debug("Updated PATH:\n" + updated_env["PATH"].replace(os.pathsep, "\n"))
 
                 # Just make sure the backend executable is found in PATH before going further (to get better error message if not found)
-                run_subprocess([backend_executable.name, "--version"], env=updated_env, check=True, logger=logging.getLogger())
+                run_subprocess([backend_executable.name, "--version"], check=True, logger=logging.getLogger())
 
                 # Step 1: install buildenv loading scripts, and check if they are installed
                 EnvBackendFactory.create(backend_name, project_path).install()
@@ -544,6 +545,20 @@ class WithFunctionalShell(TestHelper):
                 else:
                     assert not (project_path / "venv").is_dir()
                     assert not (project_path / ".venv").is_dir()
+
+                # Step 6: check if return code is propagated to calling process
+                shutil.copy(TEMPLATES / "sample.py", project_path / "sample.py")
+                test_command = shell + [
+                    str(project_path / script),
+                    "run",
+                    "--shell",
+                    "cmd" if shell[0] == "cmd.exe" else "bash",
+                    "python sample.py",
+                ]
+                cp: subprocess.CompletedProcess[str] = run_subprocess(
+                    test_command, cwd=project_path, check=False, logger=logging.getLogger()
+                )  # Just check it runs with expected return code
+                assert cp.returncode == 135, f"Command failed with return code {cp.returncode}"
 
             finally:
                 # In all cases, copy tree from temp dir to project dir

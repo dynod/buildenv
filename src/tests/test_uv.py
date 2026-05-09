@@ -9,7 +9,7 @@ from buildenv._shells.bash import BashShell
 from buildenv._shells.cmd import CmdShell
 from buildenv.backends._uv import EnvBackend, UvProjectBackend
 from buildenv.backends.factory import EnvBackendFactory
-from tests.commons2 import WithBash, WithCmd, WithFunctionalBash, WithFunctionalCmd, WithPythonProject, WithUvVenv
+from tests.commons2 import TEMPLATES, WithBash, WithCmd, WithFunctionalBash, WithFunctionalCmd, WithPythonProject, WithUvVenv
 
 
 class WithUv(WithUvVenv, WithPythonProject):
@@ -69,7 +69,7 @@ class TestUvCmd(WithUv, WithCmd):
 UV_UPDATED_ENV = {"BUILDENV_UV_ARGS": "--no-cache"}  # Force re-creating venv from scratch
 
 # Extra files to be installed
-UV_EXTRA_FILES = [Path(__file__).parent / "templates" / "pyproject.toml"]
+UV_EXTRA_FILES = [TEMPLATES / "pyproject.toml"]
 
 
 class TestFunctionalUvBash(WithFunctionalBash):
