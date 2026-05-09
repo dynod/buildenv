@@ -97,6 +97,7 @@ class BuildEnvParser:
             default=[],
             help="skip specified extension(s) on initialization (can be specified multiple times)",
         )
+        init_parser.add_argument("--new", dest="old_new_option", action="store_true", default=False, help=SUPPRESS)
         _upgrade_args(init_parser)
 
         # shell sub-command
@@ -196,6 +197,10 @@ class BuildEnvParser:
             # Check template preferred backend if no backend specified
             if (template is not None) and (backend_name is None) and EnvBackendFactory.is_supported(template.preferred_backend):
                 backend_name = template.preferred_backend
+
+        # Legacy stuff handling
+        elif options.func == "init" and options.old_new_option:
+            raise RuntimeError("Since 2.0, 'buildenv init --new' syntax is deprecated. Please use 'buildenv install' instead.")
 
         # Prepare project folder + backend
         project_folder: Path = options.project_folder

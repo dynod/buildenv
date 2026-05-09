@@ -16,3 +16,9 @@ class TestParser(TestHelper):
         rc = buildenv(["run", "true"])
         assert rc == 1
         self.check_logs("Can't locate venv config file")
+
+    def test_legacy_init_new(self):
+        # Try deprecated "buildenv init --new" command
+        rc = buildenv(["init", "--new"])
+        assert rc == 1
+        self.check_logs("'buildenv init --new' syntax is deprecated")
