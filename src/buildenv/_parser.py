@@ -63,16 +63,36 @@ class BuildEnvParser:
             default=[],
             help="additional package to install in this environment (can be specified multiple times)",
         )
-        install_parser.add_argument(
+        whole_templates_group = install_parser.add_argument_group(title="project template options")
+        templates_group = whole_templates_group.add_mutually_exclusive_group()
+        templates_group.add_argument(
             "--template",
             "-t",
             metavar="TEMPLATE",
-            dest="templates",
-            default=[],
-            action="append",
-            help="template used to create a new project (can be specified multiple times)",
+            dest="main_template",
+            default=None,
+            help="main template used to create a new project (overrides default template)",
         )
-        install_parser.add_argument("--list-templates", action="store_true", default=False, help="prints all available project templates and exit")
+        templates_group.add_argument("--no-template", action="store_true", default=False, help="forces project install without any template")
+        templates_group.add_argument("--list-templates", action="store_true", default=False, help="prints all available project templates and exit")
+        whole_templates_group.add_argument(
+            "--extra-template",
+            "-X",
+            action="append",
+            metavar="TEMPLATE",
+            dest="extra_templates",
+            default=[],
+            help="adds extra project template support (can be specified multiple times)",
+        )
+        whole_templates_group.add_argument(
+            "--ignore-template",
+            "-I",
+            action="append",
+            metavar="TEMPLATE",
+            dest="ignored_templates",
+            default=[],
+            help="removes extra project template support (can be specified multiple times)",
+        )
         install_parser.set_defaults(func="install", kwargs_map={"packages": lambda o: o.packages})  # type: ignore
 
         # init sub-command
@@ -154,23 +174,89 @@ class BuildEnvParser:
 
         # Parse project templates
         all_templates = parse_project_templates(BuildEnvInfo(project_root=options.project_folder))
-        max_name_length = max((len(t.name) for t in all_templates.values()), default=0)
-        templates_list = "\n".join(map(lambda t: f" - {t}:{' ' * (max_name_length - len(t))} {all_templates[t].description}", sorted(all_templates.keys())))
+        max_name_length = 0
+        max_weight = 0
+        main_templates_names: list[str] = []
+        extra_templates_names: list[str] = []
+        for t in all_templates.values():
+            # Check of max name length (for pretty-printing)
+            max_name_length = max((len(t.name), max_name_length))
+
+            if t.auto_extra:
+                # Just add as a default extra
+                extra_templates_names.append(t.name)
+
+            # Handle template wight
+            if t.weight == 0:
+                # Nothing else to do with non-weighted template
+                continue
+            if t.weight > max_weight:
+                # New default main template
+                main_templates_names.clear()
+                main_templates_names.append(t.name)
+                max_weight = t.weight
+            elif t.weight == max_weight:  # pragma: no branch
+                # Multiple default main template (user will have to choose)
+                main_templates_names.append(t.name)
+
+        # Build templates list
+        templates_list = "\n".join(
+            map(
+                lambda t: (
+                    f" - {t}{' ' * (max_name_length - len(t))} "
+                    + f"{'**' if t in main_templates_names else ('* ' if all_templates[t].auto_extra else '  ')} "
+                    + all_templates[t].description
+                ),
+                sorted(all_templates.keys()),
+            )
+        )
 
         # List command
         if options.list_templates:
-            _LOGGER.info(f"Available project templates:\n{templates_list}")
+            _LOGGER.info(f"Available project templates (**: default main, *: default extra):\n{templates_list}")
             raise StopHereException()
 
-        # Handle templates
-        used_templates: list[str] = []
-        for template in options.templates:
-            assert template in all_templates, f"Unknown project template '{template}'\nAvailable templates:\n{templates_list}"
-            if template not in used_templates:  # pragma: no branch
-                used_templates.append(template)
-        templates: list[BuildEnvProjectTemplate] = [all_templates[name] for name in used_templates]
+        def validate_template(t_name: str):
+            assert main_template in all_templates, f"Unknown project template '{main_template}'\nAvailable templates:\n{templates_list}"
 
-        return (templates[0], templates[1:]) if templates else (None, [])
+        # Main template
+        if options.no_template:
+            # No template at all, stop here
+            _LOGGER.info("No project template selected")
+            return (None, [])
+        elif options.main_template:
+            # User specified
+            main_template = options.main_template
+            validate_template(main_template)
+        elif len(main_templates_names) == 0:
+            # No default main template, stop here
+            _LOGGER.info("No default project template")
+            return (None, [])
+        elif len(main_templates_names) == 1:
+            # Use most weighted unique template
+            main_template = main_templates_names[0]
+        else:
+            # More than 1 most weighted main templates
+            raise RuntimeError(f"Please choose among the available default main templates: {', '.join(main_templates_names)}")
+
+        # Extra templates
+        for to_add in options.extra_templates:
+            validate_template(to_add)
+            if to_add not in extra_templates_names:
+                extra_templates_names.append(to_add)
+        for to_remove in options.ignored_templates:
+            validate_template(to_remove)
+            if to_remove in extra_templates_names:
+                extra_templates_names.remove(to_remove)
+
+        # In any case, main template can't be in extra templates
+        if main_template in extra_templates_names:
+            extra_templates_names.remove(main_template)
+
+        # Ready to go
+        _LOGGER.info(f"Main template: {main_template}")
+        _LOGGER.info(f"Extra templates: {', '.join(extra_templates_names)}")
+        return (all_templates[main_template], [all_templates[t] for t in extra_templates_names])
 
     def execute(self, args: list[str]) -> int:
         """
