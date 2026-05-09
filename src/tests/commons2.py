@@ -65,6 +65,18 @@ class WithVenv(WithTmpDir):
             os.environ.clear()
             os.environ.update(orig_env)
 
+    @pytest.fixture
+    def fake_git_parent(self, monkeypatch: pytest.MonkeyPatch, project: Path):
+        real_subprocess = subprocess.run
+
+        def fake_run(args: list[str], *posargs: list[Any], **kwargs: dict[str, str]):  # type: ignore
+            if args[:2] == ["git", "rev-parse"]:
+                return subprocess.CompletedProcess[str](args, 0, stdout=str(project), stderr="")
+            return real_subprocess(args, *posargs, **kwargs)  # type: ignore
+
+        # Fake git response for parent git directory detection
+        monkeypatch.setattr(subprocess, "run", fake_run)
+
 
 class WithProject(TestHelper):
     def check_created_files(self, project: Path, backend: EnvBackend):
@@ -84,18 +96,6 @@ class WithProject(TestHelper):
         # Test that backend detected version is 2
         assert backend.version == 2
 
-    @pytest.fixture
-    def fake_git_parent(self, monkeypatch: pytest.MonkeyPatch, project: Path):
-        real_subprocess = subprocess.run
-
-        def fake_run(args: list[str], *posargs: list[Any], **kwargs: dict[str, str]):  # type: ignore
-            if args[:2] == ["git", "rev-parse"]:
-                return subprocess.CompletedProcess[str](args, 0, stdout=str(project), stderr="")
-            return real_subprocess(args, *posargs, **kwargs)  # type: ignore
-
-        # Fake git response for parent git directory detection
-        monkeypatch.setattr(subprocess, "run", fake_run)
-
     def test_install(self, project: Path, backend: EnvBackend, fake_git_parent: None):
         # Test installation from API + check generated files
         backend.install(packages=["sample_package"])
@@ -103,7 +103,7 @@ class WithProject(TestHelper):
 
     def test_cli_install(self, project: Path, backend: EnvBackend, fake_git_parent: None):
         # Test CLI installation from CLI + check generated files
-        rc = buildenv(["install", "--backend", backend.name, "--project", str(project)])
+        rc = buildenv(["install", "--backend", backend.name, "--project", str(project), "--no-template"])
         assert rc == 0
         self.check_created_files(project, backend)
 

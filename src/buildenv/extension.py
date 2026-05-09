@@ -144,6 +144,20 @@ class BuildEnvProjectTemplate(BuildEnvEntryPoint):
         """
         return set()
 
+    @property
+    def weight(self) -> int:
+        """
+        Template "weight". Most weighted template will be the main template selected by default.
+        """
+        return 0
+
+    @property
+    def auto_extra(self) -> bool:
+        """
+        State if this template shall be automatically included in extra templates list by default.
+        """
+        return False
+
     def generate_project_files(self, renderer: BuildEnvRenderer, packages: list[str], extra_templates: list[Self]) -> None:  # pragma: no cover
         """
         Method called by buildenv backend when generating project files for a new project.
