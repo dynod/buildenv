@@ -185,12 +185,7 @@ class EnvShell(ABC):
         :return: pip stub wording
         """
         return [f"pip is not available in this environment (powered by {self._backend_name})."] + (
-            [
-                "You may use one of the following commands, depending on what you want to do:",
-                "  uv pip  -- mimics pip behavior",
-                "  uv tree -- to dump current project dependencies tree",
-                "  uv add  -- to add a package dependency to current project",
-            ]
+            ["You may try 'uv pip' instead."]
             if self._backend_name == "uv"
             else ["To modify installed packages, please consider updating the requirements.txt file and relaunch this buildenv instead."]
         )

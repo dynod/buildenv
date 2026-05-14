@@ -459,13 +459,14 @@ class EnvBackend(ABC):
 
         return 0
 
-    def upgrade(self, full: bool = True, only_deps: bool = False) -> int:
+    def upgrade(self, full: bool = True, only_deps: bool = False, print_updates: bool = True) -> int:
         """
         Upgrade all packages in this environment to their latest version.
         Also dumps upgraded versions to the console.
 
         :param full: if True, check for updates from remote repositories (may be slow); if False, ignore already installed packages
         :param only_deps: if True, upgrade only dependencies (not current project)
+        :param print_updates: if True, print updates after upgrade
         :return: command exit code
         """
 
@@ -477,7 +478,7 @@ class EnvBackend(ABC):
 
         # If mutable and upgrade succeeded, print updates
         if rc == 0 and self.is_mutable():
-            self.handle_updates(old_packages)
+            self.handle_updates(old_packages, print_updates)
 
         return rc
 
@@ -488,15 +489,17 @@ class EnvBackend(ABC):
         """
         raise NotImplementedError
 
-    def handle_updates(self, old_packages: dict[str, str]):
+    def handle_updates(self, old_packages: dict[str, str], print_updates: bool = True):
         """
         Handle packages updates from previous versions
 
         :param old_packages: map of old installed packages versions (indexed by package name)
+        :param print_updates: if True, print updates after upgrade
         """
 
-        # By default, just print update
-        self.print_updates(old_packages)
+        # By default, just print update (if required)
+        if print_updates:  # pragma: no branch
+            self.print_updates(old_packages)
 
     def print_updates(self, old_packages: dict[str, str], ignored_packages: set[str] | None = None):
         """
@@ -512,11 +515,21 @@ class EnvBackend(ABC):
         new_packages = self.installed_packages
         new_packages_names = set(new_packages.keys()) - all_ignored_packages
         changes: dict[str, str] = {}
+
+        # All removed packages
         for removed_package in old_packages_names - new_packages_names:
             changes[removed_package] = f"removed (was {old_packages[removed_package]})"
+
+        # All added packages
         for added_package in new_packages_names - old_packages_names:
             changes[added_package] = f"added ({new_packages[added_package]})"
-        for updated_package in {name for name in new_packages_names & old_packages_names if new_packages[name] != old_packages[name]}:
+
+        # All updated packages (ignoring "editable" mode)
+        for updated_package in {
+            name
+            for name in new_packages_names & old_packages_names
+            if new_packages[name].replace(_EDITABLE_SUFFIX, "") != old_packages[name].replace(_EDITABLE_SUFFIX, "")
+        }:
             changes[updated_package] = f"updated (from {old_packages[updated_package]} to {new_packages[updated_package]})"
         if changes:
             self._logger.info("Some packages were updated:")
@@ -631,9 +644,9 @@ class EnvBackendWithRequirements(EnvBackend):
         # Not implemented by default
         return None
 
-    def handle_updates(self, old_packages: dict[str, str]):
+    def handle_updates(self, old_packages: dict[str, str], print_updates: bool = True):
         # Super call
-        super().handle_updates(old_packages)
+        super().handle_updates(old_packages, print_updates)
 
         # Refresh lockfile if it exists
         if self.lock_file.is_file():
