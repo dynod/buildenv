@@ -92,8 +92,18 @@ class EnvBackendFactory:
 
         # UV property?
         if venv_props.has_option("", "uv"):
-            # UV venv detected; check if relative to current project or not
-            backend_class = UvProjectBackend if ((project_path is not None) and env_root.is_relative_to(project_path)) else UvxBackend
+            # UV venv detected
+            # Check if:
+            # * venv root is relative to a location containing a pyproject file
+            # * this location is a parent path of current project path
+            root_project_path = env_root.parent
+            root_project_file = root_project_path / "pyproject.toml"
+            if root_project_file.is_file() and (project_path is not None) and project_path.is_relative_to(root_project_path):
+                # Uv backend
+                backend_class = UvProjectBackend
+            else:
+                # Uvx backend
+                backend_class = UvxBackend
 
         # Pipx json file?
         elif (env_root / "pipx_metadata.json").is_file():
