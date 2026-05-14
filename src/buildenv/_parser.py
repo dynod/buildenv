@@ -93,7 +93,8 @@ class BuildEnvParser:
             default=[],
             help="removes extra project template support (can be specified multiple times)",
         )
-        install_parser.set_defaults(func="install", kwargs_map={"packages": lambda o: o.packages})  # type: ignore
+        install_parser.add_argument("--no-clean", action="store_true", default=False, help="don't clean legacy buildenv files")
+        install_parser.set_defaults(func="install", kwargs_map={"packages": lambda o: o.packages, "clean_old_files": lambda o: not o.no_clean})  # type: ignore
 
         # init sub-command
         init_help = "create venv and initialize extensions (implicitly done with shell and run commands)"

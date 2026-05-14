@@ -97,15 +97,32 @@ class WithProject(TestHelper):
         assert backend.version == 2
 
     def test_install(self, project: Path, backend: EnvBackend, fake_git_parent: None):
+        # Fake some legacy file
+        fake_legacy_loader = project / "buildenv-loader.py"
+        fake_legacy_loader.touch()
+        fake_legacy_buildenv = project / ".buildenv"
+        fake_legacy_buildenv.mkdir()
+
         # Test installation from API + check generated files
         backend.install(packages=["sample_package"])
         self.check_created_files(project, backend)
 
+        # Make sure legacy file has been removed
+        assert not fake_legacy_loader.is_file()
+        assert not fake_legacy_buildenv.is_dir()
+
     def test_cli_install(self, project: Path, backend: EnvBackend, fake_git_parent: None):
+        # Fake some legacy file
+        fake_legacy_loader = project / "buildenv-loader.py"
+        fake_legacy_loader.touch()
+
         # Test CLI installation from CLI + check generated files
-        rc = buildenv(["install", "--backend", backend.name, "--project", str(project), "--no-template"])
+        rc = buildenv(["install", "--backend", backend.name, "--project", str(project), "--no-template", "--no-clean"])
         assert rc == 0
         self.check_created_files(project, backend)
+
+        # Make sure legacy file has not been removed
+        assert fake_legacy_loader.is_file()
 
     def test_cli_install_existing_files(self, project: Path, backend: EnvBackend, fake_git_parent: None):
         # Prepare existing files
