@@ -8,6 +8,10 @@ from .backend import EnvBackendWithRequirements, MutableEnvBackend
 class LegacyPipBackend(EnvBackendWithRequirements, MutableEnvBackend):
     NAME = "pip"
 
+    def _setup_version(self):
+        # Detect main version from loading scripts
+        self._version = int(os.getenv("BUILDENV_VERSION", "1"))
+
     @property
     def name(self):
         return LegacyPipBackend.NAME

@@ -24,9 +24,20 @@ from buildenv.backends.backend import EnvBackendWithRequirements
 TEMPLATES = Path(__file__).parent / "templates"
 
 
-class WithTmpDir(TestHelper):
+class PreservedEnvHelper(TestHelper):
+    @pytest.fixture(autouse=True)
+    def preserved_env(self, logs: None):
+        # Preserve environment variables before test
+        preserved_env = os.environ.copy()
+        yield
+        # Restore environment variables after test
+        os.environ.clear()
+        os.environ.update(preserved_env)
+
+
+class WithTmpDir(PreservedEnvHelper):
     @pytest.fixture
-    def tmp_dir(self, monkeypatch: pytest.MonkeyPatch, logs: None) -> Generator[Path, Any, Any]:
+    def tmp_dir(self, monkeypatch: pytest.MonkeyPatch, preserved_env: None) -> Generator[Path, Any, Any]:
         # Fake temporary directory handling
         tmp_dir = self.test_folder / "tmp"
         tmp_dir.mkdir()
@@ -46,7 +57,7 @@ class WithTmpDir(TestHelper):
 
 class WithVenv(WithTmpDir):
     @pytest.fixture(autouse=True)
-    def fake_venv(self, monkeypatch: pytest.MonkeyPatch, logs: None) -> Generator[Path, Any, Any]:
+    def fake_venv(self, monkeypatch: pytest.MonkeyPatch, preserved_env: None) -> Generator[Path, Any, Any]:
         # Fake python executable
         venv_bin = self.test_folder / "fake_venv" / "bin"
         venv_bin.mkdir(parents=True, exist_ok=True)
@@ -57,13 +68,7 @@ class WithVenv(WithTmpDir):
         venv_cfg = venv_root / "pyvenv.cfg"
         venv_cfg.touch()
 
-        # Restore environment (modified by backend) after test
-        orig_env = os.environ.copy()
-        try:
-            yield venv_root
-        finally:
-            os.environ.clear()
-            os.environ.update(orig_env)
+        yield venv_root
 
     @pytest.fixture
     def fake_git_parent(self, monkeypatch: pytest.MonkeyPatch, project: Path):
@@ -78,7 +83,7 @@ class WithVenv(WithTmpDir):
         monkeypatch.setattr(subprocess, "run", fake_run)
 
 
-class WithProject(TestHelper):
+class WithProject(PreservedEnvHelper):
     def check_created_files(self, project: Path, backend: EnvBackend):
         # Check installation
         assert (project / "buildenv.sh").is_file()
@@ -87,14 +92,12 @@ class WithProject(TestHelper):
         assert (project / ".gitignore").is_file() == backend.is_mutable()
         assert (project / "requirements.txt").is_file() == isinstance(backend, EnvBackendWithRequirements)
 
-    @pytest.fixture(autouse=True)
-    def fake_buildenv_version(self, monkeypatch: pytest.MonkeyPatch):
-        monkeypatch.setenv("BUILDENV_VERSION", "2")
-        yield
-
     def test_version(self, backend: EnvBackend):
-        # Test that backend detected version is 2
-        assert backend.version == 2
+        # Test that backend detected version:
+        # - 1 for pip backend (since not wrapped from loading scripts)
+        # - 2 for other backends (default)
+        expected_version = 1 if backend.name == "pip" else 2
+        assert backend.version == expected_version
 
     def test_install(self, project: Path, backend: EnvBackend, fake_git_parent: None):
         # Fake some legacy file
@@ -390,7 +393,7 @@ class WithBash(FakeBash):
         assert rc == 0
 
 
-class WithCmd(TestHelper):
+class WithCmd(PreservedEnvHelper):
     @pytest.fixture
     def shell_name(self, monkeypatch: pytest.MonkeyPatch) -> str:
         # Force windows support
@@ -476,7 +479,7 @@ class WithCmd(TestHelper):
         assert rc == 0
 
 
-class WithFunctionalShell(TestHelper):
+class WithFunctionalShell(PreservedEnvHelper):
     @pytest.fixture(autouse=True)
     def no_venv_with_bash(self):
         # Remove any existing virtual environment related env var
