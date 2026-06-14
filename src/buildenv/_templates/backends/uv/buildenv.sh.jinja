@@ -3,14 +3,12 @@
 {% include "backends/fragments/check.sh.jinja" %}
 
 # Check for lock
+_opts=""
 if test -f buildenv.lock; then
     # Locked requirements
-    _opts="--frozen"
-else
-    # Always upgrade
-    _opts="--upgrade"
+    _opts=" --frozen"
 fi
 
 # Delegate execution to buildenv command (through uv)
-_run_cmd uv run "${_opts}" ${BUILDENV_UV_ARGS} buildenv "$@"
+_run_cmd uv run${_opts} ${BUILDENV_UV_ARGS} buildenv "$@"
 
