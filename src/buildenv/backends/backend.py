@@ -35,6 +35,9 @@ _EDITABLE_SUFFIX = " (editable)"
 LOCKFLAG_NAME = "buildenv.lock"
 """File name for the "flag" file, stating if the project is locked or not"""
 
+# Default version
+_DEFAULT_VERSION = 2
+
 
 # Backend base implementation
 class EnvBackend(ABC):
@@ -51,8 +54,8 @@ class EnvBackend(ABC):
         self._info = BuildEnvInfo(venv_bin, project_path, self.name)
         self._extensions: dict[str, BuildEnvExtension] = parse_extensions(self._info)
 
-        # Detect main version from loading scripts
-        self._version = int(os.getenv("BUILDENV_VERSION", "1"))
+        # Setup version before export
+        self._setup_version()
 
         # Update current process environment
         os.environ["BUILDENV_LEVEL"] = os.getenv("BUILDENV_LEVEL", "0")
@@ -62,6 +65,10 @@ class EnvBackend(ABC):
 
         # Prepare shell
         self._shell = ShellFactory.create(shell_name, self._venv_bin, not self.has_pip(), self.name, self._extensions, self._completions)
+
+    def _setup_version(self):
+        # Use default version (may be overridden)
+        self._version = _DEFAULT_VERSION
 
     @property
     def is_locked(self) -> bool:

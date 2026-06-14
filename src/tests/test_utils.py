@@ -1,12 +1,12 @@
 import platform
 
 import pytest
-from pytest_multilog import TestHelper
 
 from buildenv._utils import is_windows, run_subprocess
+from tests.commons2 import PreservedEnvHelper
 
 
-class TestUtils(TestHelper):
+class TestUtils(PreservedEnvHelper):
     def test_is_windows(self):
         assert is_windows() == (platform.system() == "Windows")
 

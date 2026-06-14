@@ -1,11 +1,11 @@
 import pytest
-from pytest_multilog import TestHelper
 
 from buildenv.__main__ import buildenv
 from buildenv.backends.factory import EnvBackendFactory
+from tests.commons2 import PreservedEnvHelper
 
 
-class TestParser(TestHelper):
+class TestParser(PreservedEnvHelper):
     def test_unknown_venv_folder(self, monkeypatch: pytest.MonkeyPatch):
         # Fake python executable
         venv_bin = self.test_folder / "fake_venv" / "bin"
