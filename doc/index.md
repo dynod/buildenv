@@ -8,11 +8,9 @@ The **`buildenv`** tool is a build environment setup system, based on [Python vi
 features
 usage
 scripts
+backends
+extensions
+templates
 cli
-config
+changelog
 ```
-
-## Indices and tables
-
-- {ref}`genindex`
-- {ref}`modindex`

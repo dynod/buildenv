@@ -1,0 +1,16 @@
+usage: buildenv init [-h] [--project PROJECT] [--shell {bash,cmd}] [--force]
+                     [--no-ext] [--skip-ext SKIPPED_EXTENSIONS]
+
+create venv and initialize extensions (implicitly done with shell and run
+commands)
+
+options:
+  -h, --help            show this help message and exit
+  --project PROJECT, -p PROJECT
+                        project folder (default: .)
+  --shell {bash,cmd}    force using specified shell (default: bash)
+  --force, -f           force extensions re-initialization
+  --no-ext              ignore all extensions on initialization
+  --skip-ext SKIPPED_EXTENSIONS
+                        skip specified extension(s) on initialization (can be
+                        specified multiple times)

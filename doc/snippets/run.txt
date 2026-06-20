@@ -1,0 +1,13 @@
+usage: buildenv run [-h] [--project PROJECT] [--shell {bash,cmd}] ...
+
+run command in build environment
+
+positional arguments:
+  CMD                   command and arguments to be executed in build
+                        environment
+
+options:
+  -h, --help            show this help message and exit
+  --project PROJECT, -p PROJECT
+                        project folder (default: .)
+  --shell {bash,cmd}    force using specified shell (default: bash)

@@ -1,0 +1,25 @@
+usage: buildenv [-h] [-V]
+                {install,init,shell,run,list,lock,unlock,upgrade} ...
+
+Build environment manager
+
+positional arguments:
+  {install,init,shell,run,list,lock,unlock,upgrade}
+                        sub-commands:
+    install             install build environment loading scripts and setup
+                        project from template
+    init                create venv and initialize extensions (implicitly done
+                        with shell and run commands)
+    shell               start an interactive shell with loaded build
+                        environment (default if no sub-command is specified)
+    run                 run command in build environment
+    list                list installed packages in the current build
+                        environment
+    lock                lock build environment packages versions
+    unlock              unlock build environment packages versions
+    upgrade             upgrade build environment packages to their latest
+                        version
+
+options:
+  -h, --help            show this help message and exit
+  -V, --version         show program's version number and exit
