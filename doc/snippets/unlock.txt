@@ -1,0 +1,9 @@
+usage: buildenv unlock [-h] [--project PROJECT] [--shell {bash,cmd}]
+
+unlock build environment packages versions
+
+options:
+  -h, --help            show this help message and exit
+  --project PROJECT, -p PROJECT
+                        project folder (default: .)
+  --shell {bash,cmd}    force using specified shell (default: bash)

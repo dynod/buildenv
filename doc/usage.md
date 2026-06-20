@@ -9,29 +9,31 @@ The typical project setup scenario with **`buildenv`** is:
 
 1. clone the project -- `git clone git@github.com:xxx/yyy.git`
 1. launch the loading script:
-    * on Linux (or git bash): `./buildenv.sh`
-    * on Windows: `buildenv.cmd`
+   - on Linux (or git bash): `./buildenv.sh`
+   - on Windows: `buildenv.cmd`
 1. build the project; the build environment (i.e. python venv + extensions) is now installed and loaded in your terminal
 
 ## Install buildenv in a new/existing project
 
-Any project can be simply setup to use **`buildenv`**, by following one of these methods:
+### New projects
 
-### Global user install
+The {ref}`buildenv install<install>` command can be used, with ad-hoc templates selection, in install to create a new project from scratch, with ready to use environment for the chosen project type.
 
-**`buildenv`** tool can be temporarily installed as a shared user command using [pipx](https://pipx.pypa.io/stable/):
-> `pipx run buildenv`
+The recommended install process is to run the command through an [uvx](hhttps://docs.astral.sh/uv/guides/tools/) command, including templates extensions.
 
-So it's possible to use the `pipx run buildenv init --new <path>` {ref}`command<init>` to bootstrap a new build environment in the specified folder.
+As an example, in order to setup a new [nmk Python](https://nmk-python.readthedocs.io/) project from scratch, you may simply execute the following command:
 
-Then, just run the generated [loading script](./scripts.md) for your preferred shell to load the new build environment.
+> `uvx --with nmk-python buildenv install -p /path/to/my/new/project`
 
-### Script install
+### Migrate legacy buildenv projects
 
-1. download [main python loading script](https://raw.githubusercontent.com/dynod/buildenv/main/buildenv-loader.py):
-    * use your browser **right-click > save link as** feature on the above link
-    * or on Linux, run `wget https://raw.githubusercontent.com/dynod/buildenv/main/buildenv-loader.py`
-1. launch the script:
-    * on Linux: `python3 buildenv-loader.py`
-    * on Windows: `python buildenv-loader.py`
-1. you're done, loading scripts are generated in your project
+For project already using **buildenv** 1.X version, using the {ref}`buildenv install<install>` command will:
+
+- upgrade the [loading scripts](scripts) for **buildenv** 2
+- remove the legacy useless files from the project
+
+```{note}
+It is important to choose the [backend](backends) when upgrading the scripts. You should run:
+* `uvx buildenv install --backend uv` for Python projects
+* `uvx buildenv install --backend uvx` for non-Python projects
+```

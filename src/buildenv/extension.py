@@ -39,7 +39,7 @@ class BuildEnvRenderer(ABC):
         :param environment: Jinja2 environment to use for rendering
         :param template: Template file to render (relative to provided environment)
         :param executable: States if target file as to be set as executable
-        :param keyword: Map of keywords provided to template
+        :param keywords: Map of keywords provided to template
         :param sub_path: Sub-path for the target file within the project
         """
         pass
@@ -59,7 +59,7 @@ class BuildEnvEntryPoint:
 
 class BuildEnvExtension(BuildEnvEntryPoint):
     """
-    Base class for **buildenv** extensions, to be contributed through "buildenv_init" entry point
+    Base class for **buildenv** extensions, to be contributed through "buildenv_extension" entry point
 
     :param info: BuildEnvInfo object holding information about the build environment
     """

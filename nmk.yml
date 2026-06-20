@@ -35,3 +35,16 @@ config:
       - _static
     html_css_files:
       - css/custom.css
+
+  # Doc snippets -- rename to docSnippets to refresh on interface change
+  _docSnippets:
+    buildenv.txt: "${venvBin}/buildenv -h"
+    install.txt: "${venvBin}/buildenv install -h"
+    init.txt: "${venvBin}/buildenv init -h"
+    shell.txt: "${venvBin}/buildenv shell -h"
+    run.txt: "${venvBin}/buildenv run -h"
+    list.txt: "${venvBin}/buildenv list -h"
+    lock.txt: "${venvBin}/buildenv lock -h"
+    unlock.txt: "${venvBin}/buildenv unlock -h"
+    upgrade.txt: "${venvBin}/buildenv upgrade -h"
+    install-list-1.txt: '${venvBin}/uvx --with nmk-python --from "buildenv>2a0" buildenv install --list-templates'

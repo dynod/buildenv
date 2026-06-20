@@ -1,0 +1,3 @@
+[INFO] Available project templates (**: default main, *: default extra):
+ - nmk           base nmk project, without any plugin
+ - nmk.python ** python nmk project

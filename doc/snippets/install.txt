@@ -1,0 +1,31 @@
+usage: buildenv install [-h] [--project PROJECT] [--shell {bash,cmd}]
+                        [--backend {pip,uv,uvx,pipx}] [--add PACKAGE]
+                        [--template TEMPLATE | --no-template | --list-templates]
+                        [--extra-template TEMPLATE]
+                        [--ignore-template TEMPLATE] [--no-clean]
+
+install build environment loading scripts and setup project from template
+
+options:
+  -h, --help            show this help message and exit
+  --project PROJECT, -p PROJECT
+                        project folder (default: .)
+  --shell {bash,cmd}    force using specified shell (default: bash)
+  --backend {pip,uv,uvx,pipx}
+                        force using specified backend
+  --add PACKAGE         additional package to install in this environment (can
+                        be specified multiple times)
+  --no-clean            don't clean legacy buildenv files
+
+project template options:
+  --template TEMPLATE, -t TEMPLATE
+                        main template used to create a new project (overrides
+                        default template)
+  --no-template         forces project install without any template
+  --list-templates      prints all available project templates and exit
+  --extra-template TEMPLATE, -X TEMPLATE
+                        adds extra project template support (can be specified
+                        multiple times)
+  --ignore-template TEMPLATE, -I TEMPLATE
+                        removes extra project template support (can be
+                        specified multiple times)
