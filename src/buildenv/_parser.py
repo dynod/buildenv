@@ -290,7 +290,7 @@ class BuildEnvParser:
             raise RuntimeError("Since 2.0, 'buildenv init --new' syntax is deprecated. Please use 'buildenv install' instead.")
 
         # Prepare project folder + backend
-        project_folder: Path = options.project_folder
+        project_folder: Path = options.project_folder.resolve()
         project_folder.mkdir(parents=True, exist_ok=True)
         shell_name: str = options.shell if hasattr(options, "shell") else _DEFAULT_SHELL
         backend = (

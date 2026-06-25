@@ -23,7 +23,7 @@ class EnvBackendFactory:
     List of known environment backends
     """
 
-    _ENV_BIN = Path(sys.executable).parent
+    _ENV_BIN = Path(sys.executable).parent.resolve()
     """
     Current environment bin folder
     """
@@ -60,7 +60,7 @@ class EnvBackendFactory:
 
         # Create backend instance
         return _KNOW_BACKENDS[name](
-            venv_bin=EnvBackendFactory._ENV_BIN, project_path=project_path, verbose_subprocess=verbose_subprocess, shell_name=shell_name
+            venv_bin=EnvBackendFactory._ENV_BIN, project_path=project_path.resolve(), verbose_subprocess=verbose_subprocess, shell_name=shell_name
         )
 
     @staticmethod
@@ -98,7 +98,7 @@ class EnvBackendFactory:
             # * this location is a parent path of current project path
             root_project_path = env_root.parent
             root_project_file = root_project_path / "pyproject.toml"
-            if root_project_file.is_file() and (project_path is not None) and project_path.is_relative_to(root_project_path):
+            if root_project_file.is_file() and (project_path is not None) and project_path.resolve().is_relative_to(root_project_path):
                 # Uv backend
                 backend_class = UvProjectBackend
             else:
@@ -114,4 +114,9 @@ class EnvBackendFactory:
             backend_class = LegacyPipBackend
 
         # Return backend instance
-        return backend_class(venv_bin=EnvBackendFactory._ENV_BIN, project_path=project_path, verbose_subprocess=verbose_subprocess, shell_name=shell_name)
+        return backend_class(
+            venv_bin=EnvBackendFactory._ENV_BIN,
+            project_path=project_path.resolve() if project_path is not None else None,
+            verbose_subprocess=verbose_subprocess,
+            shell_name=shell_name,
+        )
