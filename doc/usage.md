@@ -29,8 +29,12 @@ As an example, in order to setup a new [nmk Python](https://nmk-python.readthedo
 
 For project already using **buildenv** 1.X version, using the {ref}`buildenv install<install>` command will:
 
-- upgrade the [loading scripts](scripts) for **buildenv** 2
-- remove the legacy useless files from the project
+- upgrade the [loading scripts](scripts) for **buildenv** version 2
+- remove the legacy useless files from the project:
+  - _`buildenv-loader.py`_: from version 2.0, there is no need for Python bootstrap code out of the venv
+  - _`buildenv.cfg`_: from version 2.0, **buildenv** doesn't need a configuration file system anymore
+  - _`.buildenv`_ folder: there are no more persistent activation scripts, all activation scripts are systematically regenerated each time **buildenv** is invoked
+  - _`requirements.txt`_: if using **`uv`** backend, this file is now useless, since all dependencies are managed from the _`pyproject.toml`_ file
 
 ```{note}
 It is important to choose the [backend](backends) when upgrading the scripts. You should run:

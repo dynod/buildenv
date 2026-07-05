@@ -343,6 +343,13 @@ class EnvBackend(ABC):
             else:
                 self._logger.log(log_level, f"Skip {logged_name} generation (already exist in this project)")
 
+    @property
+    def _legacy_files(self) -> list[tuple[str, bool]]:
+        """List of files handled by legacy buildenv versions (file name, is_folder)"""
+        return [("buildenv-loader.py", False), ("buildenv.cfg", False), (".buildenv", True)] + (
+            [("requirements.txt", False)] if not self.use_requirements else []
+        )
+
     def install(
         self,
         packages: list[str] | None = None,
@@ -377,7 +384,7 @@ class EnvBackend(ABC):
 
         # Remove legacy files, if any
         if clean_old_files:
-            for legacy_item, is_folder in [("buildenv-loader.py", False), ("buildenv.cfg", False), (".buildenv", True)]:
+            for legacy_item, is_folder in self._legacy_files:
                 path_to_remove = self._project_path / legacy_item
                 if (not is_folder) and path_to_remove.is_file():
                     self._logger.info(f"Remove legacy {legacy_item} file")

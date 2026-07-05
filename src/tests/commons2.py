@@ -84,13 +84,14 @@ class WithVenv(WithTmpDir):
 
 
 class WithProject(PreservedEnvHelper):
-    def check_created_files(self, project: Path, backend: EnvBackend):
+    def check_created_files(self, project: Path, backend: EnvBackend, check_requirements: bool = True):
         # Check installation
         assert (project / "buildenv.sh").is_file()
         assert (project / "buildenv.cmd").is_file()
         assert (project / ".gitattributes").is_file()
         assert (project / ".gitignore").is_file() == backend.is_mutable()
-        assert (project / "requirements.txt").is_file() == isinstance(backend, EnvBackendWithRequirements)
+        if check_requirements:
+            assert (project / "requirements.txt").is_file() == isinstance(backend, EnvBackendWithRequirements)
 
     def test_version(self, backend: EnvBackend):
         # Test that backend detected version:
@@ -103,15 +104,24 @@ class WithProject(PreservedEnvHelper):
         # Fake some legacy file
         fake_legacy_loader = project / "buildenv-loader.py"
         fake_legacy_loader.touch()
+        fake_legacy_cfg = project / "buildenv.cfg"
+        fake_legacy_cfg.touch()
+        fake_legacy_req = None
+        if not backend.use_requirements:
+            fake_legacy_req = project / "requirements.txt"
+            fake_legacy_req.touch()
         fake_legacy_buildenv = project / ".buildenv"
         fake_legacy_buildenv.mkdir()
 
         # Test installation from API + check generated files
         backend.install(packages=["sample_package"])
-        self.check_created_files(project, backend)
+        self.check_created_files(project, backend, check_requirements=False)
 
         # Make sure legacy file has been removed
         assert not fake_legacy_loader.is_file()
+        assert not fake_legacy_cfg.is_file()
+        if not backend.use_requirements and fake_legacy_req is not None:
+            assert not fake_legacy_req.is_file()
         assert not fake_legacy_buildenv.is_dir()
 
     def test_cli_install(self, project: Path, backend: EnvBackend, fake_git_parent: None):
