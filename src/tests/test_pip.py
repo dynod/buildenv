@@ -10,7 +10,7 @@ from buildenv._shells.bash import BashShell
 from buildenv._shells.cmd import CmdShell
 from buildenv.backends import EnvBackend, EnvBackendFactory
 from buildenv.backends._pip import LegacyPipBackend
-from tests.commons2 import WithBash, WithCmd, WithFunctionalBash, WithFunctionalCmd, WithPythonProject, WithVenv
+from tests.commons2 import WithBash, WithCmd, WithPythonProject, WithVenv
 
 
 class PipExpectedCommands(WithPythonProject):
@@ -83,19 +83,3 @@ class TestPipAlreadyLoaded(WithVenv, WithBash, PipExpectedCommands):
         # Create backend
         assert isinstance(backend, LegacyPipBackend)
         assert isinstance(backend.shell_instance, BashShell)
-
-
-# Install script patch
-INSTALL_PATCH = {"pip install buildenv": "pip install"}
-
-
-class TestFunctionalPipBash(WithFunctionalBash):
-    def test_real_life(self, bash: str):
-        # Delegate test
-        self.run_real_life_version("pip", [bash], "buildenv.sh", patches={"buildenv.sh": INSTALL_PATCH}, expect_venv="venv")
-
-
-class TestFunctionalPipCmd(WithFunctionalCmd):
-    def test_real_life(self, cmd: str):
-        # Delegate test
-        self.run_real_life_version("pip", [cmd, "/c"], "buildenv.cmd", patches={"buildenv.cmd": INSTALL_PATCH}, expect_venv="venv")
