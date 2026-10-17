@@ -589,8 +589,8 @@ class EnvBackend(ABC):
 
             # Add in output only if not already present in editable mode
             name = pkg.name
-            if (name not in out) or (not out[name].endswith(_EDITABLE_SUFFIX)):  # pragma: no branch
-                out[pkg.metadata["Name"]] = f"{pkg.version}{_EDITABLE_SUFFIX if is_editable else ''}"
+            if name and ((name not in out) or (not out[name].endswith(_EDITABLE_SUFFIX))):  # pragma: no branch
+                out[name] = f"{pkg.version}{_EDITABLE_SUFFIX if is_editable else ''}"
         return out
 
     def _print_packages(self, packages: dict[str, str]):
