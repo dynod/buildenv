@@ -29,6 +29,12 @@ class PreservedEnvHelper(TestHelper):
     def preserved_env(self, logs: None):
         # Preserve environment variables before test
         preserved_env = os.environ.copy()
+
+        # For tests, we need to fake a non-CI + buildenv level 0 environment
+        for var in ["CI", "BUILDENV_LEVEL"]:
+            if var in os.environ:
+                del os.environ[var]
+
         yield
         # Restore environment variables after test
         os.environ.clear()
@@ -94,11 +100,8 @@ class WithProject(PreservedEnvHelper):
             assert (project / "requirements.txt").is_file() == isinstance(backend, EnvBackendWithRequirements)
 
     def test_version(self, backend: EnvBackend):
-        # Test that backend detected version:
-        # - 1 for pip backend (since not wrapped from loading scripts)
-        # - 2 for other backends (default)
-        expected_version = 1 if backend.name == "pip" else 2
-        assert backend.version == expected_version
+        # Test that backend detected version
+        assert backend.version == 2
 
     def test_install(self, project: Path, backend: EnvBackend, fake_git_parent: None):
         # Fake some legacy file
