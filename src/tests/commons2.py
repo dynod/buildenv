@@ -601,6 +601,10 @@ class WithFunctionalShell(PreservedEnvHelper):
 class WithFunctionalBash(WithFunctionalShell):
     @pytest.fixture
     def bash(self) -> Generator[str, Any, None]:
+        # Check if we are on Windows
+        if is_windows():
+            pytest.skip("This test is only for Linux")
+
         # Use shall factory to detect bash path
         shell = ShellFactory.create("bash", self.test_folder, False, "fake", {}, [])
         assert isinstance(shell, BashShell), f"Expected bash shell, got {type(shell)}"
