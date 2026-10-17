@@ -23,7 +23,7 @@ class BashShell(EnvShell):
             git_path = shutil.which("git")
             assert git_path is not None, "Git executable not found when trying to detect bash path"
             parent_path = Path(git_path).parent.parent
-            if parent_path.name == "mingw64":
+            if parent_path.name.lower() in ("mingw64", "ucrt64"):
                 # One more level up
                 parent_path = parent_path.parent
             bash_path = parent_path / "usr" / "bin" / "bash.exe"
@@ -80,11 +80,12 @@ class BashShell(EnvShell):
 
         if is_windows():  # pragma: no cover -- for local tests on Linux
             # On Windows, contribute some extra paths that may not be present when spawned from non git bash shell (e.g. cmd or powershell)
-            root_mingw = Path(self._shell_path).parent.parent.parent
+            git_root = Path(self._shell_path).parent.parent.parent
+            msystem = "UCRT64" if (git_root / "ucrt64").is_dir() else "MINGW64"
             contribute_path(env, Path(env["USERPROFILE"]) / "bin")
-            contribute_path(env, root_mingw / "usr" / "bin")
-            contribute_path(env, root_mingw / "mingw64" / "bin")
+            contribute_path(env, git_root / "usr" / "bin")
+            contribute_path(env, git_root / msystem.lower() / "bin")
 
             # Also add some env var
-            env["MSYSTEM"] = "MINGW64"
+            env["MSYSTEM"] = msystem
         return env
