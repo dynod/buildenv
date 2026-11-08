@@ -6,14 +6,13 @@ from pathlib import Path
 
 from .._utils import LOGGER_NAME
 from ._pip import LegacyPipBackend
-from ._pipx import PipXBackend
 from ._uv import UvProjectBackend, UvxBackend
 from .backend import EnvBackend
 
 _LOGGER = logging.getLogger(LOGGER_NAME)
 
 # Backends class map
-_KNOW_BACKENDS = {x.NAME: x for x in [LegacyPipBackend, UvProjectBackend, UvxBackend, PipXBackend]}
+_KNOW_BACKENDS = {x.NAME: x for x in [LegacyPipBackend, UvProjectBackend, UvxBackend]}
 
 
 # Backend detection factory
@@ -104,10 +103,6 @@ class EnvBackendFactory:
             else:
                 # Uvx backend
                 backend_class = UvxBackend
-
-        # Pipx json file?
-        elif (env_root / "pipx_metadata.json").is_file():
-            backend_class = PipXBackend
 
         # Default: legacy pip backend
         else:
