@@ -8,6 +8,15 @@ Only interface and important behavior changes are listed here.
 The fully detailed changelog is also available on [Github](https://github.com/dynod/buildenv/releases)
 ```
 
+## Release 3.0
+
+### Supported python versions
+
+- removed support for _Python 3.10_
+- added support for _Python 3.15_
+
+---
+
 ## Release 2.0
 
 ### Environment creation refactoring

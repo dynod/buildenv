@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Self
 
 from jinja2 import Environment
-from typing_extensions import Self
 
 from .completion import CompletionCommand
 
