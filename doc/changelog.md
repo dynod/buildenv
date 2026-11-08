@@ -12,8 +12,12 @@ The fully detailed changelog is also available on [Github](https://github.com/dy
 
 ### Supported python versions
 
-- removed support for _Python 3.10_
-- added support for _Python 3.15_
+- Added support for <font color="green">_Python 3.15_</font>
+
+### Breaking changes from buildenv 2.X
+
+- Removed support for <font color="red">_Python 3.10_</font>
+- Dropped support for <font color="red">_pipx_</font> environment backend
 
 ---
 

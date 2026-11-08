@@ -56,7 +56,6 @@ dev = [
     "nmk-github",
     "nmk-python",
     "nmk-vscode",
-    "pipx>=1.12.0",
     "sphinx-autoapi",
     "uv>=0.11.0",
 ]

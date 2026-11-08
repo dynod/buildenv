@@ -21,7 +21,7 @@ The **`buildenv`** tool provides following features:
 - extendable activation scripts, loaded with the build environment
 - support different environment backends:
   - [uv/uvx](https://docs.astral.sh/uv/) based environments (recommended)
-  - legacy [pip](https://pip.pypa.io/en/stable/) or [pipx](https://pipx.pypa.io/stable/) based environments
+  - legacy [pip](https://pip.pypa.io/en/stable/) based environments
 - runs either in:
   - interractive mode (for local development)
   - command mode (ideal for CI builds)

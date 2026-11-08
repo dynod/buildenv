@@ -275,13 +275,6 @@ class WithUvx(WithUvxVenv, WithToolsProject):
     pass
 
 
-class WithPipxVenv(WithVenv):
-    @pytest.fixture(autouse=True)
-    def with_pipx(self, fake_venv: Path):
-        # Fake pipx metadata
-        (fake_venv / "pipx_metadata.json").touch()
-
-
 class FakeBash(WithTmpDir):
     def get_extra_expected_files(self) -> list[str]:
         # To be overridden by subclasses
@@ -525,7 +518,7 @@ class WithFunctionalShell(PreservedEnvHelper):
             project_path = Path(tmp_dir)
 
             try:
-                # Prepare environment (Force using current python executable path (for pipx/uv/uvx detection))
+                # Prepare environment (Force using current python executable path (for uv/uvx detection))
                 updated_env = dict(os.environ)
                 current_test_venv_bin = Path(sys.executable).parent
                 backend_executable = current_test_venv_bin / f"{backend_name}{'.exe' if is_windows() else ''}"
