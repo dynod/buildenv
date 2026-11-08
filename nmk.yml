@@ -48,3 +48,7 @@ config:
     unlock.txt: "${venvBin}/buildenv unlock -h"
     upgrade.txt: "${venvBin}/buildenv upgrade -h"
     install-list-1.txt: "${venvBin}/uvx --with nmk-python buildenv install --list-templates"
+
+  # Supported python range
+  pythonMinVersion: "3.11"
+  pythonMaxVersion: "3.15"
