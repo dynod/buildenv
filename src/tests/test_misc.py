@@ -6,12 +6,13 @@ import pytest
 
 from buildenv.backends.factory import EnvBackend, EnvBackendFactory
 
-from .commons2 import WithVenv
+from .commons2 import FakeBash, WithUvVenv
 
 
-class TestMisc(WithVenv):
+class TestMisc(WithUvVenv, FakeBash):
     @pytest.fixture
-    def backend(self, fake_venv: Path) -> EnvBackend:
+    def backend(self, fake_venv: Path, monkeypatch: pytest.MonkeyPatch) -> EnvBackend:
+        monkeypatch.setenv("PYTHONHOME", str(fake_venv))
         return EnvBackendFactory.detect(fake_venv, verbose_subprocess=False)
 
     @pytest.fixture
@@ -24,6 +25,11 @@ class TestMisc(WithVenv):
             packages = backend.installed_packages
         packages_path.write_text(json.dumps(packages))
         return packages_path
+
+    def test_command(self, patch_run_process: None, backend: EnvBackend):
+        # Test command execution, with fake PYTHONHOME env
+        rc = backend.run("echo Hello")
+        assert rc == 0
 
     def test_no_updates(self, backend: EnvBackend, lockfile: Path):
         # Give a try with no updates

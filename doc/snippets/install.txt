@@ -1,5 +1,5 @@
 usage: buildenv install [-h] [--project PROJECT] [--shell {bash,cmd}]
-                        [--backend {pip,uv,uvx}] [--add PACKAGE]
+                        [--backend {uv,uvx}] [--add PACKAGE]
                         [--template TEMPLATE | --no-template |
                         --list-templates] [--extra-template TEMPLATE]
                         [--ignore-template TEMPLATE] [--no-clean]
@@ -11,8 +11,7 @@ options:
   --project, -p PROJECT
                         project folder (default: .)
   --shell {bash,cmd}    force using specified shell (default: bash)
-  --backend {pip,uv,uvx}
-                        force using specified backend
+  --backend {uv,uvx}    force using specified backend
   --add PACKAGE         additional package to install in this environment (can
                         be specified multiple times)
   --no-clean            don't clean legacy buildenv files

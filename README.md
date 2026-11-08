@@ -19,9 +19,9 @@ The **`buildenv`** tool provides following features:
 
 - simple build environment setup through loading scripts generated in your project
 - extendable activation scripts, loaded with the build environment
-- support different environment backends:
-  - [uv/uvx](https://docs.astral.sh/uv/) based environments (recommended)
-  - legacy [pip](https://pip.pypa.io/en/stable/) based environments
+- support different environment backends, based on:
+  - [uv](https://docs.astral.sh/uv/) for python projects
+  - [uvx](https://docs.astral.sh/uv/guides/tools/) for non-python projects
 - runs either in:
   - interractive mode (for local development)
   - command mode (ideal for CI builds)

@@ -667,7 +667,7 @@ class EnvBackendWithRequirements(EnvBackend):
         if self.lock_file.is_file():  # pragma: no branch
             self.lock_file.unlink()
 
-    def _backend_upgrade_env(self) -> tuple[str, str] | None:
+    def _backend_upgrade_env(self) -> tuple[str, str] | None:  # pragma: no cover
         """
         Get backend upgrade environment var name + arg, if any
         """
