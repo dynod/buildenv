@@ -81,7 +81,7 @@ class EnvShell(ABC):
             del env["PYTHONHOME"]  # Remove PYTHONHOME to avoid conflicts
 
         # PATH contributions
-        if self._fake_pip:
+        if self._fake_pip:  # pragma: no branch
             contribute_path(env, tmp_dir / "bin")  # temporary bin folder
 
         return env

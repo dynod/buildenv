@@ -17,7 +17,6 @@ Supported backends by **buildenv** tool and their properties are described by th
 | ------- | --------- | ------------ | --------------------- | ------------------ |
 | uv      | ❌        | Python       | pyproject.toml file   | ✅                 |
 | uvx     | ✅        | other        | requirements.txt file | ❌                 |
-| pip     | ❌        | Python       | requirements.txt file | ❌                 |
 
 ## uv backend (recommended for Python projects)
 
@@ -30,9 +29,3 @@ Using the **uv** backend is recommended for Python projects.
 The [uvx](hhttps://docs.astral.sh/uv/guides/tools/) tool, backed by **uv**, is an utility allowing to easily handle disposable venv for Python-based tools, used for non-Python projects.
 
 Using the **uvx** backend is recommended for non-Python projects.
-
-## pip backend (legacy)
-
-The legacy [pip](https://pip.pypa.io/en/stable/) tool is mainly a package manager, without being a project manager.
-
-It is supported for compatibility with legacy projects, but not recommended for new projects.

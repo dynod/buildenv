@@ -30,7 +30,6 @@ The **`buildenv`** tool provides a [command line interface](cli) allowing to cre
 When running on Linux (or in Git bash on Windows), completion is automatically enabled when running in **`buildenv`** shell for following commands (depending on the used [backend](backends)):
 
 - **`buildenv`**
-- **`pip`** (only for **pip** backend)
 - **`uv`**/**`uvx`** (only for **uv**/**uvx** backends)
 
 Completion can be enabled for other commands from **`buildenv`** extensions.

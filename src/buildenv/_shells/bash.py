@@ -71,7 +71,7 @@ class BashShell(EnvShell):
         )
 
         # Generate fake pip if required
-        if self._fake_pip:
+        if self._fake_pip:  # pragma: no branch
             self.render("bash/pip.sh.jinja", tmp_dir / "bin" / "pip", executable=True, keywords={"pip_help": self._get_pip_stub_wording()})
 
     def get_env(self, tmp_dir: Path) -> dict[str, str]:

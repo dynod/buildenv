@@ -44,5 +44,5 @@ class CmdShell(EnvShell):
         self.render("cmd/activate_readme.cmd.jinja", tmp_dir / "activate" / "readme.cmd")
 
         # Generate fake pip if required
-        if self._fake_pip:
+        if self._fake_pip:  # pragma: no branch
             self.render("cmd/pip.cmd.jinja", tmp_dir / "bin" / "pip.cmd", executable=True, keywords={"pip_help": self._get_pip_stub_wording()})

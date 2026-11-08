@@ -5,14 +5,13 @@ from configparser import ConfigParser
 from pathlib import Path
 
 from .._utils import LOGGER_NAME
-from ._pip import LegacyPipBackend
 from ._uv import UvProjectBackend, UvxBackend
 from .backend import EnvBackend
 
 _LOGGER = logging.getLogger(LOGGER_NAME)
 
 # Backends class map
-_KNOW_BACKENDS = {x.NAME: x for x in [LegacyPipBackend, UvProjectBackend, UvxBackend]}
+_KNOW_BACKENDS = {x.NAME: x for x in [UvProjectBackend, UvxBackend]}
 
 
 # Backend detection factory
@@ -104,9 +103,9 @@ class EnvBackendFactory:
                 # Uvx backend
                 backend_class = UvxBackend
 
-        # Default: legacy pip backend
+        # Default: not supported
         else:
-            backend_class = LegacyPipBackend
+            raise RuntimeError("Unsupported venv type")
 
         # Return backend instance
         return backend_class(
