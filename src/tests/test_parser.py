@@ -14,8 +14,7 @@ class TestParser(PreservedEnvHelper):
 
         # Try to run in a folder that is not a venv
         rc = buildenv(["run", "true"])
-        assert rc == 1
-        self.check_logs("Can't locate venv config file")
+        assert rc == 0
 
     def test_legacy_init_new(self):
         # Try deprecated "buildenv init --new" command

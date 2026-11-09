@@ -13,10 +13,11 @@ Backends can be considered regarding several properties:
 
 Supported backends by **buildenv** tool and their properties are described by this table
 
-| Backend | Immutable | Project type | Requirements format   | Workspace handling |
-| ------- | --------- | ------------ | --------------------- | ------------------ |
-| uv      | ❌        | Python       | pyproject.toml file   | ✅                 |
-| uvx     | ✅        | other        | requirements.txt file | ❌                 |
+| Backend  | Immutable | Project type | Requirements format   | Workspace handling |
+| -------- | --------- | ------------ | --------------------- | ------------------ |
+| uv       | ❌        | Python       | pyproject.toml file   | ✅                 |
+| uvx      | ✅        | other        | requirements.txt file | ❌                 |
+| fallback | ✅        | other        | none                  | ❌                 |
 
 ## uv backend (recommended for Python projects)
 
@@ -29,3 +30,9 @@ Using the **uv** backend is recommended for Python projects.
 The [uvx](hhttps://docs.astral.sh/uv/guides/tools/) tool, backed by **uv**, is an utility allowing to easily handle disposable venv for Python-based tools, used for non-Python projects.
 
 Using the **uvx** backend is recommended for non-Python projects.
+
+(fallback)=
+
+## Fallback backend
+
+When detecting the active backend thanks to {py:class}`buildenv.backends.factory.EnvBackendFactory`, if detection fails (e.g. running from a system-level python install, or from a **pip** installed venv), a fallback backend will be used, unable to perform any package install/upgrade operation.

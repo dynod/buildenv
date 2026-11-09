@@ -101,7 +101,7 @@ class WithProject(PreservedEnvHelper):
 
     def test_version(self, backend: EnvBackend):
         # Test that backend detected version
-        assert backend.version == 2
+        assert backend.version == 3
 
     def test_install(self, project: Path, backend: EnvBackend, fake_git_parent: None):
         # Fake some legacy file
