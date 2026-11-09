@@ -19,4 +19,4 @@ if /i "%parent_name%"=="ucrt64"  for %%I in ("%parent_path%\..") do set "parent_
 set "bash_path=%parent_path%\usr\bin\bash.exe"
 
 REM Wrap to buildenv.sh
-"%bash_path%" -c buildenv.sh %*
+"%bash_path%" ./buildenv.sh %*

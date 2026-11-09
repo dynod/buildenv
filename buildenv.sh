@@ -18,6 +18,17 @@ fi
 # Export buildenv version
 export BUILDENV_VERSION=2
 
+# Load env file(s) if any, and not disabled
+if test -z "${BUILDENV_NO_ENV_FILE}"; then
+    for env_file in ${BUILDENV_ENV_FILE:-.env}; do
+        if test -f "${env_file}"; then
+            for line in $(cat "${env_file}" | sed -e "s/#.*//g" | grep -v '^[[:space:]]*$'); do
+                eval export $line
+            done
+        fi
+    done
+fi
+
 # Check for lock
 _opts=""
 if test -f buildenv.lock; then

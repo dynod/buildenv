@@ -2,6 +2,8 @@
 
 {% include "backends/fragments/check.sh.jinja" %}
 
+{% include "backends/fragments/env.sh.jinja" %}
+
 # Check for requirements
 if test -f buildenv.lock -a -f requirements.lock; then
     # Locked requirements

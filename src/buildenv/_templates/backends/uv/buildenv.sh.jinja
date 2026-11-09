@@ -2,6 +2,8 @@
 
 {% include "backends/fragments/check.sh.jinja" %}
 
+{% include "backends/fragments/env.sh.jinja" %}
+
 # Check for lock
 _opts=""
 if test -f buildenv.lock; then
