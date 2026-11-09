@@ -36,7 +36,7 @@ LOCKFLAG_NAME = "buildenv.lock"
 """File name for the "flag" file, stating if the project is locked or not"""
 
 # Default version
-_DEFAULT_VERSION = 2
+_DEFAULT_VERSION = 3
 
 
 # Backend base implementation
@@ -430,13 +430,13 @@ class EnvBackend(ABC):
         # Delegate to backend implementation
         self._delegate_add_packages(packages)
 
-    def _delegate_add_packages(self, packages: list[str]) -> None:  # pragma: no cover
+    def _delegate_add_packages(self, packages: list[str]) -> None:  # pragma: no cover; never called for non-mutable backends
         """
         Delegate package addition to the backend implementation, has to be overridden by mutable backends implementation
 
         :param packages: list of packages to add
         """
-        raise NotImplementedError
+        raise NotImplementedError("Don't know how to add packages for this backend")
 
     @abstractmethod
     def _create_lockfile(self, log_level: int = logging.INFO) -> None:  # pragma: no cover
@@ -445,7 +445,7 @@ class EnvBackend(ABC):
 
         :param log_level: logging level to use for file generation
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def lock(self, log_level: int = logging.INFO) -> int:
         """
@@ -518,7 +518,7 @@ class EnvBackend(ABC):
         """
         Delegate packages upgrade to the backend implementation
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def handle_updates(self, old_packages: dict[str, str], print_updates: bool = True):
         """

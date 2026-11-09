@@ -5,6 +5,7 @@ from configparser import ConfigParser
 from pathlib import Path
 
 from .._utils import LOGGER_NAME
+from ._fallback import FallbackBackend
 from ._uv import UvProjectBackend, UvxBackend
 from .backend import EnvBackend
 
@@ -72,40 +73,35 @@ class EnvBackendFactory:
         :return: detected backend implementation instance
         """
 
+        # Prepare to create backend instance
+        backend_class: type[EnvBackend] = FallbackBackend
+
         # Check env root from current executable
         env_root = EnvBackendFactory._ENV_BIN.parent
         _LOGGER.debug(f"Detected environment: {env_root}")
 
         # Look for venv config file
         venv_cfg = env_root / "pyvenv.cfg"
-        assert venv_cfg.is_file(), f"Can't locate venv config file: {venv_cfg}"
+        if venv_cfg.is_file():
+            # Load venv properties
+            venv_props = ConfigParser()
+            with venv_cfg.open() as f:
+                venv_props.read_string("[DEFAULT]\n" + f.read())
 
-        # Load venv properties
-        venv_props = ConfigParser()
-        with venv_cfg.open() as f:
-            venv_props.read_string("[DEFAULT]\n" + f.read())
-
-        # Prepare to create backend instance
-        backend_class = None
-
-        # UV property?
-        if venv_props.has_option("", "uv"):
-            # UV venv detected
-            # Check if:
-            # * venv root is relative to a location containing a pyproject file
-            # * this location is a parent path of current project path
-            root_project_path = env_root.parent
-            root_project_file = root_project_path / "pyproject.toml"
-            if root_project_file.is_file() and (project_path is not None) and project_path.resolve().is_relative_to(root_project_path):
-                # Uv backend
-                backend_class = UvProjectBackend
-            else:
-                # Uvx backend
-                backend_class = UvxBackend
-
-        # Default: not supported
-        else:
-            raise RuntimeError("Unsupported venv type")
+            # UV property?
+            if venv_props.has_option("", "uv"):
+                # UV venv detected
+                # Check if:
+                # * venv root is relative to a location containing a pyproject file
+                # * this location is a parent path of current project path
+                root_project_path = env_root.parent
+                root_project_file = root_project_path / "pyproject.toml"
+                if root_project_file.is_file() and (project_path is not None) and project_path.resolve().is_relative_to(root_project_path):
+                    # Uv backend
+                    backend_class = UvProjectBackend
+                else:
+                    # Uvx backend
+                    backend_class = UvxBackend
 
         # Return backend instance
         return backend_class(

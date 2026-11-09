@@ -14,6 +14,10 @@ The fully detailed changelog is also available on [Github](https://github.com/dy
 
 - Added support for <font color="green">_Python 3.15_</font>
 
+### New features
+
+- Backend detection defaults to {ref}`fallback<fallback>` implementation if no compatible environment is detected
+
 ### Breaking changes from buildenv 2.X
 
 - Removed support for <font color="red">_Python 3.10_</font>
