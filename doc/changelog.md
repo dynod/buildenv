@@ -23,6 +23,7 @@ The fully detailed changelog is also available on [Github](https://github.com/dy
 - Removed support for <font color="red">_Python 3.10_</font>
 - Dropped support for <font color="red">_pipx_</font> environment backend
 - Dropped support for <font color="red">_pip_</font> environment backend
+- Rewrote **buildenv.cmd** [loading script](scripts) to simply wrap to **buildenv.sh** one
 
 ---
 

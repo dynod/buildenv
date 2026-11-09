@@ -286,7 +286,7 @@ class EnvBackend(ABC):
         # Common list for all backends
         return [
             _InstalledFileDescriptor(Path(f"backends/{self.name}/buildenv.sh.jinja"), executable=True),
-            _InstalledFileDescriptor(Path(f"backends/{self.name}/buildenv.cmd.jinja")),
+            _InstalledFileDescriptor(Path("backends/common/buildenv.cmd.jinja")),
             _InstalledFileDescriptor(Path("backends/common/gitattributes.jinja"), lazy=True, leading_dot=True),
         ]
 
