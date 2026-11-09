@@ -8,8 +8,8 @@ Loading scripts are stored in the project root folder. They are typically kept i
 
 Following scripts are generated (by **`buildenv install`** [command](cli.md)):
 
-- **`buildenv.cmd`** : wrapper to loading script, for Windows
-- **`buildenv.sh`** : wrapper to loading script, for Linux (or git bash on Windows)
+- **`buildenv.cmd`** : loading script for Windows **cmd**/**PowerShell** shells
+- **`buildenv.sh`** : loading script for Linux (or **git bash** on Windows)
 
 When launched, the loading script delegates the venv creation to the selected [backend](backends) and wraps to the [buildenv command](cli).
 
