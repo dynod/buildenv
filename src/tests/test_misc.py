@@ -15,10 +15,6 @@ class TestMisc(WithUvVenv, FakeBash):
         monkeypatch.setenv("PYTHONHOME", str(fake_venv))
         return EnvBackendFactory.detect(fake_venv, verbose_subprocess=False)
 
-    @pytest.fixture
-    def lockfile(self, fake_venv: Path) -> Path:
-        return fake_venv / "requirements.lock"
-
     def dump_fake_old_packages(self, backend: EnvBackend, packages: dict[str, str]) -> Path:
         packages_path = self.test_folder / "._buildenv_old_packages.json"
         if not packages:
@@ -31,16 +27,13 @@ class TestMisc(WithUvVenv, FakeBash):
         rc = backend.run("echo Hello")
         assert rc == 0
 
-    def test_no_updates(self, backend: EnvBackend, lockfile: Path):
+    def test_no_updates(self, backend: EnvBackend):
         # Give a try with no updates
         jp = self.dump_fake_old_packages(backend, {})
         backend.init(no_ext=True, show_updates_from=jp)
         self.check_logs("All packages are already up to date.")
 
-        # No lock file
-        assert not lockfile.is_file()
-
-    def test_with_updates(self, backend: EnvBackend, lockfile: Path):
+    def test_with_updates(self, backend: EnvBackend):
         # Give a try with fake legacy versions
         jp = self.dump_fake_old_packages(backend, {"some-unknown-pkg": "1.0.0", "argcomplete": "1.0.0"})
         backend.init(no_ext=True, show_updates_from=jp)
@@ -51,18 +44,6 @@ class TestMisc(WithUvVenv, FakeBash):
                 "Jinja2                        added (",
             ]
         )
-
-        # No lock file
-        assert not lockfile.is_file()
-
-    def test_locked_update(self, backend: EnvBackend, lockfile: Path):
-        # Fake lockfile
-        lockfile.write_text("some-unknown-pkg==1.0.0\nargcomplete==1.0.0\n")
-
-        # Give a try with no updates
-        jp = self.dump_fake_old_packages(backend, {})
-        backend.init(no_ext=True, show_updates_from=jp)
-        self.check_logs(f"Refresh {lockfile.name} file...")
 
     def test_non_verbose_subprocess(self, backend: EnvBackend, monkeypatch: pytest.MonkeyPatch):
         # Fake subprocess

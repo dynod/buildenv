@@ -4,6 +4,7 @@ import logging
 import os
 import shutil
 import subprocess
+import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,8 +33,6 @@ class _InstalledFileDescriptor:
 # Editable suffix for version
 _EDITABLE_SUFFIX = " (editable)"
 
-LOCKFLAG_NAME = "buildenv.lock"
-"""File name for the "flag" file, stating if the project is locked or not"""
 
 # Default version
 _DEFAULT_VERSION = 3
@@ -76,19 +75,11 @@ class EnvBackend(ABC):
     @property
     def is_locked(self) -> bool:
         """
-        State if this environment is locked (i.e. if it has a lockfile)
-
-        :return: True if environment is locked
+        State if this environment is locked. This method is deprecated and always return False.
         """
 
-        # No project path, no lockfile
-        assert self._project_path is not None, "Project path is not set"
-        return (self._project_path / LOCKFLAG_NAME).is_file()
-
-    @property
-    def lock_file(self) -> Path:  # pragma: no cover
-        """Path to the backend specific lockfile"""
-        raise NotImplementedError("lock_file property is not implemented for this backend")
+        warnings.warn("EnvBackend.is_locked is deprecated", DeprecationWarning, stacklevel=2)
+        return False
 
     @property
     def version(self) -> int:
@@ -450,58 +441,6 @@ class EnvBackend(ABC):
         """
         raise NotImplementedError("Don't know how to add packages for this backend")
 
-    @abstractmethod
-    def _create_lockfile(self, log_level: int = logging.INFO) -> None:  # pragma: no cover
-        """
-        Delegate lockfile creation
-
-        :param log_level: logging level to use for file generation
-        """
-        raise NotImplementedError()
-
-    def lock(self, log_level: int = logging.INFO) -> int:
-        """
-        Create a lockfile for this environment, so that next time the environment is loaded, it will be restored to this state
-
-        :param log_level: logging level to use for file generation
-        :return: command exit code
-        """
-
-        # Delegate to backend implementation
-        self._create_lockfile(log_level)
-
-        # Create the lock flag file
-        assert self._project_path is not None, "Project path is not set"
-        (self._project_path / LOCKFLAG_NAME).touch()
-
-        return 0
-
-    def _remove_lockfile(self) -> None:  # NOQA: B027
-        """
-        Delegate lockfile removal
-        """
-
-        # Default implementation: nothing to do
-        pass
-
-    def unlock(self) -> int:
-        """
-        Remove the lockfile for this environment, so that next time the environment is loaded, it will not be restored to a previous state
-
-        :return: command exit code
-        """
-
-        # Delegate to backend implementation
-        self._remove_lockfile()
-
-        # Remove the lock flag file
-        assert self._project_path is not None, "Project path is not set"
-        lockflag = self._project_path / LOCKFLAG_NAME
-        if lockflag.is_file():  # pragma: no branch
-            lockflag.unlink()
-
-        return 0
-
     def upgrade(self, full: bool = True, only_deps: bool = False, print_updates: bool = True) -> int:
         """
         Upgrade all packages in this environment to their latest version.
@@ -580,11 +519,11 @@ class EnvBackend(ABC):
         else:
             self._logger.debug("All packages are already up to date.")
 
-    @property
-    def installed_packages(self) -> dict[str, str]:
+    def get_installed_packages(self, with_editable: bool = True) -> dict[str, str]:
         """
-        List installed packages in this environment
+        Get installed packages in this environment
 
+        :param with_editable: if True, include editable packages in the output
         :return: map of installed packages versions (indexed by package name)
         """
 
@@ -598,12 +537,25 @@ class EnvBackend(ABC):
                 json_content = None
             if json_content and json.loads(json_content).get("dir_info", {}).get("editable", False):  # pragma: no cover
                 is_editable = True
+                if not with_editable:
+                    # Forget editable package in output
+                    continue
 
             # Add in output only if not already present in editable mode
             name = pkg.name
             if name and ((name not in out) or (not out[name].endswith(_EDITABLE_SUFFIX))):  # pragma: no branch
                 out[name] = f"{pkg.version}{_EDITABLE_SUFFIX if is_editable else ''}"
         return out
+
+    @property
+    def installed_packages(self) -> dict[str, str]:
+        """
+        List installed packages in this environment
+
+        :return: map of installed packages versions (indexed by package name)
+        """
+
+        return self.get_installed_packages(with_editable=True)
 
     def _print_packages(self, packages: dict[str, str]):
         """
@@ -641,7 +593,7 @@ class EnvBackend(ABC):
 
     def dump(self, output_file: Path, log_level: int = logging.INFO):
         """
-        Dump installed packages in this environment to a requirements-like file
+        Dump installed packages in this environment to a requirements-like file (skipping editable packages)
 
         :param output_file: path to the output requirements file
         :param log_level: logging level to use for file generation
@@ -650,7 +602,7 @@ class EnvBackend(ABC):
         # Just dump installed packages to the specified file
         self._generate_files(
             [_InstalledFileDescriptor(template=Path("backends/common/requirements.lock.jinja"), target=output_file)],
-            extra_keywords={"installed_packages": self.installed_packages},
+            extra_keywords={"installed_packages": self.get_installed_packages(with_editable=False)},
             log_level=log_level,
         )
 
@@ -660,24 +612,10 @@ class EnvBackendWithRequirements(EnvBackend):
     def use_requirements(self) -> bool:
         return True
 
-    @property
-    def lock_file(self) -> Path:
-        assert self._project_path is not None, "Project path is not set"
-        return self._project_path / "requirements.lock"
-
     def _get_files_descriptors(self):
         return super()._get_files_descriptors() + [
             _InstalledFileDescriptor(Path("backends/common/requirements.txt.jinja"), lazy=True),
         ]
-
-    def _create_lockfile(self, log_level: int = logging.INFO):
-        # Use the dump method
-        self.dump(self.lock_file, log_level)
-
-    def _remove_lockfile(self):
-        # Just remove the lock file if it exists
-        if self.lock_file.is_file():  # pragma: no branch
-            self.lock_file.unlink()
 
     def _backend_upgrade_env(self) -> tuple[str, str] | None:  # pragma: no cover
         """
@@ -686,15 +624,6 @@ class EnvBackendWithRequirements(EnvBackend):
 
         # Not implemented by default
         return None
-
-    def handle_updates(self, old_packages: dict[str, str], print_updates: bool = True):
-        # Super call
-        super().handle_updates(old_packages, print_updates)
-
-        # Refresh lockfile if it exists
-        if self.lock_file.is_file():
-            self._logger.info(f"Refresh {self.lock_file.name} file...")
-            self.lock()
 
     def _delegate_upgrade(self, full: bool = True, only_deps: bool = False) -> int:
         # Project path is mandatory

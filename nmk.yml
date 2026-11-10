@@ -43,8 +43,6 @@ config:
     shell.txt: "${venvBin}/buildenv shell -h"
     run.txt: "${venvBin}/buildenv run -h"
     list.txt: "${venvBin}/buildenv list -h"
-    lock.txt: "${venvBin}/buildenv lock -h"
-    unlock.txt: "${venvBin}/buildenv unlock -h"
     upgrade.txt: "${venvBin}/buildenv upgrade -h"
     install-list-1.txt: "${venvBin}/uvx --with nmk-python buildenv install --list-templates"
 

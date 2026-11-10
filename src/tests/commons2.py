@@ -171,38 +171,17 @@ class WithProject(PreservedEnvHelper):
         for f in existing_files:
             assert (project / f).stat().st_size == 0
 
-    def test_lock(self, project: Path, backend: EnvBackend):
-        # Test locking from API
-        lockfile = backend.lock_file
-        lockflag = project / "buildenv.lock"
+    def test_is_locked_deprecated(self, backend: EnvBackend):
+        # check deprecation warning
+        with pytest.warns(DeprecationWarning, match="EnvBackend.is_locked is deprecated"):
+            assert not backend.is_locked
 
-        # Lock project
-        assert not lockfile.is_file()
-        assert not lockflag.is_file()
-        assert not backend.is_locked
-        rc = backend.lock()
-        assert rc == 0
-        assert lockfile.is_file()
-        assert lockflag.is_file()
-        assert backend.is_locked
-
-        # Unlock project
-        rc = backend.unlock()
-        assert rc == 0
-        if lockfile.name.startswith("uv"):
-            # uv backend does not delete lockfile on unlock
-            assert lockfile.is_file()
-        else:
-            # requirements based backends should delete lockfile on unlock
-            assert not lockfile.is_file()
-        assert not lockflag.is_file()
-        assert not backend.is_locked
-
-    def test_cli_lock(self, project: Path, backend: EnvBackend):
-        # Test lock through shell (CLI)
-        rc = buildenv(["lock", "-p", str(project)])
-        assert rc == 0
-        assert backend.lock_file.is_file()
+    def test_reqs_dump(self, backend: EnvBackend):
+        # Check requirements dump
+        reqs = self.test_folder / "requirements.txt"
+        backend.dump(reqs)
+        assert reqs.is_file()
+        assert "editable" not in reqs.read_text()
 
     @pytest.fixture
     def expected_upgrade_cmd(self, backend: EnvBackend, project: Path) -> list[str]:

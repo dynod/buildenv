@@ -3,14 +3,12 @@
 {% include "backends/fragments/check.sh.jinja" %}
 
 # Check for requirements
-if test -f buildenv.lock -a -f requirements.lock; then
-    # Locked requirements
-    _reqs="--with-requirements requirements.lock"
-elif test -f requirements.txt; then
+_reqs=""
+if test -f requirements.txt; then
     # Base input requirements
-    _reqs="--with-requirements requirements.txt"
+    _reqs=" --with-requirements requirements.txt"
 fi
 
 # Delegate execution to buildenv command (through uvx)
-_run_cmd uvx ${_reqs} ${BUILDENV_UVX_ARGS} buildenv "$@"
+_run_cmd uvx${_reqs} ${BUILDENV_UVX_ARGS} buildenv "$@"
 

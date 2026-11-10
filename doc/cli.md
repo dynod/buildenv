@@ -106,22 +106,6 @@ This sub-command invokes the provided command with the build environment enabled
 
 This sub-command lists all installed packages the current buildenv environment (similarly to `pip list`, except that, depending on used [backend](backends), the `pip` command is not always available).
 
-## `lock` sub-command
-
-```{include} snippets/lock.txt
-:literal:
-```
-
-This command locks the current build environment. The locking behavior depends on the used [environment backend](backends).
-
-## `unlock` sub-command
-
-```{include} snippets/unlock.txt
-:literal:
-```
-
-This command unlocks the current build environment. The unlocking behavior depends on the used [environment backend](backends).
-
 ## `upgrade` sub-command
 
 ```{include} snippets/upgrade.txt

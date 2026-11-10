@@ -142,18 +142,6 @@ class BuildEnvParser:
         _common_args(list_parser)
         list_parser.set_defaults(func="list")
 
-        # lock sub-command
-        lock_help = "lock build environment packages versions"
-        lock_parser = sub_parsers.add_parser("lock", help=lock_help, description=lock_help)
-        _common_args(lock_parser)
-        lock_parser.set_defaults(func="lock")
-
-        # unlock sub-command
-        unlock_help = "unlock build environment packages versions"
-        unlock_parser = sub_parsers.add_parser("unlock", help=unlock_help, description=unlock_help)
-        _common_args(unlock_parser)
-        unlock_parser.set_defaults(func="unlock")
-
         # upgrade sub-command
         upgrade_help = "upgrade build environment packages to their latest version"
         upgrade_parser = sub_parsers.add_parser("upgrade", help=upgrade_help, description=upgrade_help)
