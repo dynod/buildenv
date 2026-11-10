@@ -15,8 +15,8 @@ if test $? -ne 0; then
     exit 1
 fi
 
-# Export buildenv version
-export BUILDENV_VERSION=2
+# Export buildenv loading scripts version
+export BUILDENV_VERSION=3
 
 # Check for lock
 _opts=""

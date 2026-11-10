@@ -99,9 +99,23 @@ class WithProject(PreservedEnvHelper):
         if check_requirements:
             assert (project / "requirements.txt").is_file() == isinstance(backend, EnvBackendWithRequirements)
 
-    def test_version(self, backend: EnvBackend):
-        # Test that backend detected version
+    @pytest.fixture
+    def fake_scripts_version(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setenv("BUILDENV_VERSION", "2")
+
+    @pytest.fixture
+    def no_scripts_version(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.delenv("BUILDENV_VERSION", raising=False)
+
+    def test_installed_scripts_version(self, fake_scripts_version: None, backend: EnvBackend):
+        # Test scripts detected version
         assert backend.version == 3
+        assert backend.scripts_version == 2
+
+    def test_unset_scripts_version(self, no_scripts_version: None, backend: EnvBackend):
+        # Test fallback detected version
+        assert backend.version == 3
+        assert backend.scripts_version == 3
 
     def test_install(self, project: Path, backend: EnvBackend, fake_git_parent: None):
         # Fake some legacy file

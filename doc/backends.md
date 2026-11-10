@@ -19,11 +19,15 @@ Supported backends by **buildenv** tool and their properties are described by th
 | uvx      | ✅        | other        | requirements.txt file | ❌                 |
 | fallback | ✅        | other        | none                  | ❌                 |
 
+(uv-b)=
+
 ## uv backend (recommended for Python projects)
 
 The [uv](https://docs.astral.sh/uv/) tool is a fast Python package and project manager.
 
 Using the **uv** backend is recommended for Python projects.
+
+(uvx-b)=
 
 ## uvx backend (recommended for other projects)
 

@@ -18,12 +18,16 @@ The fully detailed changelog is also available on [Github](https://github.com/dy
 
 - Backend detection defaults to {ref}`fallback<fallback>` implementation if no compatible environment is detected
 
+### Loading scripts update
+
+- Loading scripts {ref}`version<BUILDENV_VERSION>` is now set to **3**.
+- Rewrote **buildenv.cmd** [loading script](scripts) to simply wrap to **buildenv.sh** one
+
 ### Breaking changes from buildenv 2.X
 
 - Removed support for <font color="red">_Python 3.10_</font>
 - Dropped support for <font color="red">_pipx_</font> environment backend
 - Dropped support for <font color="red">_pip_</font> environment backend
-- Rewrote **buildenv.cmd** [loading script](scripts) to simply wrap to **buildenv.sh** one
 
 ---
 
@@ -37,6 +41,10 @@ The fully detailed changelog is also available on [Github](https://github.com/dy
 
 - [project templates](templates) handling
 - new **install**, **list**, **lock** and **unlock** sub-commands for [buildenv command](cli)
+
+### Loading scripts update
+
+Loading scripts {ref}`version<BUILDENV_VERSION>` is now set to **2**.
 
 ### Breaking changes from buildenv 1.X
 
