@@ -23,11 +23,22 @@ The fully detailed changelog is also available on [Github](https://github.com/dy
 - Loading scripts {ref}`version<BUILDENV_VERSION>` is now set to **3**.
 - Rewrote **buildenv.cmd** [loading script](scripts) to simply wrap to **buildenv.sh** one
 
+### API update
+
+In {py:class}`~buildenv.backends.backend.EnvBackend` API:
+
+- {py:func}`~buildenv.backends.backend.EnvBackend.dump` method now excludes editable packages
+- {py:attr}`~buildenv.backends.backend.EnvBackend.version` property now exposes the current buildenv loading scripts version
+- {py:attr}`~buildenv.backends.backend.EnvBackend.scripts_version` property (new) exposes the project’s installed loading scripts version
+- {py:attr}`~buildenv.backends.backend.EnvBackend.is_locked` property is now deprecated
+
 ### Breaking changes from buildenv 2.X
 
 - Removed support for <font color="red">_Python 3.10_</font>
 - Dropped support for <font color="red">_pipx_</font> environment backend
 - Dropped support for <font color="red">_pip_</font> environment backend
+- Removed **lock** and **unlock** subcommands
+- Removed **lock_file**, **lock** and **unlock** methods from {py:class}`~buildenv.backends.backend.EnvBackend` API
 
 ---
 

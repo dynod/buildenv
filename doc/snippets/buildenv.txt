@@ -1,10 +1,9 @@
-usage: buildenv [-h] [-V]
-                {install,init,shell,run,list,lock,unlock,upgrade} ...
+usage: buildenv [-h] [-V] {install,init,shell,run,list,upgrade} ...
 
 Build environment manager
 
 positional arguments:
-  {install,init,shell,run,list,lock,unlock,upgrade}
+  {install,init,shell,run,list,upgrade}
                         sub-commands:
     install             install build environment loading scripts and setup
                         project from template
@@ -15,8 +14,6 @@ positional arguments:
     run                 run command in build environment
     list                list installed packages in the current build
                         environment
-    lock                lock build environment packages versions
-    unlock              unlock build environment packages versions
     upgrade             upgrade build environment packages to their latest
                         version
 

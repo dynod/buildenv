@@ -18,12 +18,5 @@ fi
 # Export buildenv loading scripts version
 export BUILDENV_VERSION=3
 
-# Check for lock
-_opts=""
-if test -f buildenv.lock; then
-    # Locked requirements
-    _opts=" --frozen"
-fi
-
 # Delegate execution to buildenv command (through uv)
-_run_cmd uv run${_opts} ${BUILDENV_UV_ARGS} buildenv "$@"
+_run_cmd uv run ${BUILDENV_UV_ARGS} buildenv "$@"
