@@ -1,6 +1,6 @@
 # Documentation for buildenv tool
 
-The **`buildenv`** tool is a build environment setup system, based on [Python virtual environment](https://docs.python.org/3/library/venv.html).
+The **`buildenv`** tool is a build/development environment setup system, based on several possible environment backends.
 
 ```{toctree}
 :caption: 'Contents'
@@ -9,6 +9,7 @@ features
 usage
 scripts
 backends
+environment
 extensions
 templates
 cli

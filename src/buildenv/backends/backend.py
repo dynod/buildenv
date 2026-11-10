@@ -60,15 +60,18 @@ class EnvBackend(ABC):
         # Update current process environment
         os.environ["BUILDENV_LEVEL"] = os.getenv("BUILDENV_LEVEL", "0")
         os.environ["VIRTUAL_ENV"] = str(self._venv_bin.parent)
-        os.environ["BUILDENV_VERSION"] = str(self._version)
+        os.environ["BUILDENV_VERSION"] = str(self._scripts_version)
         contribute_path(cast(dict[str, str], os.environ), self._venv_bin)
 
         # Prepare shell
         self._shell = ShellFactory.create(shell_name, self._venv_bin, not self.has_pip(), self.name, self._extensions, self._completions)
 
     def _setup_version(self):
-        # Use default version (may be overridden)
+        # Current loading scripts version
         self._version = _DEFAULT_VERSION
+
+        # Detected loading scripts version from the project (if any)
+        self._scripts_version = int(os.getenv("BUILDENV_VERSION", _DEFAULT_VERSION))
 
     @property
     def is_locked(self) -> bool:
@@ -90,10 +93,18 @@ class EnvBackend(ABC):
     @property
     def version(self) -> int:
         """
-        Main version detected from loading scripts
+        Loading scripts version for this backend (used to detect if the environment is up-to-date or not)
         """
 
         return self._version
+
+    @property
+    def scripts_version(self) -> int:
+        """
+        Current project installed loading scripts version
+        """
+
+        return self._scripts_version
 
     def subprocess(
         self,
@@ -315,6 +326,7 @@ class EnvBackend(ABC):
             "command": self.command,
             "url": self.install_url,
             "ignored_patterns": self._get_ignored_patterns(),
+            "buildenv_version": str(self.version),
         } | (extra_keywords if extra_keywords else {})
 
         # Iterate on these files
