@@ -318,6 +318,7 @@ class EnvBackend(ABC):
             "url": self.install_url,
             "ignored_patterns": self._get_ignored_patterns(),
             "buildenv_version": str(self.version),
+            "run_wrapper": self.run_wrapper,
         } | (extra_keywords if extra_keywords else {})
 
         # Iterate on these files
@@ -528,8 +529,10 @@ class EnvBackend(ABC):
         """
 
         out: dict[str, str] = {}
+        editables: set[str] = set()
         for pkg in importlib.metadata.distributions():
             # Check for editable package
+            name = pkg.name
             is_editable = False
             try:
                 json_content = pkg.read_text("direct_url.json")
@@ -537,14 +540,16 @@ class EnvBackend(ABC):
                 json_content = None
             if json_content and json.loads(json_content).get("dir_info", {}).get("editable", False):  # pragma: no cover
                 is_editable = True
-                if not with_editable:
-                    # Forget editable package in output
-                    continue
+                editables.add(name)
 
             # Add in output only if not already present in editable mode
-            name = pkg.name
             if name and ((name not in out) or (not out[name].endswith(_EDITABLE_SUFFIX))):  # pragma: no branch
                 out[name] = f"{pkg.version}{_EDITABLE_SUFFIX if is_editable else ''}"
+
+        # Forget editable packages if requested
+        if not with_editable:
+            for name in editables:
+                out.pop(name, None)
         return out
 
     @property
@@ -605,6 +610,20 @@ class EnvBackend(ABC):
             extra_keywords={"installed_packages": self.get_installed_packages(with_editable=False)},
             log_level=log_level,
         )
+
+    @property
+    def run_wrapper(self) -> str:
+        """
+        Get the run wrapper command syntax for this backend (if any).
+
+        This is used to run commands in the backend environment without having to spawn a shell.
+        E.g. to execute a "pytest" command in the environment, use f"{backend.run_wrapper} pytest"
+
+        :return: path to the run wrapper script, or empty string if not available
+        """
+
+        # By default, no run wrapper is available
+        return ""
 
 
 class EnvBackendWithRequirements(EnvBackend):
