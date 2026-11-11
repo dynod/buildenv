@@ -17,6 +17,6 @@ class FallbackBackend(EnvBackend):
     def has_pip(self):
         return False
 
-    def _delegate_upgrade(self, full: bool = True, only_deps: bool = False) -> int:
+    def _delegate_upgrade(self, full: bool = True, only_deps: bool = False, exact: bool = False) -> int:
         # Empty implementation, as this backend does not support upgrades
         raise NotImplementedError("Don't know how to upgrade packages for this backend")

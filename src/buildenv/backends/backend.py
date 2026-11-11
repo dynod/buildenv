@@ -442,7 +442,7 @@ class EnvBackend(ABC):
         """
         raise NotImplementedError("Don't know how to add packages for this backend")
 
-    def upgrade(self, full: bool = True, only_deps: bool = False, print_updates: bool = True) -> int:
+    def upgrade(self, full: bool = True, only_deps: bool = False, print_updates: bool = True, exact: bool = False) -> int:
         """
         Upgrade all packages in this environment to their latest version.
         Also dumps upgraded versions to the console.
@@ -450,6 +450,7 @@ class EnvBackend(ABC):
         :param full: if True, check for updates from remote repositories (may be slow); if False, ignore already installed packages
         :param only_deps: if True, upgrade only dependencies (not current project)
         :param print_updates: if True, print updates after upgrade
+        :param exact: if True, make sure that environment only includes current project dependencies (remove any other package)
         :return: command exit code
         """
 
@@ -457,7 +458,7 @@ class EnvBackend(ABC):
         old_packages = self.installed_packages
 
         # Delegate to backend implementation
-        rc = self._delegate_upgrade(full, only_deps)
+        rc = self._delegate_upgrade(full, only_deps, exact)
 
         # If mutable and upgrade succeeded, print updates
         if rc == 0 and self.is_mutable():
@@ -466,7 +467,7 @@ class EnvBackend(ABC):
         return rc
 
     @abstractmethod
-    def _delegate_upgrade(self, full: bool = True, only_deps: bool = False) -> int:  # pragma: no cover
+    def _delegate_upgrade(self, full: bool = True, only_deps: bool = False, exact: bool = False) -> int:  # pragma: no cover
         """
         Delegate packages upgrade to the backend implementation
         """
@@ -644,7 +645,7 @@ class EnvBackendWithRequirements(EnvBackend):
         # Not implemented by default
         return None
 
-    def _delegate_upgrade(self, full: bool = True, only_deps: bool = False) -> int:
+    def _delegate_upgrade(self, full: bool = True, only_deps: bool = False, exact: bool = False) -> int:
         # Project path is mandatory
         assert self._project_path is not None, "Project path is not set"
 

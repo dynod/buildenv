@@ -238,14 +238,6 @@ class WithPythonProject(WithProject):
         shutil.copy(TEMPLATES / "pyproject-simple.toml", self.test_folder / "pyproject.toml")
         yield self.test_folder
 
-    @pytest.fixture
-    def expected_project_install_editable_cmd(self, backend: EnvBackend) -> list[str]:
-        raise NotImplementedError()
-
-    @pytest.fixture
-    def expected_project_install_non_editable_cmd(self, backend: EnvBackend) -> list[str]:
-        raise NotImplementedError()
-
 
 class WithUvVenv(WithVenv):
     @pytest.fixture(autouse=True)

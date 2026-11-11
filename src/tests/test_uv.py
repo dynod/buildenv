@@ -22,15 +22,7 @@ class WithUv(WithUvVenv, WithPythonProject):
 
     @pytest.fixture
     def expected_upgrade_cmd(self, backend: EnvBackend) -> list[str]:
-        return ["uv", "sync", "--upgrade"]
-
-    @pytest.fixture
-    def expected_project_install_editable_cmd(self, backend: EnvBackend) -> list[str]:
-        return ["uv", "sync"]
-
-    @pytest.fixture
-    def expected_project_install_non_editable_cmd(self, backend: EnvBackend) -> list[str]:
-        return ["uv", "sync", "--no-editable"]
+        return ["uv", "sync", "--upgrade", "--inexact"]
 
 
 class TestUvBash(WithUv, WithBash):
