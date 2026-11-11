@@ -32,6 +32,7 @@ In {py:class}`~buildenv.backends.backend.EnvBackend` API:
 - {py:attr}`~buildenv.backends.backend.EnvBackend.scripts_version` property (<font color="green">_NEW_</font>) exposes the project’s installed loading scripts version
 - {py:attr}`~buildenv.backends.backend.EnvBackend.is_locked` property is now deprecated
 - {py:attr}`~buildenv.backends.backend.EnvBackend.run_wrapper` property (<font color="green">_NEW_</font>) allow to get the run wrapper command syntax
+- {py:func}`~buildenv.backends.backend.EnvBackend.upgrade` method now supports an `exact` argument (default to `False`), to handle exact/inexact packages install
 
 ### Breaking changes from buildenv 2.X
 

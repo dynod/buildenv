@@ -57,10 +57,10 @@ class UvProjectBackend(_CommonUvImpl, MutableEnvBackend):
         # Delegate to uv; assuming uv project is already created, and all packages added through this interface are dev ones
         self.subprocess(["add", "--dev", *packages], check=True, cwd=self._project_path)
 
-    def _delegate_upgrade(self, full: bool = True, only_deps: bool = False) -> int:
+    def _delegate_upgrade(self, full: bool = True, only_deps: bool = False, exact: bool = False) -> int:
         # Force env synchronization
         return self.subprocess(
-            ["sync"] + (["--upgrade"] if full else []) + (["--no-install-project"] if only_deps else []),
+            ["sync"] + (["--upgrade"] if full else []) + (["--no-install-project"] if only_deps else []) + (["--inexact"] if not exact else []),
             check=False,
             cwd=self._project_path,
         ).returncode
