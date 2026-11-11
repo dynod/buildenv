@@ -65,6 +65,11 @@ class UvProjectBackend(_CommonUvImpl, MutableEnvBackend):
             cwd=self._project_path,
         ).returncode
 
+    @property
+    def run_wrapper(self) -> str:
+        # Use uv run wrapper
+        return "uv run"
+
 
 # UVX-style backend (immutable)
 class UvxBackend(_CommonUvImpl, EnvBackendWithRequirements):
@@ -77,3 +82,8 @@ class UvxBackend(_CommonUvImpl, EnvBackendWithRequirements):
     def _backend_upgrade_env(self) -> tuple[str, str] | None:
         # Force "refresh" uvx option on upgrade
         return ("BUILDENV_UVX_ARGS", "--refresh")
+
+    @property
+    def run_wrapper(self) -> str:
+        # Use uvx wrapper
+        return "uvx --with requirements.txt"

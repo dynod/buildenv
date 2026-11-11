@@ -10,6 +10,7 @@ class TestMisc(WithVenv):
         assert backend.name == "fallback"
         assert backend.install_url == ""
         assert not backend.has_pip()
+        assert backend.run_wrapper == ""
 
         # Give a try with package addition
         with pytest.raises(AssertionError, match="fallback backend is not mutable, can't add packages"):
