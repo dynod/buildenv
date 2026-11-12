@@ -23,7 +23,6 @@ dependencies = [
     "Jinja2",
     "argcomplete",
     "psutil",
-    "typing_extensions",
 ]
 description = "Build environment setup system, based on Python venv"
 
