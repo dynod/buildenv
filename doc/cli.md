@@ -1,4 +1,4 @@
-# Command line interface
+# 💻 Command line interface
 
 The **buildenv** tools comes with a command-line interface, described on this page.
 

@@ -1,4 +1,4 @@
-# Usage
+# 🚀 Usage
 
 In order to use **`buildenv`** tool features, please follow these instructions.
 

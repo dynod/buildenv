@@ -180,8 +180,7 @@ class WithProject(PreservedEnvHelper):
 
     @pytest.fixture
     def expected_upgrade_cmd(self, backend: EnvBackend, project: Path) -> list[str]:
-        script = "buildenv.cmd" if backend.shell_instance.name == "cmd" else "./buildenv.sh"
-        return [script, "init", "--show-updates-from", str(project / "._buildenv_old_packages.json")]
+        return []
 
     def test_upgrade(self, project: Path, backend: EnvBackend, monkeypatch: pytest.MonkeyPatch, expected_upgrade_cmd: list[str]):
         # Patch subprocess to analyse arguments
@@ -197,19 +196,18 @@ class WithProject(PreservedEnvHelper):
 
         monkeypatch.setattr(subprocess, "run", lambda args, **kwargs: _remember_cp(args, **kwargs))  # type: ignore
 
-        # Test upgrade from API
-        rc = backend.upgrade()
-        assert rc == 0
+        if not expected_upgrade_cmd:
+            # Upgrade shall not be supported
+            with pytest.raises(NotImplementedError):
+                backend.upgrade()
+        else:
+            # Test upgrade from API
+            rc = backend.upgrade()
+            assert rc == 0
 
-        # Verify subprocess.run call
-        assert cp is not None, "Subprocess was not called"
-        assert cp.args == expected_upgrade_cmd, f"Got args: {cp.args} instead of {expected_upgrade_cmd}"
-        if hasattr(backend, "_backend_upgrade_env"):
-            expected_upgrade_shell_env = backend._backend_upgrade_env()
-            if expected_upgrade_shell_env is not None:
-                assert env is not None, "No env captured"
-                env_name, env_arg = expected_upgrade_shell_env
-                assert env_arg in env.get(env_name, ""), f"Bad env: {env.get(env_name, '')}"
+            # Verify subprocess.run call
+            assert cp is not None, "Subprocess was not called"
+            assert cp.args == expected_upgrade_cmd, f"Got args: {cp.args} instead of {expected_upgrade_cmd}"
 
     def test_cli_list(self, project: Path):
         # Test listing installed packages through shell (CLI)

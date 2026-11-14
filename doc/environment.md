@@ -1,4 +1,4 @@
-# Environment variables
+# 🌍 Environment variables
 
 The buildenv tool deals with several environment variables, explained in this chapter. Environment variables are split in two categories:
 

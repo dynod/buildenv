@@ -1,4 +1,4 @@
-# Loading and activation scripts
+# 🧩 Loading and activation scripts
 
 The **`buildenv`** tool handle a set of scripts used to load and activate the build environment.
 

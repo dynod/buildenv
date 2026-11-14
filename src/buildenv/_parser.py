@@ -41,11 +41,6 @@ class BuildEnvParser:
             )
             sub_parser.add_argument("--shell", choices=KNOWN_SHELLS, default=_DEFAULT_SHELL, help=f"force using specified shell (default: {_DEFAULT_SHELL})")
 
-        # Common arguments to commands able to dump package upgrades
-        def _upgrade_args(sub_parser: ArgumentParser):
-            # Hidden argument to show updates from a given file
-            sub_parser.add_argument("--show-updates-from", metavar="FILE", default=None, type=Path, help=SUPPRESS)
-
         # Add subcommands:
         sub_parsers = self._parser.add_subparsers(help="sub-commands:")
 
@@ -106,7 +101,6 @@ class BuildEnvParser:
                 "force": lambda o: o.force,  # type: ignore
                 "skip_ext": lambda o: o.skipped_extensions,  # type: ignore
                 "no_ext": lambda o: o.no_ext,  # type: ignore
-                "show_updates_from": lambda o: o.show_updates_from,  # type: ignore
             },
         )
         init_parser.add_argument("--force", "-f", action="store_true", default=False, help="force extensions re-initialization")
@@ -119,15 +113,13 @@ class BuildEnvParser:
             help="skip specified extension(s) on initialization (can be specified multiple times)",
         )
         init_parser.add_argument("--new", dest="old_new_option", action="store_true", default=False, help=SUPPRESS)
-        _upgrade_args(init_parser)
 
         # shell sub-command
         shell_help = "start an interactive shell with loaded build environment (default if no sub-command is specified)"
         shell_parser = sub_parsers.add_parser("shell", help=shell_help, description=shell_help)
         _common_args(shell_parser)
-        shell_parser.set_defaults(func="shell", kwargs_map={"show_updates_from": lambda o: o.show_updates_from, "command": lambda o: o.command})  # type: ignore
+        shell_parser.set_defaults(func="shell", kwargs_map={"command": lambda o: o.command})  # type: ignore
         shell_parser.add_argument("--command", "-c", metavar="COMMAND", help="command and arguments to be executed in build environment")
-        _upgrade_args(shell_parser)
 
         # run sub-command
         run_help = "run command in build environment"

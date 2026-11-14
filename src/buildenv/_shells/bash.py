@@ -44,10 +44,6 @@ class BashShell(EnvShell):
     def name(self) -> str:
         return BashShell.NAME
 
-    @property
-    def script(self) -> str:
-        return "./buildenv.sh"
-
     def get_args_interractive(self, tmp_dir: Path) -> list[str]:
         return [self._shell_path, "--rcfile", to_linux_path(tmp_dir / "shell.sh")]
 

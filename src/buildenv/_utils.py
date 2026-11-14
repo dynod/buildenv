@@ -27,15 +27,6 @@ def is_windows() -> bool:
     return "nt" in os.name
 
 
-def is_ci() -> bool:
-    """
-    States if running in a CI environment
-
-    :return: True if running in CI, False otherwise
-    """
-    return os.getenv("CI") is not None
-
-
 def to_linux_path(path: Path) -> str:
     """
     Turn provided path to a Linux style path.

@@ -40,14 +40,6 @@ class EnvShell(ABC):
         pass
 
     @property
-    @abstractmethod
-    def script(self) -> str:  # pragma: no cover
-        """
-        Shell launch script
-        """
-        pass
-
-    @property
     def env_level(self) -> int:
         """
         Get current buildenv level

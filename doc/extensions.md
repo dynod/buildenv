@@ -1,4 +1,4 @@
-# Extensions
+# 🔌 Extensions
 
 The **`buildenv`** tool behavior can be extended, with following extension points.
 

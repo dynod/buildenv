@@ -21,7 +21,6 @@ config:
   pythonPackageRequirements:
     - Jinja2
     - argcomplete
-    - psutil
 
   # For tests
   venvPkgDeps:

@@ -1,4 +1,3 @@
-import json
 import subprocess
 from pathlib import Path
 
@@ -15,35 +14,10 @@ class TestMisc(WithUvVenv, FakeBash):
         monkeypatch.setenv("PYTHONHOME", str(fake_venv))
         return EnvBackendFactory.detect(fake_venv, verbose_subprocess=False)
 
-    def dump_fake_old_packages(self, backend: EnvBackend, packages: dict[str, str]) -> Path:
-        packages_path = self.test_folder / "._buildenv_old_packages.json"
-        if not packages:
-            packages = backend.installed_packages
-        packages_path.write_text(json.dumps(packages))
-        return packages_path
-
     def test_command(self, patch_run_process: None, backend: EnvBackend):
         # Test command execution, with fake PYTHONHOME env
         rc = backend.run("echo Hello")
         assert rc == 0
-
-    def test_no_updates(self, backend: EnvBackend):
-        # Give a try with no updates
-        jp = self.dump_fake_old_packages(backend, {})
-        backend.init(no_ext=True, show_updates_from=jp)
-        self.check_logs("All packages are already up to date.")
-
-    def test_with_updates(self, backend: EnvBackend):
-        # Give a try with fake legacy versions
-        jp = self.dump_fake_old_packages(backend, {"some-unknown-pkg": "1.0.0", "argcomplete": "1.0.0"})
-        backend.init(no_ext=True, show_updates_from=jp)
-        self.check_logs(
-            [
-                "some-unknown-pkg              removed (was 1.0.0)",
-                "argcomplete                   updated (from 1.0.0 to ",
-                "Jinja2                        added (",
-            ]
-        )
 
     def test_non_verbose_subprocess(self, backend: EnvBackend, monkeypatch: pytest.MonkeyPatch):
         # Fake subprocess
