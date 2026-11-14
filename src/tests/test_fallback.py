@@ -17,5 +17,5 @@ class TestMisc(WithVenv):
             backend.add_packages(["pytest"])
 
         # Give a try with updates
-        with pytest.raises(NotImplementedError, match="Don't know how to upgrade packages for this backend"):
-            backend.upgrade(full=True, only_deps=False)
+        with pytest.raises(NotImplementedError, match="The fallback backend is immutable, can't upgrade packages"):
+            backend.upgrade(full=True)

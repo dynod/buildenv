@@ -1,4 +1,4 @@
-# Project templates
+# 🧱 Project templates
 
 Templates can be used when you want to setup from scratch a new project. Templates are provided by **buildenv** [extensions](extensions).
 

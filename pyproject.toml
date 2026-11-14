@@ -22,7 +22,6 @@ classifiers = [
 dependencies = [
     "Jinja2",
     "argcomplete",
-    "psutil",
 ]
 description = "Build environment setup system, based on Python venv"
 

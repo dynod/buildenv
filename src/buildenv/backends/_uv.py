@@ -57,12 +57,13 @@ class UvProjectBackend(_CommonUvImpl, MutableEnvBackend):
         # Delegate to uv; assuming uv project is already created, and all packages added through this interface are dev ones
         self.subprocess(["add", "--dev", *packages], check=True, cwd=self._project_path)
 
-    def _delegate_upgrade(self, full: bool = True, only_deps: bool = False, exact: bool = False) -> int:
+    def upgrade(self, full: bool = True, only_deps: bool = False, print_updates: bool = True, exact: bool = False) -> int:
         # Force env synchronization
         return self.subprocess(
-            ["sync"] + (["--upgrade"] if full else []) + (["--no-install-project"] if only_deps else []) + (["--inexact"] if not exact else []),
+            ["sync"] + (["--upgrade"] if full else []) + (["--inexact"] if not exact else ["--exact"]),
             check=False,
             cwd=self._project_path,
+            verbose=print_updates,
         ).returncode
 
     @property
@@ -78,10 +79,6 @@ class UvxBackend(_CommonUvImpl, EnvBackendWithRequirements):
     @property
     def name(self):
         return UvxBackend.NAME
-
-    def _backend_upgrade_env(self) -> tuple[str, str] | None:
-        # Force "refresh" uvx option on upgrade
-        return ("BUILDENV_UVX_ARGS", "--refresh")
 
     @property
     def run_wrapper(self) -> str:

@@ -9,12 +9,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
-import psutil
-
 from .._entry_points import parse_extensions
 from .._renderers.factory import Keywords, RendererFactory, RenderingAdapter
 from .._shells.factory import EnvShell, ShellFactory
-from .._utils import LOGGER_NAME, contribute_path, is_ci, run_subprocess
+from .._utils import LOGGER_NAME, contribute_path, run_subprocess
 from ..completion import ArgCompleteCompletionCommand, CompletionCommand
 from ..extension import BuildEnvExtension, BuildEnvInfo, BuildEnvProjectTemplate
 
@@ -211,21 +209,15 @@ class EnvBackend(ABC):
         """
         pass
 
-    def init(self, force: bool = False, skip_ext: list[str] | None = None, no_ext: bool = False, show_updates_from: Path | None = None) -> int:
+    def init(self, force: bool = False, skip_ext: list[str] | None = None, no_ext: bool = False) -> int:
         """
         Initialize the backend extensions
 
         :param force: Force re-initialization of extensions
         :param skip_ext: List of extensions names to skip
         :param no_ext: Skip all extensions initialization
-        :param show_updates_from: Path to a file to show updates from
         :return: always 0
         """
-
-        # Handle updates if requested (+ remove the temporary file)
-        if show_updates_from is not None and show_updates_from.is_file():
-            self.handle_updates(json.loads(show_updates_from.read_text()))
-            show_updates_from.unlink()
 
         # Handle ignored extensions
         ignored_extensions: set[str] = set(self._extensions.keys()) if no_ext else (set(skip_ext) if skip_ext else set())
@@ -239,17 +231,16 @@ class EnvBackend(ABC):
                 raise AssertionError(f"Error occurred while calling {ext_name} extension init: {e}") from e
         return 0
 
-    def shell(self, show_updates_from: Path | None = None, command: str | None = None) -> int:
+    def shell(self, command: str | None = None) -> int:
         """
-        Launch an interractive shell from the backend
+        Launch an interactive shell from the backend
 
-        :param show_updates_from: Path to a file to show updates from
         :param command: command to be executed in the shell
         :return: shell exit code
         """
 
         # Init first
-        self.init(show_updates_from=show_updates_from)
+        self.init()
 
         # Run interractive shell (or command if specified)
         return self._shell.run(command)
@@ -435,81 +426,25 @@ class EnvBackend(ABC):
     def upgrade(self, full: bool = True, only_deps: bool = False, print_updates: bool = True, exact: bool = False) -> int:
         """
         Upgrade all packages in this environment to their latest version.
-        Also dumps upgraded versions to the console.
+        Also dumps upgraded versions to the console if print_updates is True.
 
         :param full: if True, check for updates from remote repositories (may be slow); if False, ignore already installed packages
-        :param only_deps: if True, upgrade only dependencies (not current project)
+        :param only_deps: deprecated, not used anymore
         :param print_updates: if True, print updates after upgrade
         :param exact: if True, make sure that environment only includes current project dependencies (remove any other package)
         :return: command exit code
         """
 
-        # Remember old packages
-        old_packages = self.installed_packages
+        # Default implementation for immutable backend: upgrade is not supported
+        raise NotImplementedError(
+            "Don't know how to upgrade packages for this backend" if self.is_mutable() else f"The {self.name} backend is immutable, can't upgrade packages"
+        )
 
-        # Delegate to backend implementation
-        rc = self._delegate_upgrade(full, only_deps, exact)
-
-        # If mutable and upgrade succeeded, print updates
-        if rc == 0 and self.is_mutable():
-            self.handle_updates(old_packages, print_updates)
-
-        return rc
-
-    @abstractmethod
-    def _delegate_upgrade(self, full: bool = True, only_deps: bool = False, exact: bool = False) -> int:  # pragma: no cover
+    def print_updates(self, old_packages: dict[str, str], ignored_packages: set[str] | None = None):  # NOQA: B027
         """
-        Delegate packages upgrade to the backend implementation
+        Deprecated method; does nothing
         """
-        raise NotImplementedError()
-
-    def handle_updates(self, old_packages: dict[str, str], print_updates: bool = True):
-        """
-        Handle packages updates from previous versions
-
-        :param old_packages: map of old installed packages versions (indexed by package name)
-        :param print_updates: if True, print updates after upgrade
-        """
-
-        # By default, just print update (if required)
-        if print_updates:  # pragma: no branch
-            self.print_updates(old_packages)
-
-    def print_updates(self, old_packages: dict[str, str], ignored_packages: set[str] | None = None):
-        """
-        Pretty print packages updates to stdout
-
-        :param old_packages: map of old installed packages versions (indexed by package name)
-        :param ignored_packages: set of package names to ignore in updates printing
-        """
-
-        # Locate changes and print them (if any)
-        all_ignored_packages: set[str] = ignored_packages if ignored_packages else set()
-        old_packages_names = set(old_packages.keys()) - all_ignored_packages
-        new_packages = self.installed_packages
-        new_packages_names = set(new_packages.keys()) - all_ignored_packages
-        changes: dict[str, str] = {}
-
-        # All removed packages
-        for removed_package in old_packages_names - new_packages_names:
-            changes[removed_package] = f"removed (was {old_packages[removed_package]})"
-
-        # All added packages
-        for added_package in new_packages_names - old_packages_names:
-            changes[added_package] = f"added ({new_packages[added_package]})"
-
-        # All updated packages (ignoring "editable" mode)
-        for updated_package in {
-            name
-            for name in new_packages_names & old_packages_names
-            if new_packages[name].replace(_EDITABLE_SUFFIX, "") != old_packages[name].replace(_EDITABLE_SUFFIX, "")
-        }:
-            changes[updated_package] = f"updated (from {old_packages[updated_package]} to {new_packages[updated_package]})"
-        if changes:
-            self._logger.info("Some packages were updated:")
-            self._print_packages(changes)
-        else:
-            self._logger.debug("All packages are already up to date.")
+        pass  # pragma: no cover
 
     def get_installed_packages(self, with_editable: bool = True) -> dict[str, str]:
         """
@@ -626,43 +561,6 @@ class EnvBackendWithRequirements(EnvBackend):
         return super()._get_files_descriptors() + [
             _InstalledFileDescriptor(Path("backends/common/requirements.txt.jinja"), lazy=True),
         ]
-
-    def _backend_upgrade_env(self) -> tuple[str, str] | None:  # pragma: no cover
-        """
-        Get backend upgrade environment var name + arg, if any
-        """
-
-        # Not implemented by default
-        return None
-
-    def _delegate_upgrade(self, full: bool = True, only_deps: bool = False, exact: bool = False) -> int:
-        # Project path is mandatory
-        assert self._project_path is not None, "Project path is not set"
-
-        # We can't spawn a subshell in CI
-        assert not (is_ci() and self._shell.env_level), "Can't spawn a subshell in CI environment"
-
-        # Force "refresh" option for backend
-        env = dict(os.environ)
-        backend_env = self._backend_upgrade_env()
-        if backend_env is not None:  # pragma: no branch
-            env_name, env_arg = backend_env
-            env[env_name] = env.get(env_name, "") + f" {env_arg}"
-
-        # Dump current installed packages to a temporary file
-        old_packages_dump = self._project_path / "._buildenv_old_packages.json"
-        old_packages_dump.write_text(json.dumps(self.installed_packages))
-
-        # Delegate to shell script
-        # If already in a shell, spawn a new one, else just init the environment again
-        args = [self._shell.script, "shell" if self._shell.env_level else "init", "--show-updates-from", str(old_packages_dump)]
-        rc = self.subprocess(args, cwd=self._project_path, check=False, env=env, verbose=True).returncode
-
-        # After having exited the spawned shell, if any, kill parent shell to enforce reloading the environment
-        if rc == 0 and self._shell.env_level:  # pragma: no cover
-            self._logger.info("Exiting parent shell after upgrade...")
-            psutil.Process(os.getppid()).kill()
-        return rc
 
 
 class MutableEnvBackend(EnvBackend):

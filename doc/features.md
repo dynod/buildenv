@@ -1,4 +1,4 @@
-# Features
+# ✨ Features
 
 The purpose of the **`buildenv`** tool is to help projects to setup easily a build environment (based on [Python virtual environment](https://docs.python.org/3/library/venv.html), or "**venv**"), just after clone, with minimal dependencies (i.e. only [**git**](https://git-scm.com/), and the chosen [environment backend](backends)).
 
