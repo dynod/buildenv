@@ -30,7 +30,6 @@ In {py:class}`~buildenv.backends.backend.EnvBackend` API:
 - {py:func}`~buildenv.backends.backend.EnvBackend.dump` method now excludes editable packages
 - {py:attr}`~buildenv.backends.backend.EnvBackend.version` property now exposes the current buildenv loading scripts version
 - {py:attr}`~buildenv.backends.backend.EnvBackend.scripts_version` property (<font color="green">_NEW_</font>) exposes the project’s installed loading scripts version
-- {py:attr}`~buildenv.backends.backend.EnvBackend.is_locked` property is now deprecated
 - {py:attr}`~buildenv.backends.backend.EnvBackend.run_wrapper` property (<font color="green">_NEW_</font>) allow to get the run wrapper command syntax
 - {py:func}`~buildenv.backends.backend.EnvBackend.upgrade` method now supports an `exact` argument (default to `False`), to handle exact/inexact packages install
 
@@ -40,7 +39,7 @@ In {py:class}`~buildenv.backends.backend.EnvBackend` API:
 - Dropped support for <font color="red">_pipx_</font> environment backend
 - Dropped support for <font color="red">_pip_</font> environment backend
 - Removed **lock** and **unlock** subcommands
-- Removed **lock_file**, **lock** and **unlock** methods from {py:class}`~buildenv.backends.backend.EnvBackend` API
+- Removed **lock_file**, **is_locked**, **lock** and **unlock** methods from {py:class}`~buildenv.backends.backend.EnvBackend` API
 
 ---
 
