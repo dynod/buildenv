@@ -4,7 +4,6 @@ import logging
 import os
 import shutil
 import subprocess
-import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
@@ -71,15 +70,6 @@ class EnvBackend(ABC):
 
         # Detected loading scripts version from the project (if any)
         self._scripts_version = int(os.getenv("BUILDENV_VERSION", _DEFAULT_VERSION))
-
-    @property
-    def is_locked(self) -> bool:
-        """
-        State if this environment is locked. This method is deprecated and always return False.
-        """
-
-        warnings.warn("EnvBackend.is_locked is deprecated", DeprecationWarning, stacklevel=2)
-        return False
 
     @property
     def version(self) -> int:

@@ -171,11 +171,6 @@ class WithProject(PreservedEnvHelper):
         for f in existing_files:
             assert (project / f).stat().st_size == 0
 
-    def test_is_locked_deprecated(self, backend: EnvBackend):
-        # check deprecation warning
-        with pytest.warns(DeprecationWarning, match="EnvBackend.is_locked is deprecated"):
-            assert not backend.is_locked
-
     def test_reqs_dump(self, backend: EnvBackend):
         # Check requirements dump
         reqs = self.test_folder / "requirements.txt"
