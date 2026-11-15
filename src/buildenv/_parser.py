@@ -35,11 +35,14 @@ class BuildEnvParser:
         self._parser.set_defaults(func=None, shell_func="shell", kwargs={}, project_folder=Path.cwd())
 
         # Common arguments to all commands
-        def _common_args(sub_parser: ArgumentParser):
+        def _common_args(sub_parser: ArgumentParser, with_shell: bool = False):
             sub_parser.add_argument(
                 "--project", "-p", metavar="PROJECT", dest="project_folder", type=Path, default=Path.cwd(), help="project folder (default: .)"
             )
-            sub_parser.add_argument("--shell", choices=KNOWN_SHELLS, default=_DEFAULT_SHELL, help=f"force using specified shell (default: {_DEFAULT_SHELL})")
+            if with_shell:
+                sub_parser.add_argument(
+                    "--shell", choices=KNOWN_SHELLS, default=_DEFAULT_SHELL, help=f"force using specified shell (default: {_DEFAULT_SHELL})"
+                )
 
         # Add subcommands:
         sub_parsers = self._parser.add_subparsers(help="sub-commands:")
@@ -117,14 +120,14 @@ class BuildEnvParser:
         # shell sub-command
         shell_help = "start an interactive shell with loaded build environment (default if no sub-command is specified)"
         shell_parser = sub_parsers.add_parser("shell", help=shell_help, description=shell_help)
-        _common_args(shell_parser)
+        _common_args(shell_parser, with_shell=True)
         shell_parser.set_defaults(func="shell", kwargs_map={"command": lambda o: o.command})  # type: ignore
         shell_parser.add_argument("--command", "-c", metavar="COMMAND", help="command and arguments to be executed in build environment")
 
         # run sub-command
         run_help = "run command in build environment"
         run_parser = sub_parsers.add_parser("run", help=run_help, description=run_help)
-        _common_args(run_parser)
+        _common_args(run_parser, with_shell=True)
         run_parser.set_defaults(func="run", kwargs_map={"command": lambda o: " ".join(o.CMD)})  # type: ignore
         run_parser.add_argument("CMD", nargs=REMAINDER, help="command and arguments to be executed in build environment")
 
