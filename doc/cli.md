@@ -32,6 +32,8 @@ Here is the general **`buildenv`** command help page:
 
 When invoked without sub-command, the **buildenv** command line interface will execute the **`shell`** sub-command.
 
+---
+
 (install)=
 
 ## `install` sub-command
@@ -55,6 +57,8 @@ It it possible to override this detection by using the **--backend** option.
 
 The templates related options are described in the [project templates documentation](templates).
 
+---
+
 (init)=
 
 ## `init` sub-command
@@ -74,6 +78,8 @@ It is possible to skip some extensions on init, by using the following options:
 - **`--skip-ext EXT`**: skip a given extension (by its id)
 - **`--no-ext`**: skip all extensions
 
+---
+
 ## `shell` sub-command
 
 ```{include} snippets/shell.txt
@@ -90,6 +96,8 @@ To be compatible with usual shells interface, it is possible to use the **-c** o
 Running either `buildenv shell -c echo hello` command or `buildenv run echo hello` command behave exactly the same way.
 ```
 
+---
+
 ## `run` sub-command
 
 ```{include} snippets/run.txt
@@ -97,6 +105,8 @@ Running either `buildenv shell -c echo hello` command or `buildenv run echo hell
 ```
 
 This sub-command invokes the provided command with the build environment enabled (i.e. original python venv + all enabled extensions provided by **`buildenv`** tool), then returns.
+
+---
 
 ## `list` sub-command
 
@@ -106,6 +116,8 @@ This sub-command invokes the provided command with the build environment enabled
 
 This sub-command lists all installed packages the current buildenv environment (similarly to `pip list`, except that, depending on used [backend](backends), the `pip` command is not always available).
 
+---
+
 ## `upgrade` sub-command
 
 ```{include} snippets/upgrade.txt
@@ -114,6 +126,7 @@ This sub-command lists all installed packages the current buildenv environment (
 
 This sub-command upgrades packages installed in python venv to their latest available version.
 
-```{note}
-If the used [environment backend](backends) is immutable, and this command is launched from an interractive shell, it will spawn a new sub-shell with the upgraded venv.
+```{warning}
+- This command is not supported if the used [environment backend](backends) is immutable
+- On Windows, this command can't be used to upgrade **buildenv** itself (since Windows doesn't support to upgrade `buildenv.exe` while it's running)
 ```

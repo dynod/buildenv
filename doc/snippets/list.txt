@@ -1,4 +1,4 @@
-usage: buildenv list [-h] [--project PROJECT] [--shell {bash,cmd}]
+usage: buildenv list [-h] [--project PROJECT]
 
 list installed packages in the current build environment
 
@@ -6,4 +6,3 @@ options:
   -h, --help            show this help message and exit
   --project, -p PROJECT
                         project folder (default: .)
-  --shell {bash,cmd}    force using specified shell (default: bash)
