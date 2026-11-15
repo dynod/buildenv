@@ -27,7 +27,9 @@ The fully detailed changelog is also available on [Github](https://github.com/dy
 
 In {py:class}`~buildenv.backends.backend.EnvBackend` API:
 
-- {py:func}`~buildenv.backends.backend.EnvBackend.dump` method now excludes editable packages
+- {py:func}`~buildenv.backends.backend.EnvBackend.dump` method now:
+  - excludes editable packages
+  - allows filtering of dev dependencies (through the `with_dev` argument)
 - {py:attr}`~buildenv.backends.backend.EnvBackend.version` property now exposes the current buildenv loading scripts version
 - {py:attr}`~buildenv.backends.backend.EnvBackend.scripts_version` property (<font color="green">_NEW_</font>) exposes the project’s installed loading scripts version
 - {py:attr}`~buildenv.backends.backend.EnvBackend.run_wrapper` property (<font color="green">_NEW_</font>) allow to get the run wrapper command syntax

@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -70,6 +71,26 @@ class UvProjectBackend(_CommonUvImpl, MutableEnvBackend):
     def run_wrapper(self) -> str:
         # Use uv run wrapper
         return "uv run"
+
+    def dump(self, output_file: Path, log_level: int = logging.INFO, with_dev: bool = True):
+        # Use "uv export" instead of custom implementation
+        self.subprocess(
+            [
+                "export",
+                "--format",
+                "requirements.txt",
+                "--no-hashes",
+                "--no-editable",
+                "--no-annotate",
+                "--no-emit-local",
+                "--no-header",
+                "--output-file",
+                str(output_file),
+            ]
+            + (["--no-dev"] if not with_dev else []),
+            check=True,
+            cwd=self._project_path,
+        )
 
 
 # UVX-style backend (immutable)
