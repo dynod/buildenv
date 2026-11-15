@@ -423,13 +423,12 @@ class EnvBackend(ABC):
         """
         raise NotImplementedError("Don't know how to add packages for this backend")
 
-    def upgrade(self, full: bool = True, only_deps: bool = False, print_updates: bool = True, exact: bool = False) -> int:
+    def upgrade(self, full: bool = True, print_updates: bool = True, exact: bool = False) -> int:
         """
         Upgrade all packages in this environment to their latest version.
         Also dumps upgraded versions to the console if print_updates is True.
 
         :param full: if True, check for updates from remote repositories (may be slow); if False, ignore already installed packages
-        :param only_deps: deprecated, not used anymore
         :param print_updates: if True, print updates after upgrade
         :param exact: if True, make sure that environment only includes current project dependencies (remove any other package)
         :return: command exit code
@@ -439,12 +438,6 @@ class EnvBackend(ABC):
         raise NotImplementedError(
             "Don't know how to upgrade packages for this backend" if self.is_mutable() else f"The {self.name} backend is immutable, can't upgrade packages"
         )
-
-    def print_updates(self, old_packages: dict[str, str], ignored_packages: set[str] | None = None):  # NOQA: B027
-        """
-        Deprecated method; does nothing
-        """
-        pass  # pragma: no cover
 
     def get_installed_packages(self, with_editable: bool = True) -> dict[str, str]:
         """
