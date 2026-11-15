@@ -515,12 +515,13 @@ class EnvBackend(ABC):
 
         return 0
 
-    def dump(self, output_file: Path, log_level: int = logging.INFO):
+    def dump(self, output_file: Path, log_level: int = logging.INFO, with_dev: bool = True):
         """
         Dump installed packages in this environment to a requirements-like file (skipping editable packages)
 
         :param output_file: path to the output requirements file
         :param log_level: logging level to use for file generation
+        :param with_dev: if True, include dev (i.e. tools) packages in the output
         """
 
         # Just dump installed packages to the specified file
